@@ -1,0 +1,3173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AeroSafe SMS | Part 145</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f0f2f7; --bg2:#ffffff; --bg3:#f4f6fb; --panel:#ffffff; --panel2:#f8f9fc;
+  --border:#dce1ec; --border2:#c8d0e0;
+  --accent:#0070cc; --accent2:#0050a0;
+  --green:#00934f; --yellow:#c08a00; --orange:#d45c00; --red:#cc2236; --purple:#6b3fd4;
+  --text:#1a2033; --text2:#4a5570; --text3:#8a94aa;
+  --c-low:rgba(0,147,79,.85); --c-med:rgba(192,138,0,.85); --c-high:rgba(212,92,0,.85); --c-crit:rgba(204,34,54,.9);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:13px;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:210px;min-width:210px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:fixed;left:0;top:0;z-index:100;}
+.logo{padding:18px 14px 14px;border-bottom:1px solid var(--border);}
+.logo-row{display:flex;align-items:center;gap:9px;}
+.logo-icon{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.logo-name{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:var(--accent);letter-spacing:1px;}
+.logo-cert{font-size:9.5px;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;padding-left:39px;margin-top:2px;}
+.nav{flex:1;padding:10px 7px;overflow-y:auto;}
+.nav-section{margin-bottom:18px;}
+.nav-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:0 8px;margin-bottom:5px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;color:var(--text2);font-size:12.5px;font-weight:500;transition:all .13s;margin-bottom:1px;position:relative;}
+.nav-item:hover{background:var(--panel);color:var(--text);}
+.nav-item.active{background:linear-gradient(90deg,rgba(0,112,204,.1),rgba(0,112,204,.04));color:var(--accent);border-left:2px solid var(--accent);padding-left:8px;}
+.nav-item .ni{font-size:14px;width:16px;text-align:center;}
+.nbadge{margin-left:auto;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;font-family:'JetBrains Mono',monospace;}
+.sidebar-foot{padding:10px;border-top:1px solid var(--border);}
+.org-chip{background:var(--panel);border-radius:7px;padding:7px 9px;}
+.org-nm{font-size:11.5px;font-weight:600;color:var(--text);}
+.org-sub{font-size:10px;color:var(--text3);margin-top:1px;}
+
+/* ── MAIN ── */
+.main{margin-left:210px;flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 22px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.pg-title{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;letter-spacing:.4px;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.content{flex:1;overflow-y:auto;padding:20px 22px;}
+
+/* ── PAGES ── */
+.page{display:none;}.page.active{display:block;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .13s;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;}
+.btn-primary:hover{opacity:.85;transform:translateY(-1px);}
+.btn-ghost{background:var(--panel);color:var(--text2);border:1px solid var(--border);}
+.btn-ghost:hover{color:var(--text);border-color:var(--accent);}
+.btn-danger{background:rgba(204,34,54,.08);color:var(--red);border:1px solid rgba(204,34,54,.25);}
+.btn-danger:hover{background:rgba(204,34,54,.15);}
+.btn-success{background:rgba(0,147,79,.08);color:var(--green);border:1px solid rgba(0,147,79,.25);}
+.btn-warning{background:rgba(192,138,0,.08);color:var(--yellow);border:1px solid rgba(192,138,0,.25);}
+.btn-sm{padding:4px 10px;font-size:11px;}
+.btn-xs{padding:2px 7px;font-size:10px;}
+
+/* ── CARDS ── */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:11px;overflow:hidden;}
+.card-head{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.card-title{font-family:'Rajdhani',sans-serif;font-size:14.5px;font-weight:700;letter-spacing:.3px;}
+.card-body{padding:16px;}
+
+/* ── STAT CARDS ── */
+.stats-row{display:grid;gap:12px;margin-bottom:16px;}
+.s4{grid-template-columns:repeat(4,1fr);}
+.s3{grid-template-columns:repeat(3,1fr);}
+.stat{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;transition:border-color .15s,transform .1s;}
+.stat[style*="cursor:pointer"]:hover{border-color:var(--accent);transform:translateY(-2px);}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.stat.ac::before{background:linear-gradient(90deg,var(--accent),var(--accent2));}
+.stat.gr::before{background:var(--green);}
+.stat.re::before{background:var(--red);}
+.stat.ye::before{background:var(--yellow);}
+.stat.pu::before{background:var(--purple);}
+.stat.or::before{background:var(--orange);}
+.stat-lbl{font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
+.stat-val{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;line-height:1;}
+.stat-sub{font-size:10px;color:var(--text3);margin-top:3px;}
+.stat-icon{position:absolute;top:12px;right:12px;font-size:18px;opacity:.35;}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead th{background:var(--bg3);padding:9px 11px;text-align:left;font-size:9.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+tbody tr:hover{background:rgba(0,112,204,.03);}
+tbody td{padding:9px 11px;color:var(--text2);font-size:12px;vertical-align:middle;}
+tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
+
+/* ── CHIPS ── */
+.id-chip{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;color:var(--accent);background:rgba(0,112,204,.08);padding:2px 6px;border-radius:4px;border:1px solid rgba(0,112,204,.2);}
+.id-chip.risk{color:var(--yellow);background:rgba(192,138,0,.1);border-color:rgba(192,138,0,.25);}
+.id-chip.ctrl{color:var(--green);background:rgba(0,147,79,.08);border-color:rgba(0,147,79,.2);}
+
+/* ── STATUS / RISK BADGES ── */
+.rbadge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:4px;font-size:10.5px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.rb-low{background:rgba(0,147,79,.12);color:var(--green);border:1px solid rgba(0,147,79,.3);}
+.rb-med{background:rgba(192,138,0,.12);color:var(--yellow);border:1px solid rgba(192,138,0,.3);}
+.rb-high{background:rgba(212,92,0,.12);color:var(--orange);border:1px solid rgba(212,92,0,.3);}
+.rb-crit{background:rgba(204,34,54,.1);color:var(--red);border:1px solid rgba(204,34,54,.25);}
+
+.sbadge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+.sb-open{background:rgba(212,92,0,.1);color:var(--orange);}
+.sb-monitoring{background:rgba(192,138,0,.1);color:var(--yellow);}
+.sb-closed{background:rgba(0,147,79,.1);color:var(--green);}
+.sb-review{background:rgba(107,63,212,.1);color:var(--purple);}
+
+.eff-badge{padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;}
+.eff-effective{background:rgba(0,147,79,.1);color:var(--green);border:1px solid rgba(0,147,79,.25);}
+.eff-partially{background:rgba(192,138,0,.1);color:var(--yellow);border:1px solid rgba(192,138,0,.25);}
+.eff-not-effective{background:rgba(204,34,54,.1);color:var(--red);border:1px solid rgba(204,34,54,.25);}
+.eff-not-checked{background:rgba(138,148,170,.12);color:var(--text3);border:1px solid rgba(138,148,170,.25);}
+
+.pres-badge{padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;}
+.pres-present{background:rgba(0,112,204,.08);color:var(--accent);border:1px solid rgba(0,112,204,.2);}
+.pres-absent{background:rgba(204,34,54,.1);color:var(--red);border:1px solid rgba(204,34,54,.25);}
+
+/* ── DEPT PILL ── */
+.dept-pill{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;background:rgba(0,112,204,.08);color:var(--accent);border:1px solid rgba(0,112,204,.15);}
+
+/* ── FORM ── */
+.fg{margin-bottom:12px;}
+.fl{display:block;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:4px;}
+.fi,.fs,.fta{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:7px 11px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;outline:none;transition:border .13s;}
+.fi:focus,.fs:focus,.fta:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,112,204,.1);}
+.fs{cursor:pointer;}
+.fta{resize:vertical;min-height:70px;}
+.fi[readonly]{color:var(--text3);cursor:default;}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(26,32,51,.45);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:13px;width:100%;max-width:680px;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 16px 48px rgba(26,32,51,.18);}
+.modal-lg{max-width:900px;}
+.modal-xl{max-width:1100px;}
+.modal-head{padding:15px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;}
+.modal-x{background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;padding:3px 7px;border-radius:5px;transition:background .13s;}
+.modal-x:hover{background:var(--panel);color:var(--text);}
+.modal-body{padding:18px;overflow-y:auto;flex:1;}
+.modal-foot{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:2px;background:var(--bg3);border-radius:8px;padding:3px;margin-bottom:16px;}
+.tab{flex:1;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;text-align:center;color:var(--text3);transition:all .13s;}
+.tab.active{background:var(--panel);color:var(--accent);}
+
+/* ── SEARCH ── */
+.search-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.search-box{display:flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:5px 11px;min-width:200px;}
+.search-box input{background:none;border:none;outline:none;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;width:100%;}
+.search-box input::placeholder{color:var(--text3);}
+
+/* ── PROGRESS ── */
+.prog-bar{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:3px;transition:width .5s;}
+
+/* ── SEP ── */
+.sep{height:1px;background:var(--border);margin:14px 0;}
+
+/* ── COMPLIANCE STRIP ── */
+.comp-strip{background:linear-gradient(90deg,rgba(0,112,204,.06),rgba(0,80,160,.02));border:1px solid rgba(0,112,204,.18);border-radius:8px;padding:7px 13px;display:flex;align-items:center;gap:12px;font-size:11px;color:var(--text3);margin-bottom:16px;}
+.comp-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);flex-shrink:0;}
+
+/* ── BACKUP BAR ── */
+.bkp-bar{border-radius:8px;padding:7px 13px;display:flex;align-items:center;gap:10px;font-size:11px;margin-bottom:16px;border:1px solid;}
+
+/* ── MATRIX ── */
+.matrix-grid{display:grid;grid-template-columns:80px repeat(5,44px);gap:2px;}
+.mc{border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;height:44px;cursor:default;transition:transform .1s;}
+.mc:hover{transform:scale(1.07);}
+.mc.lbl{background:transparent;color:var(--text3);font-size:9.5px;height:20px;}
+.mc.r1{background:rgba(0,147,79,.7);color:#fff;}
+.mc.r2{background:rgba(0,147,79,.4);color:#004d28;}
+.mc.r3{background:rgba(192,138,0,.65);color:#3d2a00;}
+.mc.r4{background:rgba(212,92,0,.75);color:#fff;}
+.mc.r5{background:rgba(204,34,54,.85);color:#fff;}
+
+/* ── CONTROL CARD ── */
+.ctrl-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:11px 13px;margin-bottom:7px;display:flex;align-items:flex-start;gap:11px;}
+.ctrl-toggles{display:flex;flex-direction:column;gap:3px;min-width:70px;}
+.tgl{width:68px;height:20px;border-radius:4px;border:none;font-size:9px;font-weight:700;cursor:pointer;letter-spacing:.4px;transition:all .13s;}
+.tgl-present{background:rgba(0,112,204,.1);color:var(--accent);border:1px solid rgba(0,112,204,.25);}
+.tgl-absent{background:rgba(204,34,54,.1);color:var(--red);border:1px solid rgba(204,34,54,.25);}
+.tgl-effective{background:rgba(0,147,79,.1);color:var(--green);border:1px solid rgba(0,147,79,.25);}
+.tgl-partially{background:rgba(192,138,0,.1);color:var(--yellow);border:1px solid rgba(192,138,0,.25);}
+.tgl-not-eff{background:rgba(204,34,54,.1);color:var(--red);border:1px solid rgba(204,34,54,.25);}
+.tgl-not-chk{background:rgba(138,148,170,.12);color:var(--text3);border:1px solid var(--border);}
+
+/* ── RISK MATRIX 5x5 selector ── */
+.rms{display:grid;grid-template-columns:repeat(5,38px);gap:3px;margin-top:6px;}
+.rms-cell{width:38px;height:38px;border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:700;font-size:12px;font-family:'JetBrains Mono',monospace;border:2px solid transparent;transition:all .13s;}
+.rms-cell:hover{transform:scale(1.1);}
+.rms-cell.selected{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.25);}
+
+/* ── TIMELINE ── */
+.timeline{position:relative;padding-left:18px;}
+.timeline::before{content:'';position:absolute;left:5px;top:0;bottom:0;width:2px;background:var(--border);}
+.tl-item{position:relative;padding-bottom:14px;}
+.tl-item::before{content:'';position:absolute;left:-15px;top:4px;width:9px;height:9px;border-radius:50%;background:var(--accent);border:2px solid var(--bg2);}
+.tl-date{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:2px;}
+.tl-text{font-size:11.5px;color:var(--text2);}
+
+/* ── TOAST ── */
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:7px;}
+.toast{background:var(--panel2);border:1px solid var(--border);border-radius:9px;padding:10px 14px;display:flex;align-items:center;gap:9px;font-size:12px;min-width:240px;box-shadow:0 6px 20px rgba(26,32,51,.14);animation:tin .2s ease;}
+@keyframes tin{from{opacity:0;transform:translateX(16px);}to{opacity:1;transform:none;}}
+
+/* ── MINI MATRIX ── */
+.mmx{display:grid;grid-template-columns:repeat(5,14px);gap:2px;}
+.mmx-c{width:14px;height:14px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:6.5px;font-weight:700;color:rgba(255,255,255,.9);}
+
+/* ── BOWTIE ── */
+.bt-wrap{position:relative;min-height:500px;padding:24px 0;}
+.bt-threat-label,.bt-consq-label{position:absolute;font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);}
+.bt-threat-label{left:12px;top:10px;}
+.bt-consq-label{right:12px;top:10px;}
+.bt-barrier-btn{cursor:pointer;transition:filter .15s;}
+.bt-barrier-btn:hover{filter:brightness(1.3);}
+.bt-empty{color:var(--text3);text-align:center;padding:60px;font-size:13px;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){.s4{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-row">
+      <div class="logo-icon">✈</div>
+      <span class="logo-name">AeroSafe</span>
+    </div>
+    <div class="logo-cert" id="sb-cert">Part 145 · SMS</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <div class="nav-item active" data-page="dashboard" onclick="nav(this)"><span class="ni">⬡</span>Dashboard</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Registers</div>
+      <div class="nav-item" data-page="hazards" onclick="nav(this)"><span class="ni">⚠</span>Hazard Register<span class="nbadge" id="nb-hz">0</span></div>
+      <div class="nav-item" data-page="risks" onclick="nav(this)"><span class="ni">◈</span>Risk Register<span class="nbadge" id="nb-rk">0</span></div>
+      <div class="nav-item" data-page="controls" onclick="nav(this)"><span class="ni">◼</span>Control Register<span class="nbadge" id="nb-ct">0</span></div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Analysis</div>
+      <div class="nav-item" data-page="bowtie" onclick="nav(this)"><span class="ni">⧖</span>Bow-Tie</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Safety Events</div>
+      <div class="nav-item" data-page="events" onclick="nav(this)"><span class="ni">▶</span>Event Log</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">System</div>
+      <div class="nav-item" data-page="settings" onclick="nav(this)"><span class="ni">⚙</span>Settings</div>
+    </div>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="org-chip">
+      <div class="org-nm" id="sb-org">My Organisation</div>
+      <div class="org-sub" id="sb-auth">GCAA · Part 145</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="pg-title" id="pg-title">Dashboard</div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span id="gh-status-indicator" style="font-size:10.5px;color:var(--text3);white-space:nowrap;font-family:'JetBrains Mono',monospace;cursor:pointer;" onclick="nav(document.querySelector('[data-page=settings]'))" title="Click to configure GitHub sync">☁ —</span>
+      <div class="topbar-right" id="topbar-right"></div>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- ══════════════ DASHBOARD ══════════════ -->
+    <div class="page active" id="page-dashboard">
+      <div class="comp-strip">
+        <div class="comp-dot"></div>
+        <span>ICAO Annex 19 &nbsp;|&nbsp; GCAA CAR-OPS &nbsp;|&nbsp; EASA Part-145 &nbsp;|&nbsp; SMS Active</span>
+        <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;color:var(--accent);font-size:10.5px;" id="dash-date"></span>
+      </div>
+      <div id="bkp-bar-dash" class="bkp-bar" style="background:rgba(255,123,44,.06);border-color:rgba(255,123,44,.2);color:var(--text3);">
+        <span id="bkp-icon">💾</span><span id="bkp-text" style="flex:1;">Checking backup…</span><span id="bkp-ts" style="font-family:'JetBrains Mono',monospace;font-size:10px;"></span>
+        <button class="btn btn-primary btn-sm" onclick="backupNow()">⬇ Backup</button>
+        <button class="btn btn-ghost btn-sm" onclick="importData()">⬆ Restore</button>
+      </div>
+
+      <div class="stats-row s4" style="margin-bottom:14px;">
+        <div class="stat re" style="cursor:pointer;" onclick="navTo('hazards',{})" title="View all hazards"><div class="stat-icon">⚠</div><div class="stat-lbl">Active Hazards</div><div class="stat-val" id="d-hz">0</div><div class="stat-sub">Click to view →</div></div>
+        <div class="stat ye" style="cursor:pointer;" onclick="navTo('risks',{status:'Open'})" title="View open risks"><div class="stat-icon">◈</div><div class="stat-lbl">Open Risks</div><div class="stat-val" id="d-rk">0</div><div class="stat-sub">Click to view →</div></div>
+        <div class="stat ac" style="cursor:pointer;" onclick="navTo('controls',{})" title="View all controls"><div class="stat-icon">◼</div><div class="stat-lbl">Controls</div><div class="stat-val" id="d-ct">0</div><div class="stat-sub">Click to view →</div></div>
+        <div class="stat gr" style="cursor:pointer;" onclick="navTo('events',{})" title="View events"><div class="stat-icon">▶</div><div class="stat-lbl">Events (month)</div><div class="stat-val" id="d-ev">0</div><div class="stat-sub">Click to view →</div></div>
+      </div>
+
+      <div class="g2" style="margin-bottom:14px;">
+        <div class="card">
+          <div class="card-head"><span class="card-title">🔝 Top 10 Hazards by Risk</span></div>
+          <div class="card-body" id="d-top-hz"><p style="color:var(--text3);font-size:12px;text-align:center;padding:20px;">No data yet</p></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">⚡ Top 10 Risks (Initial)</span></div>
+          <div class="card-body" id="d-top-rk"><p style="color:var(--text3);font-size:12px;text-align:center;padding:20px;">No data yet</p></div>
+        </div>
+      </div>
+
+      <div class="g2">
+        <div class="card">
+          <div class="card-head"><span class="card-title">🏢 Department Risk Overview</span></div>
+          <div class="card-body" id="d-depts"><p style="color:var(--text3);font-size:12px;text-align:center;padding:20px;">No data yet</p></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">📊 Control Effectiveness</span></div>
+          <div class="card-body" id="d-ctrl-eff"><p style="color:var(--text3);font-size:12px;text-align:center;padding:20px;">No data yet</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ HAZARD REGISTER ══════════════ -->
+    <div class="page" id="page-hazards">
+      <div class="search-row">
+        <div class="search-box"><span style="color:var(--text3);">🔍</span><input type="text" placeholder="Search hazards…" id="hz-srch" oninput="renderHazards()"></div>
+        <select class="fs" style="width:150px;" id="hz-f-dept" onchange="renderHazards()"><option value="">All Departments</option></select>
+        <select class="fs" style="width:130px;" id="hz-f-status" onchange="renderHazards()">
+          <option value="">All Status</option><option>Open</option><option>Monitoring</option><option>Closed</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Hazard Register <span style="font-weight:400;font-size:12px;color:var(--text3);" id="hz-count-lbl"></span></span>
+        </div>
+        <div class="tbl-wrap">
+          <table style="table-layout:fixed;width:100%;">
+            <colgroup>
+              <col style="width:90px;">   <!-- Hazard ID -->
+              <col style="width:240px;">  <!-- Description -->
+              <col style="width:130px;">  <!-- Sources -->
+              <col style="width:130px;">  <!-- Department -->
+              <col style="width:110px;">  <!-- Location -->
+              <col style="width:100px;">  <!-- Date -->
+              <col style="width:120px;">  <!-- Owner -->
+              <col style="width:90px;">   <!-- Status -->
+              <col>                       <!-- Remarks (flex) -->
+              <col style="width:110px;">  <!-- Actions -->
+            </colgroup>
+            <thead><tr>
+              <th>Hazard ID</th><th>Hazard Description</th><th>Source(s)</th><th>Department</th>
+              <th>Location</th><th>Date Identified</th><th>Hazard Owner</th>
+              <th>Status</th><th>Remarks</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="hz-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ RISK REGISTER ══════════════ -->
+    <div class="page" id="page-risks">
+      <div class="search-row">
+        <div class="search-box"><span style="color:var(--text3);">🔍</span><input type="text" placeholder="Search risks…" id="rk-srch" oninput="renderRisks()"></div>
+        <select class="fs" style="width:130px;" id="rk-f-hz" onchange="renderRisks()"><option value="">All Hazards</option></select>
+        <select class="fs" style="width:130px;" id="rk-f-level" onchange="renderRisks()">
+          <option value="">All Levels</option><option>LOW</option><option>MEDIUM</option><option>HIGH</option><option>CRITICAL</option>
+        </select>
+        <select class="fs" style="width:130px;" id="rk-f-status" onchange="renderRisks()">
+          <option value="">All Status</option><option>Open</option><option>Monitoring</option><option>Closed</option><option>Review</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Risk Register <span style="font-weight:400;font-size:12px;color:var(--text3);" id="rk-count-lbl"></span></span>
+        </div>
+        <div class="tbl-wrap">
+          <table style="table-layout:fixed;width:100%;">
+            <colgroup>
+              <col style="width:90px;">   <!-- Risk ID -->
+              <col style="width:80px;">   <!-- Hazard -->
+              <col style="width:220px;">  <!-- Risk Description -->
+              <col style="width:160px;">  <!-- Existing Controls -->
+              <col style="width:36px;">   <!-- P -->
+              <col style="width:36px;">   <!-- S -->
+              <col style="width:80px;">   <!-- Initial Risk -->
+              <col style="width:160px;">  <!-- Additional Controls -->
+              <col style="width:40px;">   <!-- Res.P -->
+              <col style="width:40px;">   <!-- Res.S -->
+              <col style="width:80px;">   <!-- Residual Risk -->
+              <col style="width:110px;">  <!-- Risk Owner -->
+              <col style="width:90px;">   <!-- Target Date -->
+              <col style="width:90px;">   <!-- Signed Off -->
+              <col style="width:80px;">   <!-- Status -->
+              <col style="width:100px;">  <!-- Actions -->
+            </colgroup>
+            <thead><tr>
+              <th>Risk ID</th><th>Hazard</th><th>Risk Description</th>
+              <th>Existing Controls</th>
+              <th>P</th><th>S</th><th>Initial</th>
+              <th>Additional Controls</th>
+              <th>R.P</th><th>R.S</th><th>Residual</th>
+              <th>Risk Owner</th><th>Target</th><th>Signed Off</th><th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="rk-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ CONTROL REGISTER ══════════════ -->
+    <div class="page" id="page-controls">
+      <div class="stats-row s4" style="margin-bottom:14px;">
+        <div class="stat gr" style="cursor:pointer;" onclick="navTo('controls',{eff:'Effective'})" title="Filter: Effective"><div class="stat-lbl">Effective</div><div class="stat-val" id="ct-eff">0</div><div class="stat-sub">Click to filter →</div></div>
+        <div class="stat ye" style="cursor:pointer;" onclick="navTo('controls',{eff:'Partially Effective'})" title="Filter: Partially Effective"><div class="stat-lbl">Partially Effective</div><div class="stat-val" id="ct-part">0</div><div class="stat-sub">Click to filter →</div></div>
+        <div class="stat re" style="cursor:pointer;" onclick="navTo('controls',{eff:'Not Effective'})" title="Filter: Not Effective"><div class="stat-lbl">Not Effective</div><div class="stat-val" id="ct-neff">0</div><div class="stat-sub">Click to filter →</div></div>
+        <div class="stat ac" style="cursor:pointer;" onclick="navTo('controls',{eff:'Not Checked'})" title="Filter: Not Checked"><div class="stat-lbl">Not Checked</div><div class="stat-val" id="ct-nchk">0</div><div class="stat-sub">Click to filter →</div></div>
+      </div>
+      <div class="search-row">
+        <div class="search-box"><span style="color:var(--text3);">🔍</span><input type="text" placeholder="Search controls…" id="ct-srch" oninput="renderControls()"></div>
+        <select class="fs" style="width:150px;" id="ct-f-risk" onchange="renderControls()"><option value="">All Risks</option></select>
+        <select class="fs" style="width:150px;" id="ct-f-eff" onchange="renderControls()">
+          <option value="">All Effectiveness</option><option>Effective</option><option>Partially Effective</option><option>Not Effective</option><option>Not Checked</option>
+        </select>
+        <select class="fs" style="width:140px;" id="ct-f-type" onchange="renderControls()">
+          <option value="">All Types</option><option>Preventive</option><option>Detective</option><option>Mitigating</option><option>Corrective</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Control Register <span style="font-weight:400;font-size:12px;color:var(--text3);" id="ct-count-lbl"></span></span>
+        </div>
+        <div class="tbl-wrap">
+          <table style="table-layout:fixed;width:100%;">
+            <colgroup>
+              <col style="width:90px;">   <!-- Control ID -->
+              <col style="width:80px;">   <!-- Risk ID -->
+              <col style="width:140px;">  <!-- Risk Description -->
+              <col style="width:220px;">  <!-- Control Description -->
+              <col style="width:90px;">   <!-- Type -->
+              <col style="width:130px;">  <!-- Monitoring Method -->
+              <col style="width:90px;">   <!-- Frequency -->
+              <col style="width:110px;">  <!-- Responsible -->
+              <col style="width:100px;">  <!-- Verified By -->
+              <col style="width:110px;">  <!-- Effectiveness -->
+              <col style="width:90px;">   <!-- Last Checked -->
+              <col>                       <!-- Remarks (flex) -->
+              <col style="width:80px;">   <!-- Actions -->
+            </colgroup>
+            <thead><tr>
+              <th>Control ID</th><th>Risk ID</th><th>Risk Description</th><th>Control Description</th>
+              <th>Type</th><th>Monitoring Method</th><th>Frequency</th>
+              <th>Responsible</th><th>Verified By</th>
+              <th>Effectiveness</th><th>Last Checked</th><th>Remarks</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="ct-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ BOW-TIE ══════════════ -->
+    <div class="page" id="page-bowtie">
+
+      <!-- Hazard selector + legend row -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);white-space:nowrap;">Select Hazard</label>
+          <select class="fs" id="bt-hz-sel" onchange="onBtHzChange()" style="min-width:320px;"></select>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);"><span style="width:12px;height:12px;border-radius:2px;background:var(--green);display:inline-block;"></span>Effective</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);"><span style="width:12px;height:12px;border-radius:2px;background:var(--yellow);display:inline-block;"></span>Partially Effective</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);"><span style="width:12px;height:12px;border-radius:2px;background:var(--red);display:inline-block;"></span>Not Effective</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);"><span style="width:12px;height:12px;border-radius:2px;background:var(--text3);display:inline-block;"></span>Not Checked</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);"><span style="width:12px;height:12px;border-radius:2px;background:var(--orange);display:inline-block;"></span>Absent</div>
+        </div>
+      </div>
+
+      <!-- Risk role assignment -->
+      <div id="bt-role-panel" style="display:none;margin-bottom:14px;">
+        <div class="card">
+          <div class="card-head"><span class="card-title">Assign Risk Roles</span><span style="font-size:11px;color:var(--text3);">Tag each risk as Threat (cause) or Consequence (outcome) of the top event</span></div>
+          <div class="card-body" id="bt-role-list"></div>
+        </div>
+      </div>
+
+      <!-- Bowtie diagram -->
+      <div class="card" id="bt-diagram-card">
+        <div class="card-body" style="padding:0;">
+          <div id="bt-diagram" style="width:100%;overflow-x:auto;"></div>
+        </div>
+      </div>
+
+      <!-- Detail panel -->
+      <div id="bt-detail-panel" style="margin-top:14px;display:none;">
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title" id="bt-detail-title">Barrier Details</span>
+            <button class="btn btn-ghost btn-xs" onclick="document.getElementById('bt-detail-panel').style.display='none'">✕</button>
+          </div>
+          <div class="card-body" id="bt-detail-body"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════ EVENT LOG ══════════════ -->
+    <div class="page" id="page-events">
+      <div style="background:rgba(255,63,87,.07);border:1px solid rgba(255,63,87,.18);border-radius:9px;padding:10px 14px;font-size:12px;color:var(--text2);margin-bottom:14px;">
+        ⚡ Events are linked to hazards → risks → controls. Logging an event auto-marks failed controls as <strong>Not Effective</strong>, flags linked risks for review, and updates hazard sources.
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Safety Event Log</span>
+          <button class="btn btn-danger btn-sm" onclick="openAddEvent()">⚡ Log Event</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>Event ID</th><th>Date</th><th>Hazard</th><th>Risk</th><th>Description</th>
+              <th>Controls Failed</th><th>Consequence</th><th>New Risk?</th><th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="ev-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ SETTINGS ══════════════ -->
+    <div class="page" id="page-settings">
+      <!-- TEST BANNER -->
+      <div style="background:rgba(255,63,87,.07);border:1px solid rgba(255,63,87,.22);border-radius:9px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:18px;">🧪</span>
+        <div style="flex:1;"><div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:1px;">Testing Controls</div><div style="font-size:11px;color:var(--text3);">Remove before going live.</div></div>
+        <button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑 Clear All Data</button>
+        <button class="btn btn-ghost btn-sm" onclick="reloadDemo()">↺ Demo Data</button>
+      </div>
+
+      <div class="g2" style="gap:16px;">
+        <div>
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-head"><span class="card-title">🏢 Organisation</span></div>
+            <div class="card-body">
+              <div class="fg"><label class="fl">Organisation Name</label><input class="fi" id="s-org" placeholder="e.g. Gulf Aviation MRO LLC"></div>
+              <div class="fg"><label class="fl">Part 145 Approval #</label><input class="fi" id="s-cert" placeholder="e.g. UAE.145.0001"></div>
+              <div class="fg"><label class="fl">Accountable Manager</label><input class="fi" id="s-accmgr"></div>
+              <div class="fg"><label class="fl">Safety Manager</label><input class="fi" id="s-sfmgr"></div>
+              <div class="fg"><label class="fl">Regulatory Authority</label>
+                <select class="fs" id="s-auth"><option>GCAA (UAE)</option><option>EASA</option><option>GCAA + EASA</option><option>ICAO</option><option>FAA</option></select>
+              </div>
+              <button class="btn btn-primary" onclick="saveOrg()">💾 Save Organisation</button>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-head">
+              <span class="card-title">☁ GitHub Cloud Sync</span>
+              <span id="gh-settings-badge" style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);"></span>
+            </div>
+            <div class="card-body">
+              <div style="background:rgba(0,112,204,.05);border:1px solid rgba(0,112,204,.15);border-radius:8px;padding:10px 13px;font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6;">
+                Store your SMS data in a <strong style="color:var(--accent);">private GitHub repository</strong> — free, secure, accessible from any device.
+                Data auto-saves to GitHub after every change and loads from it on startup.
+                &nbsp;<a href="#" onclick="showGhSetupGuide();return false;" style="color:var(--accent);">📖 Step-by-step setup guide</a>
+              </div>
+              <div class="fg"><label class="fl">GitHub Username / Org</label>
+                <input class="fi" id="gh-owner" placeholder="e.g. rugene-smith"></div>
+              <div class="fg"><label class="fl">Repository Name <span style="color:var(--text3);font-weight:400;">(must be Private)</span></label>
+                <input class="fi" id="gh-repo" placeholder="e.g. ejme-sms-data"></div>
+              <div class="fg"><label class="fl">Data File Path</label>
+                <input class="fi" id="gh-filepath" placeholder="data/aerosafe_data.json"></div>
+              <div class="fg"><label class="fl">Personal Access Token <span style="color:var(--red);">*</span></label>
+                <input type="password" class="fi" id="gh-token" placeholder="ghp_xxxxxxxxxxxx — stored only in this browser">
+                <div style="font-size:10px;color:var(--text3);margin-top:3px;">
+                  Needs <code style="background:var(--bg3);padding:1px 4px;border-radius:3px;">repo</code> scope only.
+                  <a href="https://github.com/settings/tokens/new?scopes=repo&description=AeroSafe+SMS" target="_blank" style="color:var(--accent);">Generate on GitHub ↗</a>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn btn-primary" onclick="saveGhConfig()">☁ Connect & Test</button>
+                <button class="btn btn-ghost" onclick="testGhConnection()">🔌 Test Connection</button>
+                <button class="btn btn-ghost" onclick="forcePushToGitHub()">⬆ Push Now</button>
+                <button class="btn btn-danger btn-sm" onclick="disconnectGitHub()">Disconnect</button>
+              </div>
+              <div id="gh-test-result" style="margin-top:8px;font-size:11px;"></div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-head"><span class="card-title">🗄 Data Management</span></div>
+            <div class="card-body">
+              <div id="s-bkp-status" style="font-size:12px;color:var(--text3);margin-bottom:10px;"></div>
+              <div style="display:flex;flex-direction:column;gap:7px;">
+                <button class="btn btn-primary" onclick="backupNow()" style="justify-content:center;">⬇ Download Backup</button>
+                <button class="btn btn-ghost" onclick="importData()" style="justify-content:center;">⬆ Restore from File</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- DEPARTMENTS -->
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-head"><span class="card-title">Departments</span><button class="btn btn-ghost btn-xs" onclick="addListItem('s-departments')">+ Add</button></div>
+            <div class="card-body"><div id="s-departments"></div></div>
+          </div>
+          <!-- LOCATIONS -->
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-head"><span class="card-title">Locations</span><button class="btn btn-ghost btn-xs" onclick="addListItem('s-locations')">+ Add</button></div>
+            <div class="card-body"><div id="s-locations"></div></div>
+          </div>
+        </div>
+
+        <div>
+          <!-- SOURCES -->
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-head"><span class="card-title">Hazard Sources</span><button class="btn btn-ghost btn-xs" onclick="addListItem('s-sources')">+ Add</button></div>
+            <div class="card-body"><div id="s-sources"></div></div>
+          </div>
+          <!-- CONTROL TYPES -->
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-head"><span class="card-title">Control Types</span><button class="btn btn-ghost btn-xs" onclick="addListItem('s-ctrlTypes')">+ Add</button></div>
+            <div class="card-body"><div id="s-ctrlTypes"></div></div>
+          </div>
+          <!-- EFFECTIVENESS VALUES -->
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-head"><span class="card-title">Effectiveness Values</span><button class="btn btn-ghost btn-xs" onclick="addListItem('s-effValues')">+ Add</button></div>
+            <div class="card-body"><div id="s-effValues"></div></div>
+          </div>
+          <!-- MONITORING METHODS -->
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-head"><span class="card-title">Monitoring Methods</span><button class="btn btn-ghost btn-xs" onclick="addListItem('s-monMethods')">+ Add</button></div>
+            <div class="card-body"><div id="s-monMethods"></div></div>
+          </div>
+          <!-- FREQUENCIES -->
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-head"><span class="card-title">Verification Frequencies</span><button class="btn btn-ghost btn-xs" onclick="addListItem('s-freqs')">+ Add</button></div>
+            <div class="card-body"><div id="s-freqs"></div></div>
+          </div>
+          <!-- RESPONSIBLE PERSONS (Hazard/Risk level) -->
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-head"><span class="card-title">Responsible Persons (Hazard & Risk)</span><button class="btn btn-ghost btn-xs" onclick="addListItem('s-respPersons')">+ Add</button></div>
+            <div class="card-body"><div id="s-respPersons"></div></div>
+          </div>
+          <!-- RESPONSIBLE PERSONS (Control executor level) -->
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-head"><span class="card-title">Responsible Persons (Control Executor)</span><button class="btn btn-ghost btn-xs" onclick="addListItem('s-respExec')">+ Add</button></div>
+            <div class="card-body"><div id="s-respExec"></div></div>
+          </div>
+          <!-- EFFECTIVENESS VALIDATED BY -->
+          <div class="card">
+            <div class="card-head"><span class="card-title">Effectiveness Validated By</span><button class="btn btn-ghost btn-xs" onclick="addListItem('s-validBy')">+ Add</button></div>
+            <div class="card-body"><div id="s-validBy"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ══════════ MODALS ══════════ -->
+
+<!-- ADD / EDIT HAZARD -->
+<div class="modal-overlay" id="m-hazard">
+  <div class="modal modal-lg">
+    <div class="modal-head"><div class="modal-title" id="m-hazard-title">⚠ Register Hazard</div><button class="modal-x" onclick="closeM('m-hazard')">✕</button></div>
+    <div class="modal-body">
+      <div class="g2">
+        <div class="fg"><label class="fl">Hazard ID</label><input class="fi" id="h-id" readonly></div>
+        <div class="fg"><label class="fl">Date Identified</label><input type="date" class="fi" id="h-date"></div>
+      </div>
+      <div class="fg"><label class="fl">Hazard Description</label><textarea class="fta" id="h-desc" style="min-height:60px;"></textarea></div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Department</label><select class="fs" id="h-dept"></select></div>
+        <div class="fg"><label class="fl">Location</label><select class="fs" id="h-loc"></select></div>
+      </div>
+      <div class="fg">
+        <label class="fl">Source(s) <span style="color:var(--text3);font-weight:400;">(comma-separated incident refs or select)</span></label>
+        <input class="fi" id="h-src" placeholder="e.g. INC893, INC1102 or Audit, Inspection…">
+      </div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Hazard Owner</label><select class="fs" id="h-owner"></select></div>
+        <div class="fg"><label class="fl">Status</label><select class="fs" id="h-status"><option>Open</option><option>Monitoring</option><option>Closed</option></select></div>
+      </div>
+      <div class="fg"><label class="fl">Remarks / Monitoring Notes</label><textarea class="fta" id="h-remarks" style="min-height:55px;" placeholder="e.g. Monitor via GSE incidents and safety inspections"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-hazard')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveHazard()">💾 Save Hazard</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT RISK -->
+<div class="modal-overlay" id="m-risk">
+  <div class="modal modal-xl">
+    <div class="modal-head"><div class="modal-title" id="m-risk-title">◈ Risk Assessment</div><button class="modal-x" onclick="closeM('m-risk')">✕</button></div>
+    <div class="modal-body">
+      <div class="g2">
+        <div class="fg"><label class="fl">Risk ID</label><input class="fi" id="r-id" readonly></div>
+        <div class="fg"><label class="fl">Linked Hazard</label><select class="fs" id="r-hz"></select></div>
+      </div>
+      <div class="fg"><label class="fl">Risk Description</label><textarea class="fta" id="r-desc" style="min-height:55px;" placeholder="What could go wrong?"></textarea></div>
+
+      <div class="sep"></div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">INITIAL RISK RATING</div>
+      <div class="g2">
+        <div>
+          <label class="fl">Probability (Initial) 1–5</label>
+          <div style="display:flex;gap:6px;margin-top:5px;" id="r-prob-btns">
+            <button class="btn btn-ghost" onclick="setRP(1)">1</button><button class="btn btn-ghost" onclick="setRP(2)">2</button>
+            <button class="btn btn-ghost" onclick="setRP(3)">3</button><button class="btn btn-ghost" onclick="setRP(4)">4</button>
+            <button class="btn btn-ghost" onclick="setRP(5)">5</button>
+          </div>
+        </div>
+        <div>
+          <label class="fl">Severity (Initial) 1–5</label>
+          <div style="display:flex;gap:6px;margin-top:5px;" id="r-sev-btns">
+            <button class="btn btn-ghost" onclick="setRS(1)">1</button><button class="btn btn-ghost" onclick="setRS(2)">2</button>
+            <button class="btn btn-ghost" onclick="setRS(3)">3</button><button class="btn btn-ghost" onclick="setRS(4)">4</button>
+            <button class="btn btn-ghost" onclick="setRS(5)">5</button>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--bg3);border-radius:7px;padding:10px;margin:12px 0;text-align:center;">
+        <div style="font-size:9.5px;color:var(--text3);margin-bottom:3px;letter-spacing:.8px;text-transform:uppercase;">Initial Risk Score</div>
+        <div id="r-init-score" style="font-family:'Rajdhani',sans-serif;font-size:34px;font-weight:700;">—</div>
+        <div id="r-init-level" style="font-size:12px;margin-top:1px;">Select probability & severity</div>
+      </div>
+
+      <div class="sep"></div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">EXISTING CONTROLS</div>
+      <div class="fg">
+        <label class="fl">Link controls from register</label>
+        <select class="fs" id="r-ctrl-sel" onchange="addRiskCtrl()"><option value="">-- Select control to link --</option></select>
+        <div id="r-ctrl-list" style="margin-top:7px;"></div>
+      </div>
+      <div class="fg">
+        <label class="fl">Existing Controls <span style="color:var(--text3);font-weight:400;">(legacy / pre-existing — add to register)</span></label>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Type a description and click Add — each one is immediately created as a CTRL-xxx entry in the Control Register.</div>
+        <div style="display:flex;gap:7px;align-items:flex-end;">
+          <input class="fi" id="r-existing-txt" placeholder="e.g. AMM compliance, basic supervision" onkeydown="if(event.key==='Enter'){event.preventDefault();addExistingControl();}" style="flex:1;">
+          <button class="btn btn-ghost" onclick="addExistingControl()" style="white-space:nowrap;border-color:var(--accent);color:var(--accent);">+ Add to Register</button>
+        </div>
+        <div id="r-existing-list" style="margin-top:8px;"></div>
+      </div>
+
+      <div class="sep"></div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--text3);margin-bottom:4px;">ADDITIONAL CONTROLS</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Each control added here is immediately registered in the Control Register as a CTRL-xxx entry linked to this risk. In subsequent revisions they appear as existing controls.</div>
+      <div class="fg">
+        <div style="display:flex;gap:7px;align-items:flex-end;">
+          <div style="flex:1;">
+            <label class="fl">Control Description</label>
+            <input class="fi" id="r-addl-input" placeholder="e.g. Introduce marshaller requirement during aircraft approach" onkeydown="if(event.key==='Enter'){event.preventDefault();addAdditionalControl();}">
+          </div>
+          <button class="btn btn-primary" onclick="addAdditionalControl()" style="white-space:nowrap;flex-shrink:0;">+ Add to Register</button>
+        </div>
+        <div id="r-addl-list" style="margin-top:8px;"></div>
+      </div>
+
+      <div class="sep"></div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">RESIDUAL RISK RATING</div>
+      <div class="g2">
+        <div>
+          <label class="fl">Residual Probability 1–5</label>
+          <div style="display:flex;gap:6px;margin-top:5px;" id="r-resprob-btns">
+            <button class="btn btn-ghost" onclick="setRRP(1)">1</button><button class="btn btn-ghost" onclick="setRRP(2)">2</button>
+            <button class="btn btn-ghost" onclick="setRRP(3)">3</button><button class="btn btn-ghost" onclick="setRRP(4)">4</button>
+            <button class="btn btn-ghost" onclick="setRRP(5)">5</button>
+          </div>
+        </div>
+        <div>
+          <label class="fl">Residual Severity 1–5</label>
+          <div style="display:flex;gap:6px;margin-top:5px;" id="r-ressev-btns">
+            <button class="btn btn-ghost" onclick="setRRS(1)">1</button><button class="btn btn-ghost" onclick="setRRS(2)">2</button>
+            <button class="btn btn-ghost" onclick="setRRS(3)">3</button><button class="btn btn-ghost" onclick="setRRS(4)">4</button>
+            <button class="btn btn-ghost" onclick="setRRS(5)">5</button>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--bg3);border-radius:7px;padding:10px;margin:12px 0;text-align:center;">
+        <div style="font-size:9.5px;color:var(--text3);margin-bottom:3px;letter-spacing:.8px;text-transform:uppercase;">Residual Risk Score</div>
+        <div id="r-res-score" style="font-family:'Rajdhani',sans-serif;font-size:34px;font-weight:700;">—</div>
+        <div id="r-res-level" style="font-size:12px;margin-top:1px;">Select residual probability & severity</div>
+      </div>
+
+      <div class="sep"></div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Risk Owner</label><select class="fs" id="r-owner"></select></div>
+        <div class="fg"><label class="fl">Target Date</label><input type="date" class="fi" id="r-target"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-risk')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRisk()">💾 Save Risk</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT CONTROL -->
+<div class="modal-overlay" id="m-ctrl">
+  <div class="modal modal-lg">
+    <div class="modal-head"><div class="modal-title" id="m-ctrl-title">◼ Add Control</div><button class="modal-x" onclick="closeM('m-ctrl')">✕</button></div>
+    <div class="modal-body">
+      <div class="g2">
+        <div class="fg"><label class="fl">Control ID</label><input class="fi" id="c-id" readonly></div>
+        <div class="fg"><label class="fl">Linked Risk</label><select class="fs" id="c-risk"></select></div>
+      </div>
+      <div class="fg"><label class="fl">Control Description</label><textarea class="fta" id="c-desc" style="min-height:60px;"></textarea></div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Control Type</label><select class="fs" id="c-type"></select></div>
+        <div class="fg"><label class="fl">Monitoring Method</label><select class="fs" id="c-mon"></select></div>
+      </div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Frequency</label><select class="fs" id="c-freq"></select></div>
+        <div class="fg"><label class="fl">Responsible Person</label><select class="fs" id="c-resp"></select></div>
+      </div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Effectiveness Verified By</label><select class="fs" id="c-verby"></select></div>
+        <div class="fg"><label class="fl">Last Checked</label><input type="date" class="fi" id="c-lastchk"></div>
+      </div>
+      <div class="g2">
+        <div class="fg">
+          <label class="fl">Effectiveness Status</label>
+          <select class="fs" id="c-eff">
+            <option>Effective</option><option>Partially Effective</option><option>Not Effective</option><option>Not Checked</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Present?</label>
+          <select class="fs" id="c-present"><option value="present">Present</option><option value="absent">Absent</option></select>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Remarks (Mandatory notes)</label><textarea class="fta" id="c-remarks" style="min-height:55px;" placeholder="e.g. To be verified during ramp inspection"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-ctrl')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveControl()">💾 Save Control</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIGN OFF -->
+<div class="modal-overlay" id="m-signoff">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-head"><div class="modal-title">✅ Manager Sign-Off</div><button class="modal-x" onclick="closeM('m-signoff')">✕</button></div>
+    <div class="modal-body">
+      <div class="fg"><label class="fl">Manager Name</label><input class="fi" id="so-name"></div>
+      <div class="fg"><label class="fl">Role / Title</label><input class="fi" id="so-role"></div>
+      <div class="fg"><label class="fl">Date</label><input type="date" class="fi" id="so-date"></div>
+      <div style="background:var(--bg3);border-radius:7px;padding:10px;font-size:11px;color:var(--text3);">
+        By signing off you confirm you have reviewed this risk assessment in accordance with ICAO Annex 19, GCAA CAR-OPS, and EASA Part-145 requirements.
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-signoff')">Cancel</button>
+      <button class="btn btn-success" onclick="confirmSignOff()">✅ Confirm Sign-Off</button>
+    </div>
+  </div>
+</div>
+
+<!-- VERIFY CONTROL -->
+<div class="modal-overlay" id="m-verify-ctrl">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <div class="modal-title">✓ Record Verification — <span id="vc-id" style="color:var(--green);font-family:'JetBrains Mono',monospace;"></span></div>
+      <button class="modal-x" onclick="closeM('m-verify-ctrl')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+        <div class="g2" style="gap:12px;">
+          <div>
+            <div style="font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:3px;">Control Description</div>
+            <div style="font-size:12px;color:var(--text);line-height:1.4;" id="vc-desc"></div>
+          </div>
+          <div>
+            <div style="font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:2px;">Type</div>
+            <div style="font-size:11px;color:var(--text2);margin-bottom:8px;" id="vc-type"></div>
+            <div style="font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:2px;">Monitoring Method</div>
+            <div style="font-size:11px;color:var(--text2);" id="vc-mon"></div>
+          </div>
+        </div>
+        <div class="sep" style="margin:10px 0;"></div>
+        <div class="g2" style="gap:12px;">
+          <div>
+            <div style="font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:2px;">Linked Risk</div>
+            <div style="font-size:11px;color:var(--text2);" id="vc-risk"></div>
+          </div>
+          <div>
+            <div style="font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:2px;">Linked Hazard</div>
+            <div style="font-size:11px;color:var(--text2);" id="vc-hazard"></div>
+          </div>
+        </div>
+        <div class="g2" style="gap:12px;margin-top:8px;">
+          <div>
+            <div style="font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:2px;">Required Frequency</div>
+            <div style="font-size:11px;color:var(--text2);" id="vc-freq"></div>
+          </div>
+          <div>
+            <div style="font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:2px;">Previous Check</div>
+            <span style="font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace;" id="vc-prev-date"></span>
+            &nbsp;<span id="vc-prev-eff" style="font-size:10px;"></span>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">▼ Verification Record</div>
+
+      <div class="g2">
+        <div class="fg">
+          <label class="fl">Verification Date <span style="color:var(--red);">*</span></label>
+          <input type="date" class="fi" id="vc-date">
+        </div>
+        <div class="fg">
+          <label class="fl">Verified By <span style="color:var(--red);">*</span></label>
+          <select class="fs" id="vc-verby"></select>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="fg">
+          <label class="fl">Control Present? <span style="color:var(--red);">*</span></label>
+          <select class="fs" id="vc-present">
+            <option value="present">Present — control is in place</option>
+            <option value="absent">Absent — control is missing or removed</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Effectiveness <span style="color:var(--red);">*</span></label>
+          <select class="fs" id="vc-eff">
+            <option value="Effective">Effective — fully achieving intended outcome</option>
+            <option value="Partially Effective">Partially Effective — gaps identified</option>
+            <option value="Not Effective">Not Effective — failing to mitigate risk</option>
+            <option value="Not Checked">Not Checked</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Verification Remarks <span style="color:var(--red);">*</span></label>
+        <textarea class="fta" id="vc-remarks" style="min-height:100px;"
+          placeholder="Describe what was checked and how. Include method used, observations, any findings or non-conformances, and recommendations.&#10;&#10;e.g. 'Conducted spot check during ramp operations 03 Apr 2026. All GSE operators observed wearing correct PPE. One vehicle noted without functioning alarm — raised as finding REF-2026-041. Overall compliance estimated 95%.'"></textarea>
+      </div>
+      <div style="background:rgba(0,112,204,.05);border:1px solid rgba(0,112,204,.15);border-radius:8px;padding:10px 13px;font-size:11px;color:var(--text3);">
+        Setting <strong>Not Effective</strong> or <strong>Absent</strong> will automatically flag all linked risks for review. All verification records are stored as an auditable history per ICAO Annex 19 and GCAA requirements.
+      </div>
+      <input type="hidden" id="vc-ctrl-id">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-verify-ctrl')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveVerification()">✓ Save Verification Record</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW DETAIL (generic) -->
+<div class="modal-overlay" id="m-detail">
+  <div class="modal modal-xl">
+    <div class="modal-head"><div class="modal-title" id="m-detail-title">Detail</div><button class="modal-x" onclick="closeM('m-detail')">✕</button></div>
+    <div class="modal-body" id="m-detail-body"></div>
+  </div>
+</div>
+
+<!-- ADD EVENT -->
+<div class="modal-overlay" id="m-event">
+  <div class="modal modal-xl">
+    <div class="modal-head"><div class="modal-title">⚡ Log Safety Event</div><button class="modal-x" onclick="closeM('m-event')">✕</button></div>
+    <div class="modal-body">
+      <div class="g2">
+        <div class="fg"><label class="fl">Event ID</label><input class="fi" id="ev-id" readonly></div>
+        <div class="fg"><label class="fl">Event Date</label><input type="date" class="fi" id="ev-date"></div>
+      </div>
+      <div class="fg"><label class="fl">Event Description</label><textarea class="fta" id="ev-desc" style="min-height:60px;" placeholder="Describe what occurred…"></textarea></div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Consequence</label>
+          <select class="fs" id="ev-conseq"><option>Near Miss</option><option>Minor Incident</option><option>Significant Incident</option><option>Serious Incident</option><option>Accident</option></select>
+        </div>
+        <div class="fg"><label class="fl">New Source to Add to Hazard</label><input class="fi" id="ev-newsrc" placeholder="e.g. OCC-2026-031"></div>
+      </div>
+      <div class="sep"></div>
+      <div class="fg"><label class="fl">Step 1 — Select Linked Hazard</label>
+        <select class="fs" id="ev-hz" onchange="onEvHzChange()"><option value="">-- Select Hazard --</option></select>
+      </div>
+      <div id="ev-cascade" style="display:none;">
+        <div class="sep"></div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">Step 2 — Controls That Failed</div>
+        <div style="font-size:11px;color:var(--text2);background:rgba(204,34,54,.05);border:1px solid rgba(204,34,54,.18);border-radius:6px;padding:8px 11px;margin-bottom:10px;">
+          Tick any controls that failed. They will be automatically marked <strong style="color:var(--red);">Not Effective</strong> and all linked risks flagged for review.
+        </div>
+        <div id="ev-ctrl-list"></div>
+        <div class="sep"></div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;">Step 3 — Link to Specific Risk</div>
+        <select class="fs" id="ev-risk"><option value="">-- None / Unknown --</option></select>
+        <div class="sep"></div>
+        <div style="background:rgba(107,63,212,.05);border:1px solid rgba(107,63,212,.2);border-radius:8px;padding:11px;">
+          <div style="font-size:11px;font-weight:700;color:var(--purple);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;">◈ Previously Unknown Risk?</div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:7px;">Describe a new risk this event has revealed. It will be flagged for formal assessment.</div>
+          <input class="fi" id="ev-newrisk" placeholder="e.g. Ground crew proximity to engine during unscheduled run-up">
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-event')">Cancel</button>
+      <button class="btn btn-danger" onclick="saveEvent()">⚡ Log Event & Trigger Review</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+const ST = {
+  org:{ name:'My Organisation', cert:'UAE.145.XXXX', accMgr:'', sfMgr:'', auth:'GCAA (UAE)' },
+  lists:{
+    departments:['Line Maintenance','Base Maintenance','Workshops (NDT)','Workshops (Wheel)','Workshops (Battery)','Technical Services','Quality','Safety','Supply Chain / Stores','Planning','Facilities / HSE'],
+    locations:['Hangar','Ramp / Apron','Workshop','Stores','Office','External Site'],
+    sources:['Audit','Occurrence','SAG','SRB','Inspection','Employee Report','Regulatory Finding','OEM Bulletin','Risk Assessment'],
+    ctrlTypes:['Preventive','Detective','Mitigating','Corrective'],
+    effValues:['Effective','Partially Effective','Not Effective','Not Checked'],
+    monMethods:['Audit','Inspection / Spot Check','Occurrence / Investigation','SPI Monitoring','SAG Review','Training / Competency','Supplier audit','RA review','Records check','Supervisor check','Spot checks','Training records review','Line checks / supervisor verification','Random observation'],
+    freqs:['Daily','Per Task / Each Use','Weekly','Monthly','Quarterly','Half-Yearly','Annually','As Required','Per activity','Each event','Per project','Routine','6 Monthly'],
+    respPersons:['Safety Manager','Quality Manager','Maintenance Manager','Technical Services Manager','Planning Manager','Workshop Manager','Training Manager','Supply Chain Manager','Facilities Manager','IT Manager','GM Maintenance'],
+    respExec:['Supervisor','Certifying Staff','Technician','Engineer','Planner','Storekeeper','NDT Inspector','Wheel Shop Technician','Battery Shop Technician','IT Administrator'],
+    validBy:['Safety Dept','Quality Audit','SAG','Management']
+  },
+  hazards:[], risks:[], controls:[], events:[],
+  bowtieRoles:{},
+  _hzN:1, _rkN:1, _ctN:1, _evN:1
+};
+
+// temp form state
+let rProb=0, rSev=0, rResProb=0, rResSev=0;
+let rLinkedCtrls=[], rAddlCtrls=[];
+let soRiskId=null;
+let editHzId=null, editRkId=null, editCtId=null, editEvId=null;
+
+// ═══════════════════════════════════════════════════
+//  RISK HELPERS
+// ═══════════════════════════════════════════════════
+const rScore=(p,s)=>p*s;
+function rLevel(sc){ if(sc<=4)return'LOW'; if(sc<=9)return'MEDIUM'; if(sc<=14)return'HIGH'; return'CRITICAL'; }
+function rClass(lv){ return{LOW:'rb-low',MEDIUM:'rb-med',HIGH:'rb-high',CRITICAL:'rb-crit'}[lv]||''; }
+function rColor(sc){ if(sc<=4)return'var(--green)'; if(sc<=9)return'var(--yellow)'; if(sc<=14)return'var(--orange)'; return'var(--red)'; }
+function mClass(p,s){ const sc=p*s; if(sc<=4)return'r1'; if(sc<=9)return'r2'; if(sc<=14)return'r4'; return'r5'; }
+
+// ═══════════════════════════════════════════════════
+//  HAZARD STATUS AUTO-LOGIC
+//  If all linked controls: present+effective → Closed
+//  Any present+not-effective OR partially effective → Monitoring
+//  Any absent → Open
+//  No controls → Open
+// ═══════════════════════════════════════════════════
+function calcHazardStatus(hzId){
+  const linkedRisks = ST.risks.filter(r=>r.hzId===hzId);
+  if(!linkedRisks.length) return 'Open';
+  const ctrlIds = [...new Set(linkedRisks.flatMap(r=>r.ctrlIds))];
+  if(!ctrlIds.length) return 'Open';
+  const ctrls = ctrlIds.map(id=>ST.controls.find(c=>c.id===id)).filter(Boolean);
+  if(!ctrls.length) return 'Open';
+  const hasAbsent = ctrls.some(c=>c.present==='absent');
+  if(hasAbsent) return 'Open';
+  const hasNotEff = ctrls.some(c=>c.eff==='Not Effective');
+  const hasPart = ctrls.some(c=>c.eff==='Partially Effective');
+  const hasNotChk = ctrls.some(c=>c.eff==='Not Checked');
+  if(hasNotEff) return 'Open';
+  if(hasPart||hasNotChk) return 'Monitoring';
+  const allEff = ctrls.every(c=>c.eff==='Effective' && c.present==='present');
+  return allEff ? 'Closed' : 'Monitoring';
+}
+
+// Same logic for Risk status based on its controls
+function calcRiskStatus(rkId){
+  const rk = ST.risks.find(r=>r.id===rkId);
+  if(!rk) return 'Open';
+  if(rk.flaggedNew) return 'Review';
+  if(!rk.ctrlIds.length) return 'Open';
+  const ctrls = rk.ctrlIds.map(id=>ST.controls.find(c=>c.id===id)).filter(Boolean);
+  if(!ctrls.length) return 'Open';
+  if(ctrls.some(c=>c.present==='absent'||c.eff==='Not Effective')) return 'Open';
+  if(ctrls.some(c=>c.eff==='Partially Effective'||c.eff==='Not Checked')) return 'Monitoring';
+  return ctrls.every(c=>c.eff==='Effective'&&c.present==='present') ? 'Closed' : 'Monitoring';
+}
+
+// ═══════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════
+function nav(el){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  const pg=el.dataset.page;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+pg).classList.add('active');
+  document.getElementById('pg-title').textContent=el.textContent.trim();
+  renderTopbar(pg);
+  if(pg==='dashboard') renderDashboard();
+  if(pg==='hazards')   renderHazards();
+  if(pg==='risks')     renderRisks();
+  if(pg==='controls')  renderControls();
+  if(pg==='bowtie')    renderBowtie();
+  if(pg==='events')    renderEvents();
+  if(pg==='settings')  renderSettings();
+}
+
+// Navigate to a page and optionally apply filters
+// filters: { status, eff, dept, level, hz } 
+function navTo(page, filters={}){
+  const navEl=document.querySelector(`.nav-item[data-page="${page}"]`);
+  if(navEl) nav(navEl);
+  // Apply filters after render
+  setTimeout(()=>{
+    if(filters.status){
+      const el=document.getElementById('rk-f-status')||document.getElementById('hz-f-status');
+      if(el){ el.value=filters.status; }
+    }
+    if(filters.eff){
+      const el=document.getElementById('ct-f-eff');
+      if(el){ el.value=filters.eff; renderControls(); }
+    }
+    if(filters.dept){
+      const el=document.getElementById('hz-f-dept');
+      if(el){ el.value=filters.dept; renderHazards(); }
+    }
+    if(filters.status && page==='risks'){ renderRisks(); }
+    if(filters.status && page==='hazards'){ renderHazards(); }
+  },50);
+}
+function renderTopbar(pg){
+  const tb=document.getElementById('topbar-right');
+  const m={
+    'dashboard':`<button class="btn btn-primary btn-sm" onclick="backupNow()">⬇ Backup</button><button class="btn btn-ghost btn-sm" onclick="importData()">⬆ Restore</button>`,
+    'hazards':`<button class="btn btn-primary" onclick="openAddHazard()">+ New Hazard</button>`,
+    'risks':`<button class="btn btn-primary" onclick="openAddRisk()">+ New Risk</button>`,
+    'controls':`<button class="btn btn-primary" onclick="openAddCtrl()">+ New Control</button>`,
+    'events':`<button class="btn btn-danger" onclick="openAddEvent()">⚡ Log Event</button>`
+  };
+  tb.innerHTML=m[pg]||'';
+}
+
+// ═══════════════════════════════════════════════════
+//  MODAL HELPERS
+// ═══════════════════════════════════════════════════
+function openM(id){ document.getElementById(id).classList.add('open'); }
+function closeM(id){ document.getElementById(id).classList.remove('open'); }
+
+// ═══════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════
+function toast(msg,type='info'){
+  const icons={info:'ℹ',success:'✅',warning:'⚠',error:'❌'};
+  const t=document.createElement('div'); t.className='toast';
+  t.innerHTML=`<span>${icons[type]}</span><span>${msg}</span>`;
+  document.getElementById('toast-wrap').appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+// ═══════════════════════════════════════════════════
+//  POPULATE SELECT HELPERS
+// ═══════════════════════════════════════════════════
+function fillSel(id,arr,blank=''){
+  const el=document.getElementById(id); if(!el)return;
+  el.innerHTML=(blank?`<option value="">${blank}</option>`:'')+arr.map(v=>`<option>${v}</option>`).join('');
+}
+function fillSelKV(id,items,blank=''){
+  const el=document.getElementById(id); if(!el)return;
+  el.innerHTML=(blank?`<option value="">${blank}</option>`:'')+items.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  HAZARDS
+// ═══════════════════════════════════════════════════
+function openAddHazard(id=null){
+  editHzId=id;
+  const isEdit=!!id;
+  document.getElementById('m-hazard-title').textContent=isEdit?'⚠ Edit Hazard':'⚠ Register Hazard';
+  fillSel('h-dept', ST.lists.departments, '-- Select --');
+  fillSel('h-loc', ST.lists.locations, '-- Select --');
+  fillSel('h-owner', ST.lists.respPersons, '-- Select --');
+
+  if(isEdit){
+    const h=ST.hazards.find(x=>x.id===id);
+    if(!h)return;
+    document.getElementById('h-id').value=h.id;
+    document.getElementById('h-date').value=h.date;
+    document.getElementById('h-desc').value=h.desc;
+    document.getElementById('h-dept').value=h.dept;
+    document.getElementById('h-loc').value=h.loc;
+    document.getElementById('h-src').value=(h.sources||[]).join(', ');
+    document.getElementById('h-owner').value=h.owner;
+    document.getElementById('h-status').value=h.manualStatus||'Open';
+    document.getElementById('h-remarks').value=h.remarks||'';
+  } else {
+    document.getElementById('h-id').value='HAZ-'+String(ST._hzN).padStart(3,'0');
+    document.getElementById('h-date').value=new Date().toISOString().split('T')[0];
+    document.getElementById('h-desc').value='';
+    document.getElementById('h-src').value='';
+    document.getElementById('h-owner').value='';
+    document.getElementById('h-remarks').value='';
+  }
+  openM('m-hazard');
+}
+
+function saveHazard(){
+  const desc=document.getElementById('h-desc').value.trim();
+  if(!desc){toast('Please enter a hazard description','error');return;}
+  const srcRaw=document.getElementById('h-src').value.trim();
+  const sources=srcRaw?srcRaw.split(',').map(s=>s.trim()).filter(Boolean):[];
+  const hz={
+    id: document.getElementById('h-id').value,
+    date: document.getElementById('h-date').value,
+    desc, sources,
+    dept: document.getElementById('h-dept').value,
+    loc: document.getElementById('h-loc').value,
+    owner: document.getElementById('h-owner').value,
+    manualStatus: document.getElementById('h-status').value,
+    remarks: document.getElementById('h-remarks').value.trim()
+  };
+  if(editHzId){
+    const i=ST.hazards.findIndex(x=>x.id===editHzId);
+    if(i>=0) ST.hazards[i]={...ST.hazards[i],...hz};
+  } else {
+    ST.hazards.push(hz);
+    ST._hzN++;
+  }
+  closeM('m-hazard');
+  autosave(); renderHazards(); updateBadges();
+  toast(editHzId?`Hazard ${hz.id} updated`:`Hazard ${hz.id} registered`,'success');
+}
+
+function renderHazards(){
+  const srch=(document.getElementById('hz-srch')?.value||'').toLowerCase();
+  const fDept=document.getElementById('hz-f-dept')?.value||'';
+  const fSt=document.getElementById('hz-f-status')?.value||'';
+
+  // Refresh dept filter
+  const df=document.getElementById('hz-f-dept');
+  if(df){ const cv=df.value; df.innerHTML='<option value="">All Departments</option>'+ST.lists.departments.map(d=>`<option ${d===cv?'selected':''}>${d}</option>`).join('');}
+
+  const rows=ST.hazards.filter(h=>{
+    const status=calcHazardStatus(h.id);
+    return(!srch||h.id.toLowerCase().includes(srch)||h.desc.toLowerCase().includes(srch))
+      &&(!fDept||h.dept===fDept)
+      &&(!fSt||status===fSt);
+  });
+
+  document.getElementById('hz-count-lbl').textContent=`(${ST.hazards.length} total)`;
+
+  document.getElementById('hz-tbody').innerHTML=rows.length
+    ?rows.map(h=>{
+      const status=calcHazardStatus(h.id);
+      const stCls={'Open':'sb-open','Monitoring':'sb-monitoring','Closed':'sb-closed'}[status]||'sb-open';
+      const linked=ST.risks.filter(r=>r.hzId===h.id).length;
+      return `<tr>
+        <td style="white-space:nowrap;"><span class="id-chip" style="white-space:nowrap;">${h.id}</span></td>
+        <td style="overflow:hidden;text-overflow:ellipsis;color:var(--text);" title="${h.desc}">${h.desc}</td>
+        <td style="font-size:10.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(h.sources||[]).join(', ')}">${(h.sources||[]).join(', ')}</td>
+        <td style="overflow:hidden;"><span class="dept-pill" style="white-space:nowrap;">${h.dept||'—'}</span></td>
+        <td style="font-size:11px;white-space:nowrap;">${h.loc||'—'}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:10.5px;white-space:nowrap;">${h.date}</td>
+        <td style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${h.owner||''}">${h.owner||'—'}</td>
+        <td style="white-space:nowrap;"><span class="sbadge ${stCls}">${status}</span></td>
+        <td style="font-size:10.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;" title="${h.remarks||''}">${h.remarks||'—'}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-ghost btn-xs" onclick="openAddHazard('${h.id}')">Edit</button>
+          <button class="btn btn-ghost btn-xs" onclick="viewHazardDetail('${h.id}')">Risks(${linked})</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteHazard('${h.id}')">✕</button>
+        </td>
+      </tr>`;
+    }).join('')
+    :`<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:28px;">No hazards found</td></tr>`;
+}
+
+function deleteHazard(id){
+  if(!confirm(`Delete ${id}? This removes all linked risks and controls.`)) return;
+  ST.hazards=ST.hazards.filter(h=>h.id!==id);
+  const rkIds=ST.risks.filter(r=>r.hzId===id).map(r=>r.id);
+  ST.risks=ST.risks.filter(r=>r.hzId!==id);
+  ST.controls=ST.controls.filter(c=>!rkIds.includes(c.rkId));
+  autosave(); renderHazards(); updateBadges();
+  toast(`${id} deleted`,'warning');
+}
+
+function viewHazardDetail(id){
+  const h=ST.hazards.find(x=>x.id===id)||{};
+  const risks=ST.risks.filter(r=>r.hzId===id);
+  document.getElementById('m-detail-title').textContent=`${id} — Linked Risks`;
+  document.getElementById('m-detail-body').innerHTML=`
+    <div style="margin-bottom:14px;">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.7px;">Hazard Description</div>
+      <div style="font-size:13px;color:var(--text);margin-bottom:12px;">${h.desc}</div>
+      <button class="btn btn-primary btn-sm" onclick="closeM('m-detail');openAddRisk(null,'${id}')">+ New Risk Assessment for ${id}</button>
+    </div>
+    <div class="sep"></div>
+    ${risks.length?risks.map(r=>`
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:11px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span class="id-chip risk">${r.id}</span>
+          <span style="flex:1;font-size:12px;color:var(--text);">${r.desc}</span>
+          <span class="rbadge ${rClass(rLevel(rScore(r.prob,r.sev)))}">${rScore(r.prob,r.sev)} ${rLevel(rScore(r.prob,r.sev))}</span>
+          ${r.signedOff?`<span style="color:var(--green);font-size:10px;">✅ ${r.signedOff.name}</span>`:'<span style="color:var(--text3);font-size:10px;">⬜ Pending</span>'}
+          <button class="btn btn-ghost btn-xs" onclick="closeM('m-detail');openAddRisk('${r.id}')">Edit</button>
+        </div>
+        <div style="font-size:10.5px;color:var(--text3);">
+          Initial: P${r.prob}×S${r.sev}=${rScore(r.prob,r.sev)} &nbsp;|&nbsp; Residual: P${r.resProb}×S${r.resSev}=${rScore(r.resProb,r.resSev)} &nbsp;|&nbsp; Owner: ${r.owner||'—'} &nbsp;|&nbsp; Target: ${r.target||'—'}
+          &nbsp;|&nbsp; Controls: ${r.ctrlIds.length}
+          &nbsp;|&nbsp; <span class="sbadge ${'sb-'+calcRiskStatus(r.id).toLowerCase()}">${calcRiskStatus(r.id)}</span>
+        </div>
+      </div>`).join(''):`
+      <div style="color:var(--text3);text-align:center;padding:24px;font-size:12px;">
+        No risk assessments yet for this hazard.<br>
+        <button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="closeM('m-detail');openAddRisk(null,'${id}')">+ Add First Risk Assessment</button>
+      </div>`}
+  `;
+  openM('m-detail');
+}
+
+// ═══════════════════════════════════════════════════
+//  RISKS
+// ═══════════════════════════════════════════════════
+function openAddRisk(id=null, preHzId=null){
+  editRkId=id;
+  rProb=0; rSev=0; rResProb=0; rResSev=0;
+  rLinkedCtrls=[]; rAddlCtrls=[];
+
+  fillSelKV('r-hz', ST.hazards.map(h=>[h.id,`${h.id}: ${h.desc.substring(0,55)}`]), '-- Select Hazard --');
+  fillSel('r-owner', ST.lists.respPersons, '-- Select --');
+
+  // ctrl selector
+  const cSel=document.getElementById('r-ctrl-sel');
+  cSel.innerHTML='<option value="">-- Select control to link --</option>'+ST.controls.map(c=>`<option value="${c.id}">${c.id}: ${c.desc.substring(0,50)}</option>`).join('');
+
+  document.getElementById('m-risk-title').textContent=id?'◈ Edit Risk':'◈ New Risk Assessment';
+
+  if(id){
+    const r=ST.risks.find(x=>x.id===id); if(!r) return;
+    document.getElementById('r-id').value=r.id;
+    document.getElementById('r-hz').value=r.hzId;
+    document.getElementById('r-desc').value=r.desc;
+    document.getElementById('r-existing-txt').value='';
+    const exList2=document.getElementById('r-existing-list'); if(exList2) exList2.innerHTML='';
+    document.getElementById('r-owner').value=r.owner||'';
+    document.getElementById('r-target').value=r.target||'';
+    rLinkedCtrls=[...r.ctrlIds];
+    rAddlCtrls=[...(r.addlCtrls||[])]; // these are already CTRL-xxx ids
+    rProb=r.prob; rSev=r.sev; rResProb=r.resProb; rResSev=r.resSev;
+    renderRPbtns('r-prob-btns',rProb,'rgba(0,112,204,.15)','var(--accent)','rgba(0,112,204,.2)');
+    renderRPbtns('r-sev-btns',rSev,'rgba(212,92,0,.15)','var(--orange)','rgba(212,92,0,.2)');
+    renderRPbtns('r-resprob-btns',rResProb,'rgba(0,112,204,.15)','var(--accent)','rgba(0,112,204,.2)');
+    renderRPbtns('r-ressev-btns',rResSev,'rgba(212,92,0,.15)','var(--orange)','rgba(212,92,0,.2)');
+    updateRiskScoreDisplay();
+  } else {
+    document.getElementById('r-id').value='RISK-'+String(ST._rkN).padStart(3,'0');
+    document.getElementById('r-desc').value='';
+    document.getElementById('r-existing-txt').value='';
+    document.getElementById('r-owner').value='';
+    document.getElementById('r-target').value='';
+    const exList=document.getElementById('r-existing-list'); if(exList) exList.innerHTML='';
+    // Pre-select hazard if launched from hazard detail
+    if(preHzId) document.getElementById('r-hz').value=preHzId;
+  }
+  renderLinkedCtrls();
+  renderAddlCtrls();
+  renderExistingList();
+  openM('m-risk');
+}
+
+function renderRPbtns(divId,val,bg,col,bgActive){
+  document.querySelectorAll(`#${divId} .btn`).forEach((b,i)=>{
+    const active=i<val;
+    b.style.background=active?bgActive:'';
+    b.style.color=active?col:'';
+    b.style.borderColor=active?col:'';
+  });
+}
+
+function setRP(v){ rProb=v; renderRPbtns('r-prob-btns',v,'rgba(0,112,204,.15)','var(--accent)','rgba(0,112,204,.2)'); updateRiskScoreDisplay(); }
+function setRS(v){ rSev=v; renderRPbtns('r-sev-btns',v,'rgba(212,92,0,.15)','var(--orange)','rgba(212,92,0,.2)'); updateRiskScoreDisplay(); }
+function setRRP(v){ rResProb=v; renderRPbtns('r-resprob-btns',v,'rgba(0,112,204,.15)','var(--accent)','rgba(0,112,204,.2)'); updateRiskScoreDisplay(); }
+function setRRS(v){ rResSev=v; renderRPbtns('r-ressev-btns',v,'rgba(212,92,0,.15)','var(--orange)','rgba(212,92,0,.2)'); updateRiskScoreDisplay(); }
+
+function updateRiskScoreDisplay(){
+  if(rProb&&rSev){
+    const sc=rProb*rSev; const lv=rLevel(sc);
+    document.getElementById('r-init-score').textContent=sc;
+    document.getElementById('r-init-score').style.color=rColor(sc);
+    document.getElementById('r-init-level').textContent=lv;
+    document.getElementById('r-init-level').style.color=rColor(sc);
+  }
+  if(rResProb&&rResSev){
+    const sc=rResProb*rResSev; const lv=rLevel(sc);
+    document.getElementById('r-res-score').textContent=sc;
+    document.getElementById('r-res-score').style.color=rColor(sc);
+    document.getElementById('r-res-level').textContent=lv;
+    document.getElementById('r-res-level').style.color=rColor(sc);
+  }
+}
+
+function addRiskCtrl(){
+  const sel=document.getElementById('r-ctrl-sel');
+  const id=sel.value; if(!id)return;
+  if(!rLinkedCtrls.includes(id)){ rLinkedCtrls.push(id); renderLinkedCtrls(); }
+  sel.value='';
+}
+
+function renderLinkedCtrls(){
+  const el=document.getElementById('r-ctrl-list');
+  el.innerHTML=rLinkedCtrls.map(cid=>{
+    const c=ST.controls.find(x=>x.id===cid)||{id:cid,desc:'Unknown'};
+    return`<div style="display:flex;align-items:center;gap:7px;background:var(--bg3);border-radius:5px;padding:5px 9px;margin-bottom:3px;">
+      <span class="id-chip ctrl">${c.id}</span>
+      <span style="flex:1;font-size:11px;color:var(--text2);">${c.desc.substring(0,55)}</span>
+      <button class="btn btn-danger btn-xs" onclick="removeRiskCtrl('${cid}')">✕</button>
+    </div>`;
+  }).join('');
+}
+function removeRiskCtrl(id){ rLinkedCtrls=rLinkedCtrls.filter(x=>x!==id); renderLinkedCtrls(); }
+
+function addExistingControl(){
+  const inp = document.getElementById('r-existing-txt');
+  const v = inp.value.trim();
+  if(!v){ toast('Enter a control description','error'); return; }
+
+  const rkId = document.getElementById('r-id').value;
+  const newCtrl = {
+    id: 'CTRL-'+String(ST._ctN).padStart(3,'0'),
+    rkId,
+    desc: v,
+    type: 'Preventive',
+    mon:'', freq:'', resp:'', verBy:'', lastChk:'',
+    eff: 'Not Checked', present: 'present',
+    remarks: 'Added as existing control during risk assessment'
+  };
+  ST.controls.push(newCtrl);
+  ST._ctN++;
+  rLinkedCtrls.push(newCtrl.id);
+  inp.value = '';
+  renderExistingList();
+  renderLinkedCtrls();
+  inp.focus();
+  toast(`${newCtrl.id} added to Control Register`,'success');
+}
+
+function removeExistingCtrl(ctrlId){
+  rLinkedCtrls = rLinkedCtrls.filter(x=>x!==ctrlId);
+  ST.controls = ST.controls.filter(c=>c.id!==ctrlId);
+  ST._ctN = Math.max(1, ST._ctN-1);
+  renderExistingList();
+  renderLinkedCtrls();
+}
+
+function renderExistingList(){
+  const el = document.getElementById('r-existing-list');
+  if(!el) return;
+  // Show controls that were added in this session via addExistingControl
+  // We identify them by their remarks tag
+  const sessionExisting = rLinkedCtrls
+    .map(id=>ST.controls.find(c=>c.id===id))
+    .filter(c=>c && c.remarks==='Added as existing control during risk assessment');
+  if(!sessionExisting.length){ el.innerHTML=''; return; }
+  el.innerHTML = sessionExisting.map(c=>`
+    <div style="display:flex;align-items:center;gap:7px;background:rgba(0,112,204,.04);border:1px solid rgba(0,112,204,.15);border-radius:6px;padding:6px 10px;margin-bottom:4px;">
+      <span class="id-chip ctrl">${c.id}</span>
+      <span style="flex:1;font-size:11.5px;color:var(--text);">${c.desc}</span>
+      <span class="eff-badge eff-not-checked">Not Checked</span>
+      <button class="btn btn-danger btn-xs" onclick="removeExistingCtrl('${c.id}')">✕</button>
+    </div>`).join('');
+}
+
+function addAdditionalControl(){
+  const inp=document.getElementById('r-addl-input');
+  const v=inp.value.trim();
+  if(!v){toast('Enter a control description','error');return;}
+
+  // Immediately create a proper CTRL-xxx entry in the Control Register
+  const rkId=document.getElementById('r-id').value; // the risk being assessed
+  const newCtrl={
+    id:'CTRL-'+String(ST._ctN).padStart(3,'0'),
+    rkId,
+    desc:v,
+    type:'Preventive',
+    mon:'',freq:'',resp:'',verBy:'',lastChk:'',
+    eff:'Not Checked',present:'present',
+    remarks:'Added as additional control during risk assessment'
+  };
+  ST.controls.push(newCtrl);
+  ST._ctN++;
+
+  // Track the new ctrl id so it gets linked to the risk on save
+  rLinkedCtrls.push(newCtrl.id);
+  // Also keep in rAddlCtrls so we can show it distinctly in the pending list
+  rAddlCtrls.push(newCtrl.id);
+
+  inp.value='';
+  renderAddlCtrls();
+  renderLinkedCtrls();
+  inp.focus();
+  toast(`${newCtrl.id} added to Control Register — complete details after saving`,'success');
+}
+
+function removeAddlCtrl(ctrlId){
+  // Remove from the pending additional list
+  rAddlCtrls=rAddlCtrls.filter(x=>x!==ctrlId);
+  // Also remove from linked controls
+  rLinkedCtrls=rLinkedCtrls.filter(x=>x!==ctrlId);
+  // Remove from the control register (it was just created, not yet saved)
+  ST.controls=ST.controls.filter(c=>c.id!==ctrlId);
+  ST._ctN=Math.max(1, ST._ctN-1); // roll back counter
+  renderAddlCtrls();
+  renderLinkedCtrls();
+}
+
+function renderAddlCtrls(){
+  const el=document.getElementById('r-addl-list');
+  if(!rAddlCtrls.length){ el.innerHTML=''; return; }
+  el.innerHTML=`
+    <div style="font-size:9.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px;">Newly added — registered in Control Register</div>
+    `+rAddlCtrls.map(ctrlId=>{
+    const c=ST.controls.find(x=>x.id===ctrlId);
+    if(!c) return '';
+    return`<div style="display:flex;align-items:center;gap:7px;background:rgba(0,112,204,.05);border:1px solid rgba(0,112,204,.18);border-radius:6px;padding:6px 10px;margin-bottom:4px;">
+      <span class="id-chip ctrl">${c.id}</span>
+      <span style="flex:1;font-size:11.5px;color:var(--text);">${c.desc}</span>
+      <span class="eff-badge eff-not-checked" style="font-size:9.5px;">Not Checked</span>
+      <button class="btn btn-danger btn-xs" onclick="removeAddlCtrl('${ctrlId}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function saveRisk(){
+  const hzId=document.getElementById('r-hz').value;
+  const desc=document.getElementById('r-desc').value.trim();
+  if(!hzId||!desc||!rProb||!rSev){toast('Please fill hazard, description, probability & severity','error');return;}
+  const rk={
+    id: document.getElementById('r-id').value,
+    hzId, desc,
+    prob:rProb, sev:rSev,
+    resProb:rResProb||rProb, resSev:rResSev||rSev,
+    existingTxt: '', // controls now added directly to register via rLinkedCtrls
+    ctrlIds:[...rLinkedCtrls],
+    addlCtrls:[...rAddlCtrls], // stores CTRL-xxx ids of controls added this session
+    owner: document.getElementById('r-owner').value,
+    target: document.getElementById('r-target').value,
+    signedOff: null,
+    events:[], flaggedNew:false
+  };
+  if(editRkId){
+    const i=ST.risks.findIndex(x=>x.id===editRkId);
+    if(i>=0){
+      rk.signedOff=ST.risks[i].signedOff;
+      rk.events=ST.risks[i].events;
+      rk.flaggedNew=false;
+      // Merge addlCtrls — keep previously tracked ones plus new ones
+      const prev=ST.risks[i].addlCtrls||[];
+      rk.addlCtrls=[...new Set([...prev,...rAddlCtrls])];
+      ST.risks[i]=rk;
+    }
+  } else {
+    ST.risks.push(rk); ST._rkN++;
+  }
+  closeM('m-risk'); autosave(); renderRisks(); updateBadges();
+  toast(editRkId?`Risk ${rk.id} updated`:`Risk ${rk.id} saved`,'success');
+}
+
+function renderRisks(){
+  const srch=(document.getElementById('rk-srch')?.value||'').toLowerCase();
+  const fHz=document.getElementById('rk-f-hz')?.value||'';
+  const fLv=document.getElementById('rk-f-level')?.value||'';
+  const fSt=document.getElementById('rk-f-status')?.value||'';
+
+  // Refresh hz filter
+  const hf=document.getElementById('rk-f-hz');
+  if(hf){ const cv=hf.value; hf.innerHTML='<option value="">All Hazards</option>'+ST.hazards.map(h=>`<option value="${h.id}" ${h.id===cv?'selected':''}>${h.id}</option>`).join('');}
+
+  const rows=ST.risks.filter(r=>{
+    const sc=rScore(r.prob,r.sev); const lv=rLevel(sc);
+    const st=calcRiskStatus(r.id);
+    return(!srch||r.id.toLowerCase().includes(srch)||r.desc.toLowerCase().includes(srch))
+      &&(!fHz||r.hzId===fHz)&&(!fLv||lv===fLv)&&(!fSt||st===fSt);
+  });
+
+  document.getElementById('rk-count-lbl').textContent=`(${ST.risks.length} total)`;
+
+  document.getElementById('rk-tbody').innerHTML=rows.length
+    ?rows.map(r=>{
+      const sc=rScore(r.prob,r.sev), lv=rLevel(sc);
+      const rsc=rScore(r.resProb,r.resSev), rlv=rLevel(rsc);
+      const st=calcRiskStatus(r.id);
+      const stCls={'Open':'sb-open','Monitoring':'sb-monitoring','Closed':'sb-closed','Review':'sb-review'}[st]||'sb-open';
+      const ctrls=r.ctrlIds.map(id=>ST.controls.find(c=>c.id===id)).filter(Boolean);
+      // addlCtrls are now ctrl IDs too — show them as chips, distinct from existing
+      const addlCtrls=(r.addlCtrls||[]).map(id=>ST.controls.find(c=>c.id===id)).filter(Boolean);
+      const addlHtml=addlCtrls.length
+        ?addlCtrls.map(c=>`<div style="display:flex;align-items:center;gap:4px;margin-bottom:2px;"><span class="id-chip ctrl" style="font-size:9.5px;">${c.id}</span><span style="font-size:10px;color:var(--text3);">${c.desc.substring(0,35)}</span></div>`).join('')
+        :'—';
+      return`<tr class="${r.flaggedNew?'flagged-new':''}">
+        <td style="white-space:nowrap;"><span class="id-chip risk" style="white-space:nowrap;">${r.id}</span></td>
+        <td style="white-space:nowrap;"><span class="id-chip" style="white-space:nowrap;">${r.hzId}</span></td>
+        <td style="overflow:hidden;text-overflow:ellipsis;max-width:220px;color:var(--text);font-size:11.5px;" title="${r.desc}">${r.desc}</td>
+        <td style="overflow:hidden;font-size:10.5px;">${ctrls.slice(0,3).map(c=>`<span class="id-chip ctrl" style="margin:1px 1px 2px;white-space:nowrap;">${c.id}</span>`).join('')}${ctrls.length>3?`<span style="font-size:9px;color:var(--text3);"> +${ctrls.length-3}</span>`:''}${!ctrls.length?'—':''}</td>
+        <td style="font-weight:700;color:var(--accent);text-align:center;">${r.prob}</td>
+        <td style="font-weight:700;color:var(--orange);text-align:center;">${r.sev}</td>
+        <td><span class="rbadge ${rClass(lv)}" style="white-space:nowrap;">${sc}</span></td>
+        <td style="overflow:hidden;font-size:10.5px;">${addlHtml||'—'}</td>
+        <td style="font-weight:700;color:var(--accent);text-align:center;">${r.resProb||'—'}</td>
+        <td style="font-weight:700;color:var(--orange);text-align:center;">${r.resSev||'—'}</td>
+        <td>${r.resProb?`<span class="rbadge ${rClass(rlv)}" style="white-space:nowrap;">${rsc}</span>`:'—'}</td>
+        <td style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.owner||''}">${r.owner||'—'}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:10px;white-space:nowrap;">${r.target||'—'}</td>
+        <td style="white-space:nowrap;">${r.signedOff?`<span style="color:var(--green);font-size:10px;">✅ ${r.signedOff.name.split(' ')[0]}</span>`:`<button class="btn btn-ghost btn-xs" onclick="openSignOff('${r.id}')">Sign Off</button>`}</td>
+        <td style="white-space:nowrap;"><span class="sbadge ${stCls}">${st}</span></td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-ghost btn-xs" onclick="openAddRisk('${r.id}')">Edit</button>
+          <button class="btn btn-ghost btn-xs" onclick="viewRiskDetail('${r.id}')">Detail</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteRisk('${r.id}')">✕</button>
+        </td>
+      </tr>`;
+    }).join('')
+    :`<tr><td colspan="16" style="text-align:center;color:var(--text3);padding:28px;">No risks found</td></tr>`;
+}
+
+function deleteRisk(id){
+  if(!confirm(`Delete risk ${id}?`)) return;
+  ST.risks=ST.risks.filter(r=>r.id!==id);
+  ST.controls.forEach(c=>{ if(c.rkId===id) c.rkId=''; });
+  autosave(); renderRisks(); updateBadges();
+}
+
+function viewRiskDetail(id){
+  const r=ST.risks.find(x=>x.id===id); if(!r)return;
+  const hz=ST.hazards.find(h=>h.id===r.hzId)||{};
+  const ctrls=r.ctrlIds.map(cid=>ST.controls.find(c=>c.id===cid)).filter(Boolean);
+  const sc=rScore(r.prob,r.sev), lv=rLevel(sc);
+  const rsc=rScore(r.resProb,r.resSev), rlv=rLevel(rsc);
+  document.getElementById('m-detail-title').textContent=`Risk Detail — ${r.id}`;
+  document.getElementById('m-detail-body').innerHTML=`
+    <div class="g2" style="gap:14px;margin-bottom:14px;">
+      <div>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;">Risk Description</div>
+        <div style="font-size:13px;color:var(--text);">${r.desc}</div>
+        <div style="margin-top:10px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;">Linked Hazard</div>
+        <div><span class="id-chip">${r.hzId}</span> <span style="font-size:11px;color:var(--text2);">${hz.desc||''}</span></div>
+        <div style="margin-top:10px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;">Initial Risk</div>
+        <span class="rbadge ${rClass(lv)}">${sc} — P${r.prob} × S${r.sev} — ${lv}</span>
+        <div style="margin-top:8px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;">Residual Risk</div>
+        <span class="rbadge ${rClass(rlv)}">${rsc} — P${r.resProb} × S${r.resSev} — ${rlv}</span>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;">Risk Owner</div>
+        <div style="font-size:12px;color:var(--text2);">${r.owner||'—'}</div>
+        <div style="margin-top:10px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;">Target Date</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);">${r.target||'—'}</div>
+        <div style="margin-top:10px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;">Sign-Off</div>
+        <div>${r.signedOff?`<span style="color:var(--green);font-size:12px;">✅ ${r.signedOff.name} (${r.signedOff.role}) — ${r.signedOff.date}</span>`:'<span style="color:var(--yellow);">⚠ Pending</span>'}</div>
+      </div>
+    </div>
+    ${r.existingTxt?`<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px;">Existing Controls (text)</div><div style="background:var(--bg3);border-radius:6px;padding:8px;font-size:11.5px;color:var(--text2);margin-bottom:10px;">${r.existingTxt}</div>`:''}
+    ${ctrls.length?`<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;">Linked Controls (${ctrls.length})</div>
+    ${ctrls.map(c=>`<div style="display:flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;margin-bottom:5px;">
+      <span class="id-chip ctrl">${c.id}</span>
+      <span style="flex:1;font-size:11px;color:var(--text2);">${c.desc}</span>
+      <span class="eff-badge eff-${c.eff.toLowerCase().replace(/\s+/g,'-')}">${c.eff}</span>
+      <span class="pres-badge pres-${c.present}">${c.present==='present'?'Present':'Absent'}</span>
+    </div>`).join('')}`:''}
+    ${r.addlCtrls&&r.addlCtrls.length&&typeof r.addlCtrls[0]==='string'&&r.addlCtrls[0].startsWith('CTRL-')?`<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-top:10px;margin-bottom:6px;">Additional Controls (added this revision)</div>
+    ${r.addlCtrls.map(ctrlId=>{
+      const c=ST.controls.find(x=>x.id===ctrlId);
+      if(!c)return'';
+      return`<div style="display:flex;align-items:center;gap:7px;background:rgba(0,112,204,.04);border:1px solid rgba(0,112,204,.15);border-radius:6px;padding:7px 10px;margin-bottom:5px;">
+        <span class="id-chip ctrl">${c.id}</span>
+        <span style="flex:1;font-size:11px;color:var(--text2);">${c.desc}</span>
+        <span class="eff-badge eff-${c.eff.toLowerCase().replace(/\s+/g,'-')}">${c.eff}</span>
+        <span class="pres-badge pres-${c.present}">${c.present==='present'?'Present':'Absent'}</span>
+      </div>`;
+    }).join('')}`:''}
+    ${r.events&&r.events.length?`<div class="sep"></div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;">Linked Events (${r.events.length})</div>
+    <div class="timeline">${r.events.map(eid=>{const ev=ST.events.find(e=>e.id===eid);return ev?`<div class="tl-item"><div class="tl-date">${ev.date} — ${ev.conseq}</div><div class="tl-text">${ev.desc.substring(0,80)}</div></div>`:''}).join('')}</div>`:''}
+  `;
+  openM('m-detail');
+}
+
+// Sign off
+function openSignOff(rkId){
+  soRiskId=rkId;
+  document.getElementById('so-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('so-name').value='';
+  document.getElementById('so-role').value='';
+  openM('m-signoff');
+}
+function confirmSignOff(){
+  const name=document.getElementById('so-name').value.trim();
+  const role=document.getElementById('so-role').value.trim();
+  const date=document.getElementById('so-date').value;
+  if(!name||!role){toast('Enter name and role','error');return;}
+  const r=ST.risks.find(x=>x.id===soRiskId);
+  if(r) r.signedOff={name,role,date};
+  closeM('m-signoff'); autosave(); renderRisks();
+  toast(`${soRiskId} signed off by ${name}`,'success');
+}
+
+// ═══════════════════════════════════════════════════
+//  CONTROLS
+// ═══════════════════════════════════════════════════
+function openAddCtrl(id=null, preRkId=null){
+  editCtId=id;
+  fillSelKV('c-risk', ST.risks.map(r=>[r.id,`${r.id}: ${r.desc.substring(0,50)}`]), '-- Select Risk --');
+  fillSel('c-type', ST.lists.ctrlTypes);
+  fillSel('c-mon', ST.lists.monMethods, '-- Select --');
+  fillSel('c-freq', ST.lists.freqs, '-- Select --');
+  fillSel('c-resp', ST.lists.respExec, '-- Select --');
+  fillSel('c-verby', ST.lists.validBy, '-- Select --');
+
+  document.getElementById('m-ctrl-title').textContent=id?'◼ Edit Control':'◼ Add Control';
+
+  if(id){
+    const c=ST.controls.find(x=>x.id===id); if(!c)return;
+    document.getElementById('c-id').value=c.id;
+    document.getElementById('c-risk').value=c.rkId;
+    document.getElementById('c-desc').value=c.desc;
+    document.getElementById('c-type').value=c.type;
+    document.getElementById('c-mon').value=c.mon;
+    document.getElementById('c-freq').value=c.freq;
+    document.getElementById('c-resp').value=c.resp;
+    document.getElementById('c-verby').value=c.verBy;
+    document.getElementById('c-lastchk').value=c.lastChk||'';
+    document.getElementById('c-eff').value=c.eff;
+    document.getElementById('c-present').value=c.present;
+    document.getElementById('c-remarks').value=c.remarks||'';
+  } else {
+    document.getElementById('c-id').value='CTRL-'+String(ST._ctN).padStart(3,'0');
+    document.getElementById('c-desc').value='';
+    document.getElementById('c-remarks').value='';
+    document.getElementById('c-lastchk').value='';
+    document.getElementById('c-eff').value='Not Checked';
+    document.getElementById('c-present').value='present';
+    if(preRkId) document.getElementById('c-risk').value=preRkId;
+  }
+  openM('m-ctrl');
+}
+
+function saveControl(){
+  const rkId=document.getElementById('c-risk').value;
+  const desc=document.getElementById('c-desc').value.trim();
+  if(!desc){toast('Enter control description','error');return;}
+  const ct={
+    id: document.getElementById('c-id').value,
+    rkId, desc,
+    type: document.getElementById('c-type').value,
+    mon: document.getElementById('c-mon').value,
+    freq: document.getElementById('c-freq').value,
+    resp: document.getElementById('c-resp').value,
+    verBy: document.getElementById('c-verby').value,
+    lastChk: document.getElementById('c-lastchk').value,
+    eff: document.getElementById('c-eff').value,
+    present: document.getElementById('c-present').value,
+    remarks: document.getElementById('c-remarks').value.trim()
+  };
+  if(editCtId){
+    const i=ST.controls.findIndex(x=>x.id===editCtId);
+    if(i>=0) ST.controls[i]=ct;
+  } else {
+    ST.controls.push(ct); ST._ctN++;
+    // Auto-link to risk's ctrlIds
+    if(rkId){
+      const rk=ST.risks.find(r=>r.id===rkId);
+      if(rk&&!rk.ctrlIds.includes(ct.id)) rk.ctrlIds.push(ct.id);
+    }
+  }
+  closeM('m-ctrl'); autosave(); renderControls(); updateBadges();
+  toast(editCtId?`${ct.id} updated`:`${ct.id} added`,'success');
+}
+
+function renderControls(){
+  const srch=(document.getElementById('ct-srch')?.value||'').toLowerCase();
+  const fRk=document.getElementById('ct-f-risk')?.value||'';
+  const fEff=document.getElementById('ct-f-eff')?.value||'';
+  const fType=document.getElementById('ct-f-type')?.value||'';
+
+  // Refresh risk filter
+  const rf=document.getElementById('ct-f-risk');
+  if(rf){ const cv=rf.value; rf.innerHTML='<option value="">All Risks</option>'+ST.risks.map(r=>`<option value="${r.id}" ${r.id===cv?'selected':''}>${r.id}</option>`).join('');}
+
+  let eff=0,part=0,neff=0,nchk=0;
+  ST.controls.forEach(c=>{
+    if(c.eff==='Effective')eff++;
+    else if(c.eff==='Partially Effective')part++;
+    else if(c.eff==='Not Effective')neff++;
+    else nchk++;
+  });
+  document.getElementById('ct-eff').textContent=eff;
+  document.getElementById('ct-part').textContent=part;
+  document.getElementById('ct-neff').textContent=neff;
+  document.getElementById('ct-nchk').textContent=nchk;
+
+  const rows=ST.controls.filter(c=>{
+    return(!srch||c.id.toLowerCase().includes(srch)||c.desc.toLowerCase().includes(srch)||c.rkId.toLowerCase().includes(srch))
+      &&(!fRk||c.rkId===fRk)&&(!fEff||c.eff===fEff)&&(!fType||c.type===fType);
+  });
+
+  document.getElementById('ct-count-lbl').textContent=`(${ST.controls.length} total)`;
+
+  const effCls=e=>(({'Effective':'eff-effective','Partially Effective':'eff-partially','Not Effective':'eff-not-effective','Not Checked':'eff-not-checked'})[e]||'eff-not-checked');
+
+  document.getElementById('ct-tbody').innerHTML=rows.length
+    ?rows.map(c=>{
+      const rk=ST.risks.find(r=>r.id===c.rkId)||{};
+      return`<tr>
+        <td style="white-space:nowrap;"><span class="id-chip ctrl" style="white-space:nowrap;">${c.id}</span></td>
+        <td style="white-space:nowrap;"><span class="id-chip risk" style="white-space:nowrap;">${c.rkId||'—'}</span></td>
+        <td style="font-size:10.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${rk.desc||''}">${rk.desc?rk.desc.substring(0,45):'—'}</td>
+        <td style="color:var(--text);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;" title="${c.desc}">${c.desc}</td>
+        <td style="white-space:nowrap;"><span style="font-size:10px;background:var(--bg3);border-radius:3px;padding:2px 6px;color:var(--text2);">${c.type}</span></td>
+        <td style="font-size:10.5px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${c.mon||''}">${c.mon||'—'}</td>
+        <td style="font-size:10.5px;color:var(--text2);white-space:nowrap;">${c.freq||'—'}</td>
+        <td style="font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${c.resp||''}">${c.resp||'—'}</td>
+        <td style="font-size:10.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${c.verBy||''}">${c.verBy||'—'}</td>
+        <td style="white-space:nowrap;">
+          <span class="eff-badge ${effCls(c.eff)}" style="cursor:pointer;title="Click to record verification"" onclick="openVerifyCtrl('${c.id}')">${c.eff}</span>
+        </td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:10px;white-space:nowrap;">${c.lastChk||'—'}</td>
+        <td style="font-size:10px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;" title="${c.verRemarks||c.remarks||''}">${c.verRemarks||c.remarks||'—'}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-primary btn-xs" onclick="openVerifyCtrl('${c.id}')">✓ Verify</button>
+          <button class="btn btn-ghost btn-xs" onclick="openAddCtrl('${c.id}')">Edit</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteCtrl('${c.id}')">✕</button>
+        </td>
+      </tr>`;
+    }).join('')
+    :`<tr><td colspan="13" style="text-align:center;color:var(--text3);padding:28px;">No controls found</td></tr>`;
+}
+
+function openVerifyCtrl(id){
+  const c = ST.controls.find(x=>x.id===id); if(!c) return;
+  const rk = ST.risks.find(r=>r.id===c.rkId)||{};
+  const hz = ST.hazards.find(h=>h.id===rk.hzId)||{};
+
+  document.getElementById('vc-id').textContent = c.id;
+  document.getElementById('vc-desc').textContent = c.desc;
+  document.getElementById('vc-risk').textContent = c.rkId ? `${c.rkId}: ${(rk.desc||'').substring(0,60)}` : '—';
+  document.getElementById('vc-hazard').textContent = hz.id ? `${hz.id}: ${(hz.desc||'').substring(0,60)}` : '—';
+  document.getElementById('vc-type').textContent = c.type || '—';
+  document.getElementById('vc-mon').textContent = c.mon || '—';
+  document.getElementById('vc-freq').textContent = c.freq || '—';
+  document.getElementById('vc-prev-eff').textContent = c.eff;
+  document.getElementById('vc-prev-date').textContent = c.lastChk || 'Never checked';
+
+  // Pre-select current values
+  document.getElementById('vc-eff').value = c.eff;
+  document.getElementById('vc-present').value = c.present || 'present';
+  document.getElementById('vc-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('vc-verby').value = c.verBy || '';
+  document.getElementById('vc-remarks').value = '';
+
+  // Fill verBy dropdown
+  fillSel('vc-verby', ST.lists.validBy, '-- Select --');
+  if(c.verBy) document.getElementById('vc-verby').value = c.verBy;
+
+  document.getElementById('vc-ctrl-id').value = id;
+  openM('m-verify-ctrl');
+}
+
+function saveVerification(){
+  const id = document.getElementById('vc-ctrl-id').value;
+  const c = ST.controls.find(x=>x.id===id); if(!c) return;
+
+  const eff = document.getElementById('vc-eff').value;
+  const present = document.getElementById('vc-present').value;
+  const date = document.getElementById('vc-date').value;
+  const verBy = document.getElementById('vc-verby').value;
+  const remarks = document.getElementById('vc-remarks').value.trim();
+
+  if(!remarks){ toast('Verification remarks are required — describe what was checked','error'); return; }
+  if(!date){ toast('Please enter the verification date','error'); return; }
+  if(!verBy){ toast('Please select who verified this control','error'); return; }
+
+  // Record history entry
+  if(!c.verHistory) c.verHistory = [];
+  c.verHistory.push({
+    date, verBy, remarks,
+    prevEff: c.eff, newEff: eff,
+    prevPresent: c.present, newPresent: present
+  });
+
+  // Update control
+  c.eff = eff;
+  c.present = present;
+  c.lastChk = date;
+  c.verBy = verBy;
+  c.verRemarks = remarks;
+
+  // If not effective or absent — flag all linked risks for review
+  if(eff === 'Not Effective' || present === 'absent'){
+    ST.risks.forEach(r=>{
+      if(r.ctrlIds.includes(id)){
+        r.status = 'review';
+        toast(`${r.id} flagged for review — control ${id} is ${present==='absent'?'absent':'not effective'}`,'warning');
+      }
+    });
+  }
+
+  closeM('m-verify-ctrl');
+  autosave();
+  renderControls();
+  toast(`${id} verification saved — ${eff}`,'success');
+}
+
+function deleteCtrl(id){
+  if(!confirm(`Delete ${id}?`)) return;
+  ST.controls=ST.controls.filter(c=>c.id!==id);
+  ST.risks.forEach(r=>{ r.ctrlIds=r.ctrlIds.filter(x=>x!==id); });
+  autosave(); renderControls(); updateBadges();
+}
+
+// ═══════════════════════════════════════════════════
+//  EVENTS
+// ═══════════════════════════════════════════════════
+function openAddEvent(id=null){
+  editEvId=id;
+  const isEdit=!!id;
+  document.querySelector('#m-event .modal-title').textContent=isEdit?'⚡ Edit Safety Event':'⚡ Log Safety Event';
+
+  const hSel=document.getElementById('ev-hz');
+  hSel.innerHTML='<option value="">-- Select Hazard --</option>'+ST.hazards.map(h=>`<option value="${h.id}">${h.id}: ${h.desc.substring(0,60)}</option>`).join('');
+
+  if(isEdit){
+    const ev=ST.events.find(e=>e.id===id); if(!ev)return;
+    document.getElementById('ev-id').value=ev.id;
+    document.getElementById('ev-date').value=ev.date;
+    document.getElementById('ev-desc').value=ev.desc;
+    document.getElementById('ev-newsrc').value=''; // sources already applied
+    document.getElementById('ev-newrisk').value=ev.newRiskFlagged||'';
+    document.getElementById('ev-conseq').value=ev.conseq;
+    // Set hazard and trigger cascade
+    hSel.value=ev.hzId;
+    onEvHzChange();
+    // After cascade renders, restore checked controls and selected risk
+    setTimeout(()=>{
+      document.getElementById('ev-risk').value=ev.rkId||'';
+      (ev.failedCtrls||[]).forEach(cid=>{
+        const cb=document.querySelector(`.ev-ctrl-chk[value="${cid}"]`);
+        if(cb) cb.checked=true;
+      });
+    },60);
+  } else {
+    document.getElementById('ev-id').value='EV-'+String(ST._evN).padStart(3,'0');
+    document.getElementById('ev-date').value=new Date().toISOString().split('T')[0];
+    document.getElementById('ev-desc').value='';
+    document.getElementById('ev-newsrc').value='';
+    document.getElementById('ev-newrisk').value='';
+    document.getElementById('ev-cascade').style.display='none';
+  }
+  openM('m-event');
+}
+
+function onEvHzChange(){
+  const hzId=document.getElementById('ev-hz').value;
+  const casc=document.getElementById('ev-cascade');
+  if(!hzId){casc.style.display='none';return;}
+  casc.style.display='block';
+
+  // Populate risk selector
+  const linkedRisks=ST.risks.filter(r=>r.hzId===hzId);
+  const rSel=document.getElementById('ev-risk');
+  rSel.innerHTML='<option value="">-- None / Unknown --</option>'+linkedRisks.map(r=>`<option value="${r.id}">${r.id}: ${r.desc.substring(0,60)}</option>`).join('');
+
+  // Build checklist
+  const listEl=document.getElementById('ev-ctrl-list');
+  if(!linkedRisks.length){
+    listEl.innerHTML=`<div style="color:var(--text3);font-size:12px;padding:10px;background:var(--bg3);border-radius:6px;">No risk assessments for this hazard yet.</div>`;
+    return;
+  }
+  const seen=new Set();
+  let html='';
+  linkedRisks.forEach(r=>{
+    const rCtrls=r.ctrlIds.map(cid=>ST.controls.find(c=>c.id===cid)).filter(Boolean);
+    html+=`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:7px;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;">
+        <span class="id-chip risk">${r.id}</span>
+        <span style="font-size:11.5px;color:var(--text);flex:1;">${r.desc}</span>
+        <span class="rbadge ${rClass(rLevel(rScore(r.prob,r.sev)))}">${rScore(r.prob,r.sev)}</span>
+      </div>`;
+    if(rCtrls.length){
+      html+=`<div style="font-size:9.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px;">Controls</div>`;
+      rCtrls.forEach(c=>{
+        if(seen.has(c.id)){
+          html+=`<div style="font-size:10.5px;color:var(--text3);padding:3px 0;opacity:.5;"><span class="id-chip ctrl">${c.id}</span> — already listed above</div>`;
+          return;
+        }
+        seen.add(c.id);
+        html+=`<label style="display:flex;align-items:flex-start;gap:9px;padding:6px 0;cursor:pointer;border-bottom:1px solid var(--border);">
+          <input type="checkbox" class="ev-ctrl-chk" value="${c.id}" style="margin-top:2px;accent-color:var(--red);width:15px;height:15px;flex-shrink:0;cursor:pointer;">
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+              <span class="id-chip ctrl">${c.id}</span>
+              <span style="font-size:9.5px;color:var(--text3);">${c.type||'Preventive'}</span>
+              <span class="eff-badge eff-${c.eff.toLowerCase().replace(/\s+/g,'-')}" style="margin-left:auto;">${c.eff}</span>
+            </div>
+            <div style="font-size:11px;color:var(--text2);">${c.desc}</div>
+          </div>
+        </label>`;
+      });
+    }
+    html+=`</div>`;
+  });
+  listEl.innerHTML=html;
+}
+
+function saveEvent(){
+  const desc=document.getElementById('ev-desc').value.trim();
+  const hzId=document.getElementById('ev-hz').value;
+  if(!desc||!hzId){toast('Select a hazard and enter description','error');return;}
+
+  const failedCtrlIds=[...document.querySelectorAll('.ev-ctrl-chk:checked')].map(cb=>cb.value);
+  const newSrc=document.getElementById('ev-newsrc').value.trim();
+  const rkId=document.getElementById('ev-risk').value;
+  const newRiskDesc=document.getElementById('ev-newrisk').value.trim();
+
+  if(editEvId){
+    // EDIT MODE — update existing event
+    const ev=ST.events.find(e=>e.id===editEvId);
+    if(ev){
+      const oldRkId=ev.rkId;
+      ev.date=document.getElementById('ev-date').value;
+      ev.hzId=hzId;
+      ev.desc=desc;
+      ev.conseq=document.getElementById('ev-conseq').value;
+      ev.newRiskFlagged=newRiskDesc||null;
+
+      // Update control failures — undo old ones if they have no other event failures
+      const oldFailed=ev.failedCtrls||[];
+      oldFailed.forEach(cid=>{
+        if(!failedCtrlIds.includes(cid)){
+          // Only restore to Not Checked if no other open event still flags it
+          const stillFailed=ST.events.some(e=>e.id!==editEvId&&(e.failedCtrls||[]).includes(cid));
+          if(!stillFailed){ const c=ST.controls.find(x=>x.id===cid); if(c&&c.eff==='Not Effective') c.eff='Not Checked'; }
+        }
+      });
+      ev.failedCtrls=failedCtrlIds;
+      ev.failedAddl=[];
+      failedCtrlIds.forEach(cid=>{ const c=ST.controls.find(x=>x.id===cid); if(c) c.eff='Not Effective'; });
+
+      // Update risk linkage
+      if(oldRkId&&oldRkId!==rkId){
+        const oldRk=ST.risks.find(r=>r.id===oldRkId);
+        if(oldRk) oldRk.events=oldRk.events.filter(e=>e!==editEvId);
+      }
+      ev.rkId=rkId;
+      if(rkId){ const r=ST.risks.find(x=>x.id===rkId); if(r&&!r.events.includes(editEvId)) r.events.push(editEvId); }
+
+      if(newSrc){ const h=ST.hazards.find(x=>x.id===hzId); if(h&&!(h.sources||[]).includes(newSrc)) h.sources.push(newSrc); }
+    }
+    closeM('m-event'); autosave(); renderEvents(); updateBadges();
+    toast(`${editEvId} updated`,'success');
+    return;
+  }
+
+  // ADD MODE
+  const ev={
+    id: document.getElementById('ev-id').value,
+    date: document.getElementById('ev-date').value,
+    hzId, rkId, desc,
+    failedCtrls: failedCtrlIds,
+    failedAddl: [],
+    conseq: document.getElementById('ev-conseq').value,
+    newRiskFlagged: newRiskDesc||null,
+    status:'open'
+  };
+
+  ST.events.push(ev); ST._evN++;
+
+  // Link to risk
+  if(rkId){ const r=ST.risks.find(x=>x.id===rkId); if(r){r.events.push(ev.id);} }
+
+  // Flag all linked risks for review
+  ST.risks.filter(r=>r.hzId===hzId).forEach(r=>{r.status='review';});
+
+  // Add new source to hazard
+  if(newSrc){ const h=ST.hazards.find(x=>x.id===hzId); if(h&&!(h.sources||[]).includes(newSrc)) h.sources.push(newSrc); }
+
+  // Mark ticked formal controls as Not Effective
+  failedCtrlIds.forEach(cid=>{ const c=ST.controls.find(x=>x.id===cid); if(c) c.eff='Not Effective'; });
+
+  // Create new placeholder risk if described
+  if(newRiskDesc){
+    const placeholder={
+      id:'RISK-'+String(ST._rkN).padStart(3,'0'),
+      hzId, desc:newRiskDesc,
+      prob:1,sev:1,resProb:1,resSev:1,
+      existingTxt:'',ctrlIds:[],addlCtrls:[],
+      owner:'',target:'',signedOff:null,
+      events:[ev.id],flaggedNew:true
+    };
+    ST.risks.push(placeholder); ST._rkN++;
+    toast(`New risk ${placeholder.id} created — awaiting assessment`,'info');
+  }
+
+  closeM('m-event'); autosave(); renderEvents(); updateBadges();
+  const fc=failedCtrlIds.length;
+  toast(`${ev.id} logged. ${fc} control${fc!==1?'s':''} marked Not Effective.`,'warning');
+}
+
+function renderEvents(){
+  const rows=ST.events;
+  document.getElementById('ev-tbody').innerHTML=rows.length
+    ?rows.map(ev=>{
+      const fc=(ev.failedCtrls||[]).map(id=>{const c=ST.controls.find(x=>x.id===id);return c?`<span class="id-chip ctrl" style="margin:1px;">${c.id}</span>`:id;}).join('');
+      const failedHtml=fc||'—';
+      const cCls={'Near Miss':'sb-monitoring','Minor Incident':'sb-open','Significant Incident':'sb-open','Serious Incident':'sb-review','Accident':'sb-review'}[ev.conseq]||'sb-open';
+      return`<tr>
+        <td><span class="id-chip">${ev.id}</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:10px;">${ev.date}</td>
+        <td><span class="id-chip">${ev.hzId}</span></td>
+        <td>${ev.rkId?`<span class="id-chip risk">${ev.rkId}</span>`:'—'}</td>
+        <td style="max-width:160px;font-size:11px;color:var(--text2);">${ev.desc.substring(0,60)}</td>
+        <td style="max-width:140px;">${failedHtml}</td>
+        <td><span class="sbadge ${cCls}">${ev.conseq}</span></td>
+        <td>${ev.newRiskFlagged?`<span style="color:var(--purple);font-size:10px;">◈ ${ev.newRiskFlagged.substring(0,35)}</span>`:'—'}</td>
+        <td><span class="sbadge ${ev.status==='closed'?'sb-closed':'sb-open'}">${ev.status}</span></td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-ghost btn-xs" onclick="openAddEvent('${ev.id}')">Edit</button>
+          <button class="btn btn-ghost btn-xs" onclick="viewEventDetail('${ev.id}')">View</button>
+          <button class="btn btn-ghost btn-xs" onclick="closeEvt('${ev.id}')">Close</button>
+        </td>
+      </tr>`;
+    }).join('')
+    :`<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:28px;">No events logged</td></tr>`;
+}
+
+function closeEvt(id){ const ev=ST.events.find(e=>e.id===id); if(ev) ev.status='closed'; autosave(); renderEvents(); }
+
+function viewEventDetail(id){
+  const ev=ST.events.find(e=>e.id===id); if(!ev)return;
+  const hz=ST.hazards.find(h=>h.id===ev.hzId)||{};
+  const rk=ev.rkId?ST.risks.find(r=>r.id===ev.rkId):null;
+  const fCtrls=(ev.failedCtrls||[]).map(cid=>ST.controls.find(c=>c.id===cid)).filter(Boolean);
+  document.getElementById('m-detail-title').textContent=`Event — ${ev.id}`;
+  document.getElementById('m-detail-body').innerHTML=`
+    <div class="g2" style="gap:14px;margin-bottom:14px;">
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:2px;text-transform:uppercase;letter-spacing:.7px;">Date</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);">${ev.date}</div>
+        <div style="font-size:10px;color:var(--text3);margin:10px 0 2px;text-transform:uppercase;letter-spacing:.7px;">Consequence</div>
+        <span class="sbadge sb-open">${ev.conseq}</span>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:2px;text-transform:uppercase;letter-spacing:.7px;">Linked Hazard</div>
+        <div><span class="id-chip">${ev.hzId}</span> <span style="font-size:11px;color:var(--text2);">${hz.desc||''}</span></div>
+        <div style="font-size:10px;color:var(--text3);margin:10px 0 2px;text-transform:uppercase;letter-spacing:.7px;">Linked Risk</div>
+        <div>${rk?`<span class="id-chip risk">${rk.id}</span> <span style="font-size:11px;color:var(--text2);">${rk.desc}</span>`:'Not linked'}</div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.7px;">Description</div>
+    <div style="background:var(--bg3);border-radius:7px;padding:9px;font-size:12px;color:var(--text2);margin-bottom:12px;">${ev.desc}</div>
+    ${fCtrls.length?`<div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.7px;">Controls That Failed</div>
+    ${fCtrls.map(c=>`<div style="display:flex;align-items:center;gap:7px;background:rgba(204,34,54,.05);border:1px solid rgba(204,34,54,.18);border-radius:6px;padding:7px 10px;margin-bottom:4px;">
+      <span class="id-chip ctrl">${c.id}</span><span style="flex:1;font-size:11px;color:var(--text2);">${c.desc}</span>
+      <span class="eff-badge eff-not-effective">Not Effective</span></div>`).join('')}`:''}
+    ${ev.newRiskFlagged?`<div style="font-size:10px;color:var(--text3);margin:10px 0 6px;text-transform:uppercase;letter-spacing:.7px;">New Risk Flagged</div>
+    <div style="background:rgba(107,63,212,.05);border:1px solid rgba(107,63,212,.2);border-radius:7px;padding:9px;font-size:12px;color:var(--text2);">◈ ${ev.newRiskFlagged}</div>`:''}
+  `;
+  openM('m-detail');
+}
+
+// ═══════════════════════════════════════════════════
+//  BOW-TIE
+// ═══════════════════════════════════════════════════
+
+function renderBowtie(){
+  // Populate hazard selector — preserve selection
+  const sel = document.getElementById('bt-hz-sel');
+  const curVal = sel.value;
+
+  // Only rebuild options if hazard list changed (avoid losing selection on re-render)
+  const newOptions = '<option value="">-- Select a Hazard --</option>' +
+    ST.hazards.map(h=>`<option value="${h.id}">${h.id}: ${h.desc.substring(0,70)}</option>`).join('');
+  if(sel.innerHTML !== newOptions) sel.innerHTML = newOptions;
+
+  // Restore selection after innerHTML rebuild
+  if(curVal && ST.hazards.find(h=>h.id===curVal)) sel.value = curVal;
+
+  drawBowtie(sel.value);
+}
+
+function onBtHzChange(){
+  drawBowtie(document.getElementById('bt-hz-sel').value);
+}
+
+function drawBowtie(hzId){
+  const diagramEl = document.getElementById('bt-diagram');
+  const rolePanel = document.getElementById('bt-role-panel');
+
+  if(!hzId){
+    diagramEl.innerHTML = `<div class="bt-empty">Select a hazard above to view its Bow-Tie diagram.</div>`;
+    rolePanel.style.display = 'none';
+    return;
+  }
+
+  const hz = ST.hazards.find(h=>h.id===hzId);
+  const risks = ST.risks.filter(r=>r.hzId===hzId);
+
+  if(!risks.length){
+    diagramEl.innerHTML = `<div class="bt-empty">No risk assessments linked to ${hzId}.<br><button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="openAddRisk(null,'${hzId}')">+ Add Risk Assessment</button></div>`;
+    rolePanel.style.display = 'none';
+    return;
+  }
+
+  // Render role assignment panel
+  rolePanel.style.display = 'block';
+  const roleList = document.getElementById('bt-role-list');
+  roleList.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;">` +
+    risks.map(r=>{
+      const role = ST.bowtieRoles[r.id] || 'threat';
+      return `<div style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:6px 10px;">
+        <span class="id-chip risk">${r.id}</span>
+        <span style="font-size:11px;color:var(--text2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.desc}">${r.desc.substring(0,35)}…</span>
+        <div style="display:flex;gap:4px;margin-left:4px;">
+          <button class="btn btn-xs ${role==='threat'?'btn-danger':'btn-ghost'}" onclick="setBowtieRole('${r.id}','threat','${hzId}')">◀ Threat</button>
+          <button class="btn btn-xs ${role==='consequence'?'btn-warning':'btn-ghost'}" onclick="setBowtieRole('${r.id}','consequence','${hzId}')">Consequence ▶</button>
+        </div>
+      </div>`;
+    }).join('') + `</div>`;
+
+  // Separate into threats and consequences
+  const threats = risks.filter(r=>(ST.bowtieRoles[r.id]||'threat')==='threat');
+  const consequences = risks.filter(r=>ST.bowtieRoles[r.id]==='consequence');
+
+  // Build and inject SVG
+  diagramEl.innerHTML = buildBowtieSVG(hz, threats, consequences);
+}
+
+function setBowtieRole(riskId, role, hzId){
+  ST.bowtieRoles[riskId] = role;
+  autosave();
+  drawBowtie(hzId);
+}
+
+function effColor(eff, present){
+  if(present === 'absent') return '#d45c00';
+  switch(eff){
+    case 'Effective':           return '#00934f';
+    case 'Partially Effective': return '#c08a00';
+    case 'Not Effective':       return '#cc2236';
+    case 'Not Checked':
+    default:                    return '#8a94aa';
+  }
+}
+
+function effStroke(eff, present){
+  if(present === 'absent') return '#d45c0044';
+  switch(eff){
+    case 'Effective':           return '#00934f55';
+    case 'Partially Effective': return '#c08a0055';
+    case 'Not Effective':       return '#cc223655';
+    default:                    return '#8a94aa55';
+  }
+}
+
+function buildBowtieSVG(hz, threats, consequences){
+  // Layout constants
+  const W = 1200;
+  const CX = W / 2;          // centre x
+  const CY = 300;             // centre y
+  const NODE_W = 140;        // top-event box width
+  const NODE_H = 60;
+  const BARRIER_W = 18;      // barrier pill width
+  const BARRIER_H = 52;
+  const BARRIER_GAP = 28;    // gap between barriers
+  const THREAT_X_END = CX - NODE_W/2 - 30;  // where threat arms meet the centre
+  const CONSQ_X_START = CX + NODE_W/2 + 30;
+  const RISK_NODE_W = 150;
+  const RISK_NODE_H = 52;
+  const V_SPACING = 100;     // vertical spacing between risks
+
+  let svgParts = [];
+  let tooltipData = {}; // for click interactions
+
+  // Calculate height needed
+  const maxSide = Math.max(threats.length, consequences.length, 1);
+  const H = Math.max(500, maxSide * V_SPACING + 180);
+  const realCY = H / 2;
+
+  // ── DEFS (gradients, filters) ──
+  svgParts.push(`<defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="3" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="3" flood-color="#1a2033" flood-opacity="0.12"/>
+    </filter>
+    <linearGradient id="threatGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#cc2236;stop-opacity:.06"/>
+      <stop offset="100%" style="stop-color:#cc2236;stop-opacity:.01"/>
+    </linearGradient>
+    <linearGradient id="consqGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#c08a00;stop-opacity:.01"/>
+      <stop offset="100%" style="stop-color:#c08a00;stop-opacity:.06"/>
+    </linearGradient>
+  </defs>`);
+
+  // ── BACKGROUND ZONES ──
+  svgParts.push(`
+    <rect x="0" y="0" width="${CX}" height="${H}" fill="url(#threatGrad)" rx="0"/>
+    <rect x="${CX}" y="0" width="${CX}" height="${H}" fill="url(#consqGrad)" rx="0"/>
+    <text x="20" y="22" font-size="9" font-weight="700" letter-spacing="1.5" fill="#cc223666" font-family="'Rajdhani',sans-serif" text-transform="uppercase">THREATS / CAUSES</text>
+    <text x="${W-20}" y="22" font-size="9" font-weight="700" letter-spacing="1.5" fill="#c08a0066" font-family="'Rajdhani',sans-serif" text-anchor="end">CONSEQUENCES / OUTCOMES</text>
+  `);
+
+  // ── HELPER: risk node colour ──
+  function riskNodeColor(r){
+    const sc = rScore(r.prob, r.sev);
+    return rColor(sc);
+  }
+
+  // ── THREATS (left side) ──
+  threats.forEach((r, idx)=>{
+    const totalH = threats.length * V_SPACING;
+    const startY = realCY - totalH/2 + V_SPACING/2;
+    const ry = startY + idx * V_SPACING;
+    const rx = 30;
+
+    // Controls for this risk
+    const ctrls = r.ctrlIds.map(id=>ST.controls.find(c=>c.id===id)).filter(Boolean);
+    const numBarriers = ctrls.length || 0;
+
+    // Arm line from risk node to centre
+    const armStartX = rx + RISK_NODE_W;
+    const armEndX = THREAT_X_END;
+
+    // Draw arm bow (straight line from risk to centre opening)
+    svgParts.push(`<line x1="${armStartX + 8}" y1="${ry}" x2="${armEndX}" y2="${realCY}"
+      stroke="#c8d0e0" stroke-width="1.5" stroke-dasharray="4,3" opacity=".8"/>`);
+
+    // Draw barriers along the arm
+    const armLength = armEndX - armStartX - 8;
+    if(numBarriers > 0){
+      const barrierSpacing = armLength / (numBarriers + 1);
+      ctrls.forEach((ctrl, bi)=>{
+        const bx = armStartX + 8 + barrierSpacing * (bi + 1);
+        const by = ry + (realCY - ry) * (barrierSpacing * (bi+1)) / armLength;
+        const col = effColor(ctrl.eff, ctrl.present);
+        const strokeCol = effStroke(ctrl.eff, ctrl.present);
+        const isPresentAbsent = ctrl.present === 'absent';
+        // Barrier pill
+        svgParts.push(`
+          <g class="bt-barrier-btn" onclick="showBarrierDetail('${ctrl.id}')" style="cursor:pointer;">
+            <rect x="${bx - BARRIER_W/2}" y="${by - BARRIER_H/2}" width="${BARRIER_W}" height="${BARRIER_H}"
+              rx="4" fill="${col}" opacity="${isPresentAbsent?'.4':'.85'}" filter="url(#shadow)"/>
+            ${isPresentAbsent?`<line x1="${bx-BARRIER_W/2}" y1="${by-BARRIER_H/2}" x2="${bx+BARRIER_W/2}" y2="${by+BARRIER_H/2}" stroke="#fff" stroke-width="2" opacity=".6"/>
+            <line x1="${bx+BARRIER_W/2}" y1="${by-BARRIER_H/2}" x2="${bx-BARRIER_W/2}" y2="${by+BARRIER_H/2}" stroke="#fff" stroke-width="2" opacity=".6"/>` : ''}
+            <text x="${bx}" y="${by + 1}" text-anchor="middle" dominant-baseline="middle"
+              font-size="7.5" font-weight="700" fill="#fff" font-family="'JetBrains Mono',sans-serif"
+              transform="rotate(-90,${bx},${by})">${ctrl.id}</text>
+            <title>${ctrl.id}: ${ctrl.desc}\nEffectiveness: ${ctrl.eff}\nPresent: ${ctrl.present}</title>
+          </g>`);
+      });
+    } else {
+      // No barriers — show warning
+      const bx = (armStartX + armEndX) / 2;
+      const by = ry + (realCY - ry) * 0.5;
+      svgParts.push(`<text x="${bx}" y="${by}" text-anchor="middle" font-size="9" fill="#cc223699" font-family="'DM Sans',sans-serif">no barriers</text>`);
+    }
+
+    // Risk node (threat box)
+    const rCol = riskNodeColor(r);
+    const sc = rScore(r.prob, r.sev);
+    svgParts.push(`
+      <g class="bt-barrier-btn" onclick="showRiskDetail('${r.id}')">
+        <rect x="${rx}" y="${ry - RISK_NODE_H/2}" width="${RISK_NODE_W}" height="${RISK_NODE_H}"
+          rx="7" fill="#ffffff" stroke="${rCol}" stroke-width="1.5" filter="url(#shadow)"/>
+        <text x="${rx + 8}" y="${ry - 10}" font-size="9.5" font-weight="700" fill="${rCol}"
+          font-family="'JetBrains Mono',sans-serif">${r.id}</text>
+        <text x="${rx + RISK_NODE_W/2}" y="${ry + 6}" text-anchor="middle"
+          font-size="9" fill="#4a5570" font-family="'DM Sans',sans-serif">
+          <tspan x="${rx + RISK_NODE_W/2}" dy="0">${r.desc.substring(0,20)}</tspan>
+          ${r.desc.length>20?`<tspan x="${rx + RISK_NODE_W/2}" dy="11">${r.desc.substring(20,40)}${r.desc.length>40?'…':''}</tspan>`:''}
+        </text>
+        <text x="${rx + RISK_NODE_W - 6}" y="${ry - 10}" text-anchor="end" font-size="9" font-weight="700" fill="${rCol}" font-family="'Rajdhani',sans-serif">${sc}</text>
+        <title>${r.id}: ${r.desc}\nInitial Risk: ${sc} (${rLevel(sc)})\nControls: ${numBarriers}</title>
+      </g>`);
+
+    // Threat arrow head pointing right toward centre
+    svgParts.push(`<polygon points="${armEndX},${realCY-5} ${armEndX+10},${realCY} ${armEndX},${realCY+5}"
+      fill="#cc223655" opacity=".9"/>`);
+  });
+
+  // ── CONSEQUENCES (right side) ──
+  consequences.forEach((r, idx)=>{
+    const totalH = consequences.length * V_SPACING;
+    const startY = realCY - totalH/2 + V_SPACING/2;
+    const ry = startY + idx * V_SPACING;
+    const rx = W - 30 - RISK_NODE_W;
+
+    const ctrls = r.ctrlIds.map(id=>ST.controls.find(c=>c.id===id)).filter(Boolean);
+    const numBarriers = ctrls.length || 0;
+
+    const armStartX = CONSQ_X_START;
+    const armEndX = rx;
+
+    // Arm line from centre to consequence
+    svgParts.push(`<line x1="${armStartX}" y1="${realCY}" x2="${armEndX - 8}" y2="${ry}"
+      stroke="#c8d0e0" stroke-width="1.5" stroke-dasharray="4,3" opacity=".8"/>`);
+
+    // Draw barriers along the arm
+    const armLength = armEndX - armStartX - 8;
+    if(numBarriers > 0){
+      const barrierSpacing = armLength / (numBarriers + 1);
+      ctrls.forEach((ctrl, bi)=>{
+        const bx = armStartX + barrierSpacing * (bi + 1);
+        const by = realCY + (ry - realCY) * (barrierSpacing * (bi+1)) / armLength;
+        const col = effColor(ctrl.eff, ctrl.present);
+        const isPresentAbsent = ctrl.present === 'absent';
+        svgParts.push(`
+          <g class="bt-barrier-btn" onclick="showBarrierDetail('${ctrl.id}')" style="cursor:pointer;">
+            <rect x="${bx - BARRIER_W/2}" y="${by - BARRIER_H/2}" width="${BARRIER_W}" height="${BARRIER_H}"
+              rx="4" fill="${col}" opacity="${isPresentAbsent?'.4':'.85'}" filter="url(#shadow)"/>
+            ${isPresentAbsent?`<line x1="${bx-BARRIER_W/2}" y1="${by-BARRIER_H/2}" x2="${bx+BARRIER_W/2}" y2="${by+BARRIER_H/2}" stroke="#fff" stroke-width="2" opacity=".6"/>
+            <line x1="${bx+BARRIER_W/2}" y1="${by-BARRIER_H/2}" x2="${bx-BARRIER_W/2}" y2="${by+BARRIER_H/2}" stroke="#fff" stroke-width="2" opacity=".6"/>` : ''}
+            <text x="${bx}" y="${by + 1}" text-anchor="middle" dominant-baseline="middle"
+              font-size="7.5" font-weight="700" fill="#fff" font-family="'JetBrains Mono',sans-serif"
+              transform="rotate(-90,${bx},${by})">${ctrl.id}</text>
+            <title>${ctrl.id}: ${ctrl.desc}\nEffectiveness: ${ctrl.eff}\nPresent: ${ctrl.present}</title>
+          </g>`);
+      });
+    } else {
+      const bx = (armStartX + armEndX) / 2;
+      const by = realCY + (ry - realCY) * 0.5;
+      svgParts.push(`<text x="${bx}" y="${by}" text-anchor="middle" font-size="9" fill="#c08a0099" font-family="'DM Sans',sans-serif">no barriers</text>`);
+    }
+
+    // Consequence arrow head pointing right away from centre
+    svgParts.push(`<polygon points="${armStartX},${realCY-5} ${armStartX-10},${realCY} ${armStartX},${realCY+5}"
+      fill="#c08a0055" opacity=".9"/>`);
+
+    // Risk node (consequence box)
+    const rCol = riskNodeColor(r);
+    const sc = rScore(r.prob, r.sev);
+    svgParts.push(`
+      <g class="bt-barrier-btn" onclick="showRiskDetail('${r.id}')">
+        <rect x="${rx}" y="${ry - RISK_NODE_H/2}" width="${RISK_NODE_W}" height="${RISK_NODE_H}"
+          rx="7" fill="#ffffff" stroke="${rCol}" stroke-width="1.5" filter="url(#shadow)"/>
+        <text x="${rx + 8}" y="${ry - 10}" font-size="9.5" font-weight="700" fill="${rCol}"
+          font-family="'JetBrains Mono',sans-serif">${r.id}</text>
+        <text x="${rx + RISK_NODE_W/2}" y="${ry + 6}" text-anchor="middle"
+          font-size="9" fill="#4a5570" font-family="'DM Sans',sans-serif">
+          <tspan x="${rx + RISK_NODE_W/2}" dy="0">${r.desc.substring(0,20)}</tspan>
+          ${r.desc.length>20?`<tspan x="${rx + RISK_NODE_W/2}" dy="11">${r.desc.substring(20,40)}${r.desc.length>40?'…':''}</tspan>`:''}
+        </text>
+        <text x="${rx + RISK_NODE_W - 6}" y="${ry - 10}" text-anchor="end" font-size="9" font-weight="700" fill="${rCol}" font-family="'Rajdhani',sans-serif">${sc}</text>
+        <title>${r.id}: ${r.desc}</title>
+      </g>`);
+  });
+
+  const hzStatus = calcHazardStatus(hz.id);
+  const hzStatusColor = {'Open':'#cc2236','Monitoring':'#c08a00','Closed':'#00934f'}[hzStatus]||'#cc2236';
+  const allRiskScore = risks.length ? Math.max(...risks.map(r=>rScore(r.prob,r.sev))) : 0;
+  const allRiskColor = rColor(allRiskScore);
+
+  // Bow-tie shape: two triangles meeting at centre point
+  svgParts.push(`
+    <polygon points="${THREAT_X_END},${realCY - 80} ${CX - NODE_W/2},${realCY} ${THREAT_X_END},${realCY + 80}"
+      fill="#cc2236" opacity=".06"/>
+    <polygon points="${THREAT_X_END},${realCY - 80} ${CX - NODE_W/2},${realCY} ${THREAT_X_END},${realCY + 80}"
+      fill="none" stroke="#cc223622" stroke-width="1"/>
+  `);
+  svgParts.push(`
+    <polygon points="${CONSQ_X_START},${realCY - 80} ${CX + NODE_W/2},${realCY} ${CONSQ_X_START},${realCY + 80}"
+      fill="#c08a00" opacity=".05"/>
+    <polygon points="${CONSQ_X_START},${realCY - 80} ${CX + NODE_W/2},${realCY} ${CONSQ_X_START},${realCY + 80}"
+      fill="none" stroke="#c08a0022" stroke-width="1"/>
+  `);
+
+  // Top Event box
+  const teX = CX - NODE_W/2;
+  const teY = realCY - NODE_H/2 - 10;
+  const teW = NODE_W;
+  const teH = NODE_H + 20;
+
+  svgParts.push(`
+    <rect x="${teX}" y="${teY}" width="${teW}" height="${teH}" rx="10"
+      fill="#ffffff" stroke="${hzStatusColor}" stroke-width="2" filter="url(#shadow)"/>
+    <rect x="${teX}" y="${teY}" width="${teW}" height="${teH}" rx="10"
+      fill="${hzStatusColor}" opacity=".06"/>
+
+    <text x="${CX}" y="${teY + 16}" text-anchor="middle" font-size="8.5" font-weight="700"
+      fill="${hzStatusColor}" font-family="'Rajdhani',sans-serif" letter-spacing="1">TOP EVENT</text>
+
+    <text x="${CX}" y="${teY + 30}" text-anchor="middle" font-size="9.5" font-weight="700"
+      fill="#1a2033" font-family="'JetBrains Mono',sans-serif">${hz.id}</text>
+
+    <foreignObject x="${teX + 6}" y="${teY + 38}" width="${teW - 12}" height="${teH - 46}">
+      <div xmlns="http://www.w3.org/1999/xhtml"
+        style="font-size:8px;color:#4a5570;font-family:'DM Sans',sans-serif;text-align:center;line-height:1.3;overflow:hidden;">
+        ${hz.desc.substring(0,60)}${hz.desc.length>60?'…':''}
+      </div>
+    </foreignObject>
+
+    <text x="${CX}" y="${teY + teH - 6}" text-anchor="middle" font-size="8" font-weight="700"
+      fill="${hzStatusColor}" font-family="'Rajdhani',sans-serif">${hzStatus.toUpperCase()}</text>
+  `);
+
+  // ── LABELS ──
+  svgParts.push(`
+    <text x="${CX - NODE_W/2 - 20}" y="${realCY - 88}" text-anchor="middle"
+      font-size="8" fill="#cc223688" font-family="'Rajdhani',sans-serif" letter-spacing=".8">PREVENTION</text>
+    <text x="${CX - NODE_W/2 - 20}" y="${realCY - 78}" text-anchor="middle"
+      font-size="8" fill="#cc223688" font-family="'Rajdhani',sans-serif" letter-spacing=".8">BARRIERS</text>
+    <text x="${CX + NODE_W/2 + 20}" y="${realCY - 88}" text-anchor="middle"
+      font-size="8" fill="#c08a0088" font-family="'Rajdhani',sans-serif" letter-spacing=".8">RECOVERY</text>
+    <text x="${CX + NODE_W/2 + 20}" y="${realCY - 78}" text-anchor="middle"
+      font-size="8" fill="#c08a0088" font-family="'Rajdhani',sans-serif" letter-spacing=".8">BARRIERS</text>
+  `);
+
+  // ── STATS FOOTER ──
+  const totalBarriers = risks.flatMap(r=>r.ctrlIds).length;
+  const effectiveBarriers = risks.flatMap(r=>r.ctrlIds).filter(id=>{
+    const c=ST.controls.find(x=>x.id===id);
+    return c && c.eff==='Effective' && c.present==='present';
+  }).length;
+  const pct = totalBarriers ? Math.round(effectiveBarriers/totalBarriers*100) : 0;
+
+  svgParts.push(`
+    <text x="${CX}" y="${H - 14}" text-anchor="middle" font-size="9" fill="#8a94aa"
+      font-family="'DM Sans',sans-serif">
+      ${threats.length} threat${threats.length!==1?'s':''} · ${consequences.length} consequence${consequences.length!==1?'s':''} · ${totalBarriers} barrier${totalBarriers!==1?'s':''} · ${pct}% effective
+    </text>
+  `);
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}"
+    style="width:100%;min-width:800px;height:${H}px;display:block;background:#f4f6fb;border-radius:0 0 11px 11px;">
+    ${svgParts.join('\n')}
+  </svg>`;
+}
+
+function showBarrierDetail(ctrlId){
+  const c = ST.controls.find(x=>x.id===ctrlId);
+  if(!c) return;
+  const rk = ST.risks.find(r=>r.id===c.rkId)||{};
+  const hz = ST.hazards.find(h=>h.id===rk.hzId)||{};
+  const effCls = ({'Effective':'eff-effective','Partially Effective':'eff-partially','Not Effective':'eff-not-effective','Not Checked':'eff-not-checked'})[c.eff]||'eff-not-checked';
+  document.getElementById('bt-detail-title').textContent = `Barrier: ${c.id}`;
+  document.getElementById('bt-detail-body').innerHTML = `
+    <div class="g2" style="gap:14px;">
+      <div>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;">Control Description</div>
+        <div style="font-size:13px;color:var(--text);margin-bottom:10px;">${c.desc}</div>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;">Linked Risk</div>
+        <div style="margin-bottom:10px;"><span class="id-chip risk">${c.rkId||'—'}</span> <span style="font-size:11px;color:var(--text2);">${rk.desc||''}</span></div>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;">Hazard</div>
+        <div><span class="id-chip">${hz.id||'—'}</span></div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;">Effectiveness</div>
+        <span class="eff-badge ${effCls}" style="font-size:13px;padding:4px 12px;">${c.eff}</span>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin:10px 0 3px;">Present</div>
+        <span class="pres-badge pres-${c.present}" style="font-size:12px;">${c.present==='present'?'Present':'Absent'}</span>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin:10px 0 3px;">Type</div>
+        <div style="font-size:12px;color:var(--text2);">${c.type||'—'}</div>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin:10px 0 3px;">Monitoring</div>
+        <div style="font-size:12px;color:var(--text2);">${c.mon||'—'} · ${c.freq||'—'}</div>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin:10px 0 3px;">Responsible</div>
+        <div style="font-size:12px;color:var(--text2);">${c.resp||'—'}</div>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin:10px 0 3px;">Last Checked</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);">${c.lastChk||'Never'}</div>
+        <div style="margin-top:12px;">
+          <button class="btn btn-primary btn-sm" onclick="closeM('m-detail');openVerifyCtrl('${c.id}')">✓ Record Verification</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('bt-detail-panel').style.display='none';openAddCtrl('${c.id}')">Edit this Control</button>
+        </div>
+      </div>
+    </div>
+    ${c.remarks?`<div style="margin-top:10px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;">Setup Remarks</div>
+    <div style="background:var(--bg3);border-radius:7px;padding:8px 11px;font-size:11.5px;color:var(--text2);">${c.remarks}</div>`:''}
+    ${c.verRemarks?`<div style="margin-top:10px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;">Last Verification Remarks</div>
+    <div style="background:rgba(0,147,79,.05);border:1px solid rgba(0,147,79,.15);border-radius:7px;padding:8px 11px;font-size:11.5px;color:var(--text2);">${c.verRemarks}</div>`:''}
+    ${c.verHistory&&c.verHistory.length?`
+    <div style="margin-top:12px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;">Verification History (${c.verHistory.length})</div>
+    <div class="timeline">
+      ${[...c.verHistory].reverse().map(v=>`<div class="tl-item">
+        <div class="tl-date">${v.date} — Verified by ${v.verBy||'—'}</div>
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:3px;">
+          <span class="eff-badge eff-${(v.prevEff||'').toLowerCase().replace(/\s+/g,'-')}">${v.prevEff||'?'}</span>
+          <span style="font-size:10px;color:var(--text3);">→</span>
+          <span class="eff-badge eff-${v.newEff.toLowerCase().replace(/\s+/g,'-')}">${v.newEff}</span>
+        </div>
+        <div class="tl-text">${v.remarks}</div>
+      </div>`).join('')}
+    </div>`:''}
+  `;
+  document.getElementById('bt-detail-panel').style.display = 'block';
+  document.getElementById('bt-detail-panel').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function showRiskDetail(riskId){
+  const r = ST.risks.find(x=>x.id===riskId); if(!r) return;
+  document.getElementById('bt-detail-title').textContent = `Risk: ${r.id}`;
+  document.getElementById('bt-detail-body').innerHTML = `
+    <div style="margin-bottom:8px;"><span class="id-chip risk">${r.id}</span> <span style="font-size:13px;color:var(--text);margin-left:6px;">${r.desc}</span></div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+      <span class="rbadge ${rClass(rLevel(rScore(r.prob,r.sev)))}">Initial: ${rScore(r.prob,r.sev)} ${rLevel(rScore(r.prob,r.sev))}</span>
+      <span class="rbadge ${rClass(rLevel(rScore(r.resProb,r.resSev)))}">Residual: ${rScore(r.resProb,r.resSev)} ${rLevel(rScore(r.resProb,r.resSev))}</span>
+      <span class="sbadge ${'sb-'+calcRiskStatus(r.id).toLowerCase()}">${calcRiskStatus(r.id)}</span>
+    </div>
+    <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px;">Barriers (${r.ctrlIds.length})</div>
+    ${r.ctrlIds.map(cid=>{
+      const c=ST.controls.find(x=>x.id===cid);
+      if(!c)return'';
+      const effCls=({'Effective':'eff-effective','Partially Effective':'eff-partially','Not Effective':'eff-not-effective','Not Checked':'eff-not-checked'})[c.eff]||'eff-not-checked';
+      return`<div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--border);">
+        <span class="id-chip ctrl">${c.id}</span>
+        <span style="flex:1;font-size:11.5px;color:var(--text2);">${c.desc}</span>
+        <span class="eff-badge ${effCls}">${c.eff}</span>
+      </div>`;
+    }).join('')}
+    <div style="margin-top:10px;">
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('bt-detail-panel').style.display='none';openAddRisk('${r.id}')">Edit this Risk</button>
+    </div>
+  `;
+  document.getElementById('bt-detail-panel').style.display = 'block';
+  document.getElementById('bt-detail-panel').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ═══════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════
+function renderDashboard(){
+  document.getElementById('dash-date').textContent=new Date().toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+  document.getElementById('d-hz').textContent=ST.hazards.length;
+  document.getElementById('d-rk').textContent=ST.risks.filter(r=>calcRiskStatus(r.id)!=='Closed').length;
+  document.getElementById('d-ct').textContent=ST.controls.length;
+  const mo=new Date().getMonth();
+  document.getElementById('d-ev').textContent=ST.events.filter(e=>new Date(e.date).getMonth()===mo).length;
+
+  // Top hazards
+  const topHz=[...ST.hazards].map(h=>{
+    const risks=ST.risks.filter(r=>r.hzId===h.id);
+    const maxSc=risks.length?Math.max(...risks.map(r=>rScore(r.prob,r.sev))):0;
+    return{...h,maxSc,lv:rLevel(maxSc)};
+  }).sort((a,b)=>b.maxSc-a.maxSc).slice(0,10);
+
+  const thEl=document.getElementById('d-top-hz');
+  thEl.innerHTML=topHz.length?topHz.map(h=>`
+    <div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--border);">
+      <span class="id-chip">${h.id}</span>
+      <span style="flex:1;font-size:11.5px;color:var(--text2);">${h.desc.substring(0,55)}</span>
+      <span class="rbadge ${rClass(h.lv)}">${h.maxSc}</span>
+      <span class="sbadge ${'sb-'+calcHazardStatus(h.id).toLowerCase()}">${calcHazardStatus(h.id)}</span>
+    </div>`).join(''):'<div style="color:var(--text3);font-size:12px;text-align:center;padding:18px;">No data</div>';
+
+  // Top risks by initial score
+  const topRk=[...ST.risks].sort((a,b)=>rScore(b.prob,b.sev)-rScore(a.prob,a.sev)).slice(0,10);
+  const trEl=document.getElementById('d-top-rk');
+  trEl.innerHTML=topRk.length?topRk.map(r=>{
+    const sc=rScore(r.prob,r.sev),lv=rLevel(sc);
+    return`<div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--border);">
+      <span class="id-chip risk">${r.id}</span>
+      <span style="flex:1;font-size:11.5px;color:var(--text2);">${r.desc.substring(0,50)}</span>
+      <span class="rbadge ${rClass(lv)}">${sc}</span>
+    </div>`;
+  }).join(''):'<div style="color:var(--text3);font-size:12px;text-align:center;padding:18px;">No data</div>';
+
+  // Dept overview
+  const deptEl=document.getElementById('d-depts');
+  const deptData=ST.lists.departments.map(d=>{
+    const dRisks=ST.risks.filter(r=>{ const h=ST.hazards.find(x=>x.id===r.hzId); return h&&h.dept===d; });
+    const maxSc=dRisks.length?Math.max(...dRisks.map(r=>rScore(r.prob,r.sev))):0;
+    return{dept:d,count:dRisks.length,maxSc,lv:rLevel(maxSc)};
+  }).filter(d=>d.count>0);
+  deptEl.innerHTML=deptData.length?deptData.map(d=>`
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+        <span class="dept-pill">${d.dept}</span>
+        <span class="rbadge ${rClass(d.lv)}">${d.count} risks</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${Math.min(100,d.maxSc*4)}%;background:${rColor(d.maxSc)};"></div></div>
+    </div>`).join(''):'<div style="color:var(--text3);font-size:12px;text-align:center;padding:18px;">No data</div>';
+
+  // Control effectiveness
+  let eff=0,part=0,neff=0,nchk=0;
+  ST.controls.forEach(c=>{ if(c.eff==='Effective')eff++; else if(c.eff==='Partially Effective')part++; else if(c.eff==='Not Effective')neff++; else nchk++; });
+  const total=ST.controls.length||1;
+  const ceEl=document.getElementById('d-ctrl-eff');
+  ceEl.innerHTML=ST.controls.length?`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div style="background:var(--bg3);border-radius:7px;padding:10px;text-align:center;cursor:pointer;" onclick="navTo('controls',{eff:'Effective'})" title="View Effective controls">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:var(--green);">${eff}</div>
+        <div style="font-size:10px;color:var(--text3);">Effective ↗</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:7px;padding:10px;text-align:center;cursor:pointer;" onclick="navTo('controls',{eff:'Partially Effective'})" title="View Partially Effective">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:var(--yellow);">${part}</div>
+        <div style="font-size:10px;color:var(--text3);">Partially ↗</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:7px;padding:10px;text-align:center;cursor:pointer;" onclick="navTo('controls',{eff:'Not Effective'})" title="View Not Effective">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:var(--red);">${neff}</div>
+        <div style="font-size:10px;color:var(--text3);">Not Effective ↗</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:7px;padding:10px;text-align:center;cursor:pointer;" onclick="navTo('controls',{eff:'Not Checked'})" title="View Not Checked">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:var(--text3);">${nchk}</div>
+        <div style="font-size:10px;color:var(--text3);">Not Checked ↗</div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:4px;">Overall Compliance</div>
+    <div class="prog-bar" style="height:8px;">
+      <div class="prog-fill" style="width:${Math.round(eff/total*100)}%;background:var(--green);"></div>
+    </div>
+    <div style="font-size:10.5px;color:var(--text3);margin-top:3px;">${Math.round(eff/total*100)}% effective</div>
+  `:'<div style="color:var(--text3);font-size:12px;text-align:center;padding:18px;">No controls yet</div>';
+
+  updateBackupBar();
+}
+
+// ═══════════════════════════════════════════════════
+//  SETTINGS
+// ═══════════════════════════════════════════════════
+function renderSettings(){
+  document.getElementById('s-org').value=ST.org.name;
+  document.getElementById('s-cert').value=ST.org.cert;
+  document.getElementById('s-accmgr').value=ST.org.accMgr;
+  document.getElementById('s-sfmgr').value=ST.org.sfMgr;
+  document.getElementById('s-auth').value=ST.org.auth;
+
+  // Pre-fill GitHub config (never pre-fill token for security)
+  const ghOwnerEl = document.getElementById('gh-owner'); if(ghOwnerEl) ghOwnerEl.value = GH.owner;
+  const ghRepoEl  = document.getElementById('gh-repo');  if(ghRepoEl)  ghRepoEl.value  = GH.repo;
+  const ghPathEl  = document.getElementById('gh-filepath'); if(ghPathEl) ghPathEl.value = GH.filePath;
+  const ghBadge   = document.getElementById('gh-settings-badge');
+  if(ghBadge){ ghBadge.textContent = GH.enabled ? '✅ Connected' : '— Not configured'; ghBadge.style.color = GH.enabled ? 'var(--green)':'var(--text3)'; }
+
+  // Render all list editors
+  const listKeys=['departments','locations','sources','ctrlTypes','effValues','monMethods','freqs','respPersons','respExec','validBy'];
+  listKeys.forEach(k=>renderListEditor(`s-${k}`,k));
+  updateBackupBar();
+}
+
+function renderListEditor(elId, stKey){
+  const el=document.getElementById(elId); if(!el)return;
+  el.innerHTML=ST.lists[stKey].map((v,i)=>`
+    <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;">
+      <input class="fi" value="${v}" onchange="ST.lists['${stKey}'][${i}]=this.value;autosave();" style="flex:1;">
+      <button class="btn btn-danger btn-xs" onclick="ST.lists['${stKey}'].splice(${i},1);renderListEditor('${elId}','${stKey}');autosave();">✕</button>
+    </div>`).join('');
+}
+
+function addListItem(elId){
+  // find stKey from elId (e.g. 's-departments' → 'departments')
+  const stKey=elId.replace('s-','');
+  ST.lists[stKey].push('New item');
+  renderListEditor(elId,stKey);
+  autosave();
+}
+
+async function testGhConnection(){
+  const res = document.getElementById('gh-test-result');
+  if(!GH.enabled){ res.innerHTML='<span style="color:var(--orange);">⚠ Not configured — fill in the fields and click Connect first.</span>'; return; }
+  res.innerHTML='<span style="color:var(--accent);">Testing…</span>';
+  try{
+    const r = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}`,{headers:{'Authorization':`token ${GH.token}`}});
+    const d = await r.json();
+    if(r.ok){
+      const priv = d.private ? '🔒 Private' : '⚠ PUBLIC — change to private!';
+      res.innerHTML=`<span style="color:var(--green);">✅ Connected to <strong>${d.full_name}</strong> (${priv}) — ${d.size}KB used</span>`;
+    } else {
+      res.innerHTML=`<span style="color:var(--red);">❌ ${d.message}</span>`;
+    }
+  }catch(e){ res.innerHTML=`<span style="color:var(--red);">❌ Network error: ${e.message}</span>`; }
+}
+
+function disconnectGitHub(){
+  if(!confirm('Disconnect from GitHub? Your local data is safe but will no longer sync.')) return;
+  ['gh_owner','gh_repo','gh_token','gh_filepath','gh_sha'].forEach(k=>localStorage.removeItem(k));
+  updateGhStatus('off','GitHub disconnected');
+  renderSettings();
+  toast('GitHub disconnected','warning');
+}
+
+async function forcePushToGitHub(){
+  if(!GH.enabled){ toast('GitHub not configured','error'); return; }
+  updateGhStatus('loading','Pushing…');
+  await pushToGitHub();
+  toast('Data pushed to GitHub','success');
+}
+
+function showGhSetupGuide(){
+  document.getElementById('m-detail-title').textContent = '📖 GitHub Setup Guide';
+  document.getElementById('m-detail-body').innerHTML = `
+    <div style="font-size:12.5px;color:var(--text2);line-height:1.8;">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;">How to host AeroSafe SMS on GitHub — Free & Secure</div>
+
+      <div style="background:var(--bg3);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+        <div style="font-weight:700;color:var(--accent);margin-bottom:6px;">STEP 1 — Create two GitHub repositories</div>
+        <ol style="padding-left:18px;font-size:12px;">
+          <li style="margin-bottom:4px;">Go to <a href="https://github.com/new" target="_blank" style="color:var(--accent);">github.com/new</a></li>
+          <li style="margin-bottom:4px;">Create repo: <code style="background:var(--panel);padding:1px 5px;border-radius:3px;">ejme-sms-app</code> — set to <strong>Public</strong> (needed for free GitHub Pages hosting)</li>
+          <li style="margin-bottom:4px;">Upload your <code>aerosafe_sms.html</code> file to this repo and rename it <code>index.html</code></li>
+          <li style="margin-bottom:4px;">Go to <strong>Settings → Pages</strong> → Source: <strong>Deploy from branch → main</strong></li>
+          <li style="margin-bottom:4px;">Create a second repo: <code style="background:var(--panel);padding:1px 5px;border-radius:3px;">ejme-sms-data</code> — set to <strong>Private</strong> ⚠ (your data lives here)</li>
+          <li>In the data repo, create folder <code>data/</code> and add a placeholder file <code>data/.gitkeep</code></li>
+        </ol>
+      </div>
+
+      <div style="background:var(--bg3);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+        <div style="font-weight:700;color:var(--accent);margin-bottom:6px;">STEP 2 — Generate a Personal Access Token (PAT)</div>
+        <ol style="padding-left:18px;font-size:12px;">
+          <li style="margin-bottom:4px;">Go to <a href="https://github.com/settings/tokens/new?scopes=repo&description=AeroSafe+SMS" target="_blank" style="color:var(--accent);">GitHub → Settings → Developer Settings → Personal Access Tokens → Classic ↗</a></li>
+          <li style="margin-bottom:4px;">Name it: <code>AeroSafe SMS</code></li>
+          <li style="margin-bottom:4px;">Expiry: <strong>No expiration</strong> (or 1 year, you can rotate it)</li>
+          <li style="margin-bottom:4px;">Scopes: tick <strong>repo</strong> only</li>
+          <li>Copy the token — it starts with <code>ghp_</code>. You'll only see it once.</li>
+        </ol>
+      </div>
+
+      <div style="background:var(--bg3);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+        <div style="font-weight:700;color:var(--accent);margin-bottom:6px;">STEP 3 — Connect in Settings</div>
+        <ul style="padding-left:18px;font-size:12px;">
+          <li style="margin-bottom:4px;"><strong>GitHub Username</strong>: your GitHub username</li>
+          <li style="margin-bottom:4px;"><strong>Repository Name</strong>: <code>ejme-sms-data</code></li>
+          <li style="margin-bottom:4px;"><strong>Data File Path</strong>: <code>data/aerosafe_data.json</code></li>
+          <li style="margin-bottom:4px;"><strong>Token</strong>: paste your <code>ghp_…</code> token</li>
+          <li>Click <strong>Connect &amp; Test</strong> — it should confirm connection</li>
+        </ul>
+      </div>
+
+      <div style="background:var(--bg3);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+        <div style="font-weight:700;color:var(--accent);margin-bottom:6px;">STEP 4 — Access from anywhere</div>
+        <ul style="padding-left:18px;font-size:12px;">
+          <li style="margin-bottom:4px;">Your app URL will be: <code>https://YOUR-USERNAME.github.io/ejme-sms-app/</code></li>
+          <li style="margin-bottom:4px;">Open it on any device, enter your PAT once, and it syncs automatically</li>
+          <li style="margin-bottom:4px;">Each device stores the token in its own browser — it's never uploaded anywhere</li>
+          <li>Every save creates a commit in your private repo — full version history automatically</li>
+        </ul>
+      </div>
+
+      <div style="background:rgba(0,147,79,.06);border:1px solid rgba(0,147,79,.2);border-radius:8px;padding:10px 13px;font-size:11px;color:var(--text2);">
+        <strong style="color:var(--green);">Security notes:</strong> Your PAT is stored in your browser's localStorage only — it never leaves your device except to authenticate with GitHub's API over HTTPS. Keep your data repo <strong>Private</strong>. Rotate the token annually or if compromised.
+      </div>
+    </div>
+  `;
+  openM('m-detail');
+}
+
+function saveOrg(){
+  ST.org.name=document.getElementById('s-org').value;
+  ST.org.cert=document.getElementById('s-cert').value;
+  ST.org.accMgr=document.getElementById('s-accmgr').value;
+  ST.org.sfMgr=document.getElementById('s-sfmgr').value;
+  ST.org.auth=document.getElementById('s-auth').value;
+  document.getElementById('sb-org').textContent=ST.org.name;
+  document.getElementById('sb-cert').textContent=ST.org.cert+' · SMS';
+  document.getElementById('sb-auth').textContent=ST.org.auth+' · Part 145';
+  autosave();
+  toast('Organisation saved','success');
+}
+
+// ═══════════════════════════════════════════════════
+//  DATA PERSISTENCE — GitHub + localStorage hybrid
+//  Primary: GitHub Contents API (reads/writes data.json in repo)
+//  Fallback: localStorage (always kept in sync as offline cache)
+// ═══════════════════════════════════════════════════
+
+const GH = {
+  get owner(){ return localStorage.getItem('gh_owner')||''; },
+  get repo(){ return localStorage.getItem('gh_repo')||''; },
+  get token(){ return localStorage.getItem('gh_token')||''; },
+  get filePath(){ return localStorage.getItem('gh_filepath')||'data/aerosafe_data.json'; },
+  get sha(){ return localStorage.getItem('gh_sha')||''; },
+  set sha(v){ localStorage.setItem('gh_sha',v); },
+  get enabled(){ return !!(this.owner && this.repo && this.token); }
+};
+
+function autosave(){
+  // Always write to localStorage immediately (instant, offline-safe)
+  try{ localStorage.setItem('aerosafe_v2', JSON.stringify(ST)); }catch(e){}
+  // Then push to GitHub in the background (debounced 2s to avoid hammering API)
+  if(GH.enabled) scheduleGhPush();
+}
+
+let ghPushTimer = null;
+function scheduleGhPush(){
+  clearTimeout(ghPushTimer);
+  ghPushTimer = setTimeout(pushToGitHub, 2000);
+}
+
+async function pushToGitHub(){
+  if(!GH.enabled) return;
+  try{
+    const payload = {_meta:{app:'AeroSafe SMS',version:'2.0',saved:new Date().toISOString(),org:ST.org.name},...ST};
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
+    const body = { message:`AeroSafe auto-save ${new Date().toISOString()}`, content, committer:{name:'AeroSafe SMS',email:'sms@aerosafe.app'} };
+    if(GH.sha) body.sha = GH.sha;
+    const r = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${GH.filePath}`,{
+      method:'PUT', headers:{'Authorization':`token ${GH.token}`,'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    if(r.ok){
+      const d = await r.json();
+      GH.sha = d.content.sha;
+      updateGhStatus('saved', `Saved to GitHub ${new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}`);
+    } else {
+      const err = await r.json();
+      console.warn('GitHub push failed:', err.message);
+      updateGhStatus('error', `GitHub save failed: ${err.message}`);
+    }
+  }catch(e){
+    console.warn('GitHub push error:', e);
+    updateGhStatus('error', 'GitHub offline — data saved locally');
+  }
+}
+
+async function loadFromGitHub(){
+  if(!GH.enabled) return false;
+  updateGhStatus('loading','Loading from GitHub…');
+  try{
+    const r = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${GH.filePath}`,{
+      headers:{'Authorization':`token ${GH.token}`,'Accept':'application/vnd.github.v3+json'}
+    });
+    if(r.status === 404){
+      updateGhStatus('new','No data file found in repo — will create on first save');
+      return false;
+    }
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    const meta = await r.json();
+    GH.sha = meta.sha;
+    const raw = decodeURIComponent(escape(atob(meta.content.replace(/\n/g,''))));
+    const {_meta,...d} = JSON.parse(raw);
+    Object.assign(ST,d);
+    // Migration guard
+    if(ST.risks) ST.risks.forEach(r=>{ if(r.addlCtrls&&r.addlCtrls.length&&typeof r.addlCtrls[0]==='string'&&!r.addlCtrls[0].startsWith('CTRL-')) r.addlCtrls=[]; });
+    localStorage.setItem('aerosafe_v2', JSON.stringify(ST));
+    updateGhStatus('ok',`Loaded from GitHub`);
+    return true;
+  }catch(e){
+    console.warn('GitHub load error:', e);
+    updateGhStatus('error',`GitHub load failed — using local cache`);
+    return false;
+  }
+}
+
+function loadFromStorage(){
+  try{
+    const raw=localStorage.getItem('aerosafe_v2');
+    if(raw){
+      const d=JSON.parse(raw);
+      Object.assign(ST,d);
+      if(ST.risks) ST.risks.forEach(r=>{ if(r.addlCtrls&&r.addlCtrls.length&&typeof r.addlCtrls[0]==='string'&&!r.addlCtrls[0].startsWith('CTRL-')) r.addlCtrls=[]; });
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
+function updateGhStatus(state, msg){
+  const el = document.getElementById('gh-status-indicator');
+  if(!el) return;
+  const icons = {ok:'☁✅', saved:'☁✅', loading:'☁⟳', error:'☁⚠', new:'☁✨', off:'☁✗'};
+  const colors = {ok:'var(--green)', saved:'var(--green)', loading:'var(--accent)', error:'var(--red)', new:'var(--yellow)', off:'var(--text3)'};
+  el.textContent = `${icons[state]||'☁'} ${msg}`;
+  el.style.color = colors[state]||'var(--text3)';
+}
+
+function saveGhConfig(){
+  const owner = document.getElementById('gh-owner').value.trim();
+  const repo = document.getElementById('gh-repo').value.trim();
+  const token = document.getElementById('gh-token').value.trim();
+  const path = document.getElementById('gh-filepath').value.trim() || 'data/aerosafe_data.json';
+  if(!owner||!repo||!token){ toast('Please fill in owner, repo and token','error'); return; }
+  localStorage.setItem('gh_owner', owner);
+  localStorage.setItem('gh_repo', repo);
+  localStorage.setItem('gh_token', token);
+  localStorage.setItem('gh_filepath', path);
+  localStorage.removeItem('gh_sha'); // reset SHA so next push creates file if needed
+  toast('GitHub config saved — testing connection…','info');
+  loadFromGitHub().then(ok=>{
+    if(ok){ toast('✅ Connected to GitHub successfully!','success'); renderSettings(); }
+    else{ toast('Config saved. Push any change to create the data file.','warning'); }
+  });
+}
+
+function backupNow(){
+  const today=new Date().toISOString().split('T')[0];
+  const payload={_meta:{app:'AeroSafe SMS',version:'2.0',exported:new Date().toISOString(),org:ST.org.name,cert:ST.org.cert},...ST};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=`aerosafe_data_${today}.json`; a.click();
+  URL.revokeObjectURL(url);
+  localStorage.setItem('aerosafe_last_backup',Date.now().toString());
+  updateBackupBar();
+  toast(`Backup saved: aerosafe_data_${today}.json`,'success');
+}
+
+function importData(){
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='.json';
+  inp.onchange=e=>{
+    const f=e.target.files[0]; if(!f)return;
+    const rd=new FileReader();
+    rd.onload=ev=>{
+      try{
+        const {_meta,...d}=JSON.parse(ev.target.result);
+        Object.assign(ST,d); autosave(); updateBadges(); renderDashboard();
+        toast(`✅ Restored from ${f.name}`,'success');
+      }catch(err){ toast('Invalid backup file','error'); }
+    };
+    rd.readAsText(f);
+  };
+  inp.click();
+}
+
+function updateBackupBar(){
+  const last=localStorage.getItem('aerosafe_last_backup');
+  const bar=document.getElementById('bkp-bar-dash');
+  const icon=document.getElementById('bkp-icon');
+  const text=document.getElementById('bkp-text');
+  const ts=document.getElementById('bkp-ts');
+  const ss=document.getElementById('s-bkp-status');
+
+  if(!last){
+    if(bar){bar.style.background='rgba(255,123,44,.07)';bar.style.borderColor='rgba(255,123,44,.25)';}
+    if(icon)icon.textContent='⚠';
+    if(text)text.textContent='No backup yet — download your first backup';
+    if(ts)ts.textContent='';
+    if(ss)ss.innerHTML='<span style="color:var(--orange);">⚠ No backup on record</span>';
+    return;
+  }
+  const ld=new Date(parseInt(last));
+  const days=(Date.now()-parseInt(last))/86400000;
+  const tStr=ld.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})+' '+ld.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+
+  if(days<1){
+    if(bar){bar.style.background='rgba(0,201,122,.06)';bar.style.borderColor='rgba(0,201,122,.25)';}
+    if(icon)icon.textContent='✅';
+    if(text)text.textContent='Backup up to date';
+    if(ts)ts.textContent=`Last: ${tStr}`;
+    if(ss)ss.innerHTML=`<span style="color:var(--green);">✅ Last backup: ${tStr}</span>`;
+  }else if(days<3){
+    if(bar){bar.style.background='rgba(245,196,0,.05)';bar.style.borderColor='rgba(245,196,0,.25)';}
+    if(icon)icon.textContent='⏰';
+    if(text)text.textContent=`Backup ${Math.floor(days)} day(s) old`;
+    if(ts)ts.textContent=`Last: ${tStr}`;
+    if(ss)ss.innerHTML=`<span style="color:var(--yellow);">⏰ Last backup: ${tStr}</span>`;
+  }else{
+    if(bar){bar.style.background='rgba(255,63,87,.06)';bar.style.borderColor='rgba(255,63,87,.25)';}
+    if(icon)icon.textContent='🔴';
+    if(text)text.textContent=`Backup ${Math.floor(days)} days overdue`;
+    if(ts)ts.textContent=`Last: ${tStr}`;
+    if(ss)ss.innerHTML=`<span style="color:var(--red);">🔴 Overdue — last backup: ${tStr}</span>`;
+  }
+}
+
+function updateBadges(){
+  document.getElementById('nb-hz').textContent=ST.hazards.length;
+  document.getElementById('nb-rk').textContent=ST.risks.length;
+  document.getElementById('nb-ct').textContent=ST.controls.length;
+}
+
+// ═══════════════════════════════════════════════════
+//  TESTING HELPERS
+// ═══════════════════════════════════════════════════
+function clearAllData(){
+  if(!confirm('Delete ALL data? This cannot be undone.'))return;
+  ST.hazards=[];ST.risks=[];ST.controls=[];ST.events=[];
+  ST._hzN=1;ST._rkN=1;ST._ctN=1;ST._evN=1;
+  autosave(); updateBadges(); renderDashboard();
+  toast('All data cleared','warning');
+}
+
+function reloadDemo(){ loadDemoData(); renderDashboard(); updateBadges(); toast('Demo data loaded','info'); }
+
+// ═══════════════════════════════════════════════════
+//  DEMO DATA  (matches spreadsheet structure exactly)
+// ═══════════════════════════════════════════════════
+function loadDemoData(){
+  ST.controls=[
+    {id:'CTRL-001',rkId:'RISK-001',desc:'Use of marshaller / wing walker during aircraft approach',type:'Preventive',mon:'Spot checks / audit',freq:'Monthly',resp:'Supervisor',verBy:'Safety Dept',lastChk:'',eff:'Not Checked',present:'present',remarks:'To be verified during ramp inspection'},
+    {id:'CTRL-002',rkId:'RISK-001',desc:'Enforcement of GSE safety zones and clearance markings',type:'Preventive',mon:'Safety audit',freq:'Quarterly',resp:'Safety Dept',verBy:'Safety Dept',lastChk:'',eff:'Not Checked',present:'present',remarks:'Include in hangar safety inspection'},
+    {id:'CTRL-003',rkId:'RISK-001',desc:'Mandatory training and authorization of GSE operators',type:'Preventive',mon:'Training records review',freq:'Quarterly',resp:'Training Manager',verBy:'Safety Dept',lastChk:'',eff:'Not Checked',present:'present',remarks:'Verify competency records'},
+    {id:'CTRL-004',rkId:'RISK-001',desc:'Pre-use inspection of GSE (brakes, steering)',type:'Preventive',mon:'Line checks / supervisor verification',freq:'Daily',resp:'Supervisor',verBy:'Safety Dept',lastChk:'',eff:'Not Checked',present:'present',remarks:'Record in checklist'},
+    {id:'CTRL-005',rkId:'RISK-001',desc:'Enforcement of speed limits in hangar/apron',type:'Preventive',mon:'Random observation',freq:'Monthly',resp:'Safety Dept',verBy:'Safety Dept',lastChk:'',eff:'Not Checked',present:'present',remarks:''},
+    {id:'CTRL-006',rkId:'RISK-002',desc:'Supplier approval as per MOE 2.1 / 2.2 before engagement',type:'Preventive',mon:'Supplier audit',freq:'Annually',resp:'QA Manager',verBy:'Quality Audit',lastChk:'',eff:'Not Checked',present:'present',remarks:'To be verified'},
+    {id:'CTRL-007',rkId:'RISK-002',desc:'Risk Assessment (RA) required before subcontracted work',type:'Preventive',mon:'RA review',freq:'Per activity',resp:'Safety Manager',verBy:'Safety Dept',lastChk:'',eff:'Not Checked',present:'present',remarks:'Check MOC compliance'},
+    {id:'CTRL-008',rkId:'RISK-002',desc:'External Organisation Interface implemented (IME-MOP-02-05)',type:'Preventive',mon:'Audit / checklist',freq:'Per project',resp:'Safety Manager',verBy:'Safety Dept',lastChk:'',eff:'Not Checked',present:'present',remarks:'Verify interface document'},
+    {id:'CTRL-009',rkId:'RISK-002',desc:'Verification of release documents (Form 1, traceability) before acceptance',type:'Preventive',mon:'Records check',freq:'Each event',resp:'Stores / QA',verBy:'Quality Audit',lastChk:'',eff:'Not Checked',present:'present',remarks:'Critical control'},
+    {id:'CTRL-010',rkId:'RISK-002',desc:'Work pack and task completion verification before aircraft release',type:'Preventive',mon:'Supervisor check',freq:'Each event',resp:'Supervisor',verBy:'Quality Audit',lastChk:'',eff:'Not Checked',present:'present',remarks:'Link to Corridor'},
+    {id:'CTRL-011',rkId:'RISK-002',desc:'Oversight of subcontracted work (inspection / supervision)',type:'Preventive',mon:'Spot checks',freq:'Per activity',resp:'Maintenance Manager',verBy:'Quality Audit',lastChk:'',eff:'Not Checked',present:'present',remarks:'Define oversight level'},
+    {id:'CTRL-012',rkId:'RISK-003',desc:'Mandatory use of appropriate PPE (gloves, goggles, respirators)',type:'Preventive',mon:'Spot checks',freq:'Monthly',resp:'Supervisor',verBy:'Safety Dept',lastChk:'',eff:'Not Checked',present:'present',remarks:'Verify during safety rounds'},
+    {id:'CTRL-013',rkId:'RISK-003',desc:'Availability and use of MSDS for all chemicals before handling',type:'Preventive',mon:'Audit / document check',freq:'Quarterly',resp:'Safety Dept',verBy:'Quality Audit',lastChk:'',eff:'Not Checked',present:'present',remarks:'Ensure Chemwatch access'},
+    {id:'CTRL-014',rkId:'RISK-003',desc:'Adequate ventilation maintained in chemical use areas',type:'Preventive',mon:'Inspection',freq:'Monthly',resp:'Facilities',verBy:'Quality Audit',lastChk:'',eff:'Not Checked',present:'present',remarks:'Check ventilation systems'},
+    {id:'CTRL-015',rkId:'RISK-003',desc:'Training on chemical handling and hazard communication',type:'Preventive',mon:'Training record review',freq:'Annually',resp:'Training Manager',verBy:'Safety Dept',lastChk:'',eff:'Not Checked',present:'present',remarks:'Include refresher training'},
+    {id:'CTRL-016',rkId:'RISK-003',desc:'Proper labeling, storage, and segregation of chemicals',type:'Preventive',mon:'Inspection',freq:'Monthly',resp:'Stores / Safety',verBy:'Quality Audit',lastChk:'',eff:'Not Checked',present:'present',remarks:'Check storage compliance'},
+    {id:'CTRL-017',rkId:'RISK-003',desc:'Supervision during handling of hazardous chemicals',type:'Preventive',mon:'Supervisor verification',freq:'Routine',resp:'Supervisor',verBy:'Safety Dept',lastChk:'',eff:'Not Checked',present:'present',remarks:'Critical during high-risk tasks'},
+    {id:'CTRL-018',rkId:'RISK-004',desc:'Mandatory use of fall protection (harness, lanyard, anchor points) during work at height',type:'Preventive',mon:'Spot checks',freq:'Monthly',resp:'Supervisor',verBy:'SAG',lastChk:'',eff:'Not Checked',present:'present',remarks:'Critical control'},
+    {id:'CTRL-019',rkId:'RISK-004',desc:'Pre-use inspection of lifts, platforms, and anchor systems',type:'Preventive',mon:'Checklist / inspection',freq:'Daily',resp:'Supervisor',verBy:'SAG',lastChk:'',eff:'Not Checked',present:'present',remarks:'Record required'},
+    {id:'CTRL-020',rkId:'RISK-004',desc:'Competency-based training and refresher training for working at height',type:'Preventive',mon:'Training record review',freq:'Annually',resp:'Training Manager',verBy:'SAG',lastChk:'',eff:'Not Checked',present:'present',remarks:'Verify validity'},
+    {id:'CTRL-021',rkId:'RISK-004',desc:'Supervision during work at height activities',type:'Preventive',mon:'Observation',freq:'Routine',resp:'Supervisor',verBy:'SAG',lastChk:'',eff:'Not Checked',present:'present',remarks:'High-risk activity'},
+    {id:'CTRL-022',rkId:'RISK-004',desc:'Implementation of rescue plan and suspension trauma awareness',type:'Preventive',mon:'Drill / audit',freq:'Annually',resp:'Safety Dept',verBy:'SAG',lastChk:'',eff:'Not Checked',present:'present',remarks:'Include drills'},
+    {id:'CTRL-023',rkId:'RISK-004',desc:'Restriction of work at height during adverse weather / low visibility',type:'Preventive',mon:'Supervisor monitoring',freq:'As required',resp:'Supervisor',verBy:'SAG',lastChk:'',eff:'Not Checked',present:'present',remarks:'Weather dependent'},
+    {id:'CTRL-024',rkId:'RISK-004',desc:'Periodic inspection of fall arrest systems (6 months as per EN standards)',type:'Preventive',mon:'Inspection records',freq:'6 Monthly',resp:'Quality Audit',verBy:'Quality Audit',lastChk:'',eff:'Not Checked',present:'present',remarks:'Compliance check'},
+    {id:'CTRL-025',rkId:'RISK-004',desc:'Safety signage and awareness in high-risk areas',type:'Preventive',mon:'Audit / observation',freq:'Quarterly',resp:'Safety Dept',verBy:'Safety Dept',lastChk:'',eff:'Not Checked',present:'present',remarks:'Visual control'},
+    {id:'CTRL-026',rkId:'RISK-004',desc:'Enforcement of disciplinary action for repeated safety violations',type:'Corrective',mon:'Management review',freq:'As required',resp:'Management',verBy:'Safety Dept',lastChk:'',eff:'Not Checked',present:'present',remarks:'Behaviour control'},
+  ];
+  ST._ctN=27;
+
+  ST.hazards=[
+    {id:'HAZ-001',date:'2024-06-20',desc:'Operation of powered GSE in proximity to parked aircraft',sources:['INC893','INC1102'],dept:'Base Maintenance',loc:'Hangar / Apron',owner:'GM Maintenance',manualStatus:'Open',remarks:'Monitor via GSE incidents and safety inspections'},
+    {id:'HAZ-002',date:'2024-07-01',desc:'Safety risks arising from external organisations (Customer / Operator / Third-party AMO / Contractors) affecting aircraft airworthiness and maintenance quality',sources:['INC859','INC867'],dept:'Base Maintenance',loc:'Hangar / External Work',owner:'Safety Manager',manualStatus:'Open',remarks:'Monitor via supplier audits, occurrence trends, and rework cases'},
+    {id:'HAZ-003',date:'2024-11-19',desc:'Use or working with harmful chemicals without proper PPEs',sources:['INC941'],dept:'Base Maintenance',loc:'Hangar / Workshop',owner:'GM Maintenance',manualStatus:'Open',remarks:'Monitor via PPE compliance checks and chemical handling audits'},
+    {id:'HAZ-004',date:'2024-03-11',desc:'Working at heights — fall or injury risk due to improper access, equipment use, or lack of fall protection',sources:['INC1134','INC814','INC967','INC748','INC1218','INC1269'],dept:'Base Maintenance',loc:'Hangar / Aircraft',owner:'GM Maintenance',manualStatus:'Open',remarks:'Monitor via height-related incident trends, training compliance, and near-miss reporting'},
+  ];
+  ST._hzN=5;
+
+  ST.risks=[
+    {id:'RISK-001',hzId:'HAZ-001',desc:'Collision of GSE with aircraft due to proximity operations',prob:4,sev:4,resProb:2,resSev:3,existingTxt:'AMM compliance, basic supervision',ctrlIds:['CTRL-001','CTRL-002','CTRL-003','CTRL-004','CTRL-005'],addlCtrls:[],owner:'Quality Manager',target:'2025-05-01',signedOff:null,events:[],flaggedNew:false},
+    {id:'RISK-002',hzId:'HAZ-002',desc:'Acceptance of unapproved / non-compliant maintenance or components from external organisations',prob:3,sev:5,resProb:2,resSev:4,existingTxt:'Basic AMM compliance, general oversight',ctrlIds:['CTRL-006','CTRL-007','CTRL-008','CTRL-009','CTRL-010','CTRL-011'],addlCtrls:[],owner:'Technical Services Manager',target:'2025-04-22',signedOff:null,events:[],flaggedNew:false},
+    {id:'RISK-003',hzId:'HAZ-003',desc:'Exposure to hazardous chemicals due to improper PPE usage, poor ventilation, or incorrect handling',prob:3,sev:5,resProb:2,resSev:3,existingTxt:'Basic PPE use, MSDS reference, general training',ctrlIds:['CTRL-012','CTRL-013','CTRL-014','CTRL-015','CTRL-016','CTRL-017'],addlCtrls:[],owner:'Planning Manager',target:'2026-11-19',signedOff:null,events:[],flaggedNew:false},
+    {id:'RISK-004',hzId:'HAZ-004',desc:'Fall from height due to improper use of access equipment, lack of fall protection, or unsafe working conditions',prob:3,sev:4,resProb:2,resSev:3,existingTxt:'Basic training, supervision, PPE use',ctrlIds:['CTRL-018','CTRL-019','CTRL-020','CTRL-021','CTRL-022','CTRL-023','CTRL-024','CTRL-025','CTRL-026'],addlCtrls:[],owner:'Maintenance Manager',target:'2027-03-04',signedOff:null,events:[],flaggedNew:false},
+  ];
+  ST._rkN=5;
+  ST.events=[];
+  autosave(); updateBadges();
+}
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+async function init(){
+  // Always load localStorage first for instant display
+  const hasLocal = loadFromStorage();
+  if(!hasLocal) loadDemoData();
+
+  document.getElementById('sb-org').textContent=ST.org.name;
+  document.getElementById('sb-cert').textContent=ST.org.cert+' · SMS';
+  document.getElementById('sb-auth').textContent=ST.org.auth+' · Part 145';
+  renderTopbar('dashboard');
+  renderDashboard();
+  updateBadges();
+
+  // Then try to sync from GitHub (overwrites local if GitHub is newer)
+  if(GH.enabled){
+    updateGhStatus('loading','Syncing from GitHub…');
+    const loaded = await loadFromGitHub();
+    if(loaded){
+      renderDashboard();
+      updateBadges();
+    }
+  } else {
+    updateGhStatus('off','GitHub not configured — data stored locally');
+  }
+
+  // Pre-fill GitHub config fields in settings if already set
+  if(document.getElementById('gh-owner')) document.getElementById('gh-owner').value = GH.owner;
+  if(document.getElementById('gh-repo'))  document.getElementById('gh-repo').value  = GH.repo;
+  if(document.getElementById('gh-filepath')) document.getElementById('gh-filepath').value = GH.filePath;
+  // Never pre-fill token for security
+
+  const last=localStorage.getItem('aerosafe_last_backup');
+  if(last&&(Date.now()-parseInt(last))/86400000>=1){
+    setTimeout(()=>toast('⏰ Daily backup due — use Backup button on dashboard','warning'),3000);
+  }
+}
+
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
