@@ -574,31 +574,54 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
               <span id="gh-settings-badge" style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);"></span>
             </div>
             <div class="card-body">
-              <div style="background:rgba(0,112,204,.05);border:1px solid rgba(0,112,204,.15);border-radius:8px;padding:10px 13px;font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6;">
-                Store your SMS data in a <strong style="color:var(--accent);">private GitHub repository</strong> — free, secure, accessible from any device.
-                Data auto-saves to GitHub after every change and loads from it on startup.
-                &nbsp;<a href="#" onclick="showGhSetupGuide();return false;" style="color:var(--accent);">📖 Step-by-step setup guide</a>
+              <!-- Pre-configured target — shown read-only -->
+              <div style="background:rgba(0,112,204,.05);border:1px solid rgba(0,112,204,.15);border-radius:8px;padding:10px 14px;margin-bottom:14px;">
+                <div style="font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;">Data Repository (pre-configured)</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);">
+                  github.com/<strong id="gh-display-owner">Frostypilot</strong>/<strong id="gh-display-repo">aerosafe-data</strong>
+                </div>
+                <div style="font-size:10.5px;color:var(--text3);margin-top:3px;">Path: <span id="gh-display-path">data/aerosafe_data.json</span></div>
               </div>
-              <div class="fg"><label class="fl">GitHub Username / Org</label>
-                <input class="fi" id="gh-owner" placeholder="e.g. rugene-smith"></div>
-              <div class="fg"><label class="fl">Repository Name <span style="color:var(--text3);font-weight:400;">(must be Private)</span></label>
-                <input class="fi" id="gh-repo" placeholder="e.g. ejme-sms-data"></div>
-              <div class="fg"><label class="fl">Data File Path</label>
-                <input class="fi" id="gh-filepath" placeholder="data/aerosafe_data.json"></div>
-              <div class="fg"><label class="fl">Personal Access Token <span style="color:var(--red);">*</span></label>
-                <input type="password" class="fi" id="gh-token" placeholder="ghp_xxxxxxxxxxxx — stored only in this browser">
-                <div style="font-size:10px;color:var(--text3);margin-top:3px;">
-                  Needs <code style="background:var(--bg3);padding:1px 4px;border-radius:3px;">repo</code> scope only.
+
+              <div style="font-size:11.5px;color:var(--text2);margin-bottom:12px;line-height:1.6;">
+                The data repository is already configured in this app.
+                You only need to enter your <strong>Personal Access Token</strong> once per device — it acts like a password and stays in your browser only.
+                &nbsp;<a href="#" onclick="showGhSetupGuide();return false;" style="color:var(--accent);">📖 How to generate a token</a>
+              </div>
+
+              <div class="fg">
+                <label class="fl">Personal Access Token <span style="color:var(--red);">*</span> — enter once per device</label>
+                <input type="password" class="fi" id="gh-token"
+                  placeholder="Paste your ghp_xxxxxxxxxxxx token here"
+                  style="font-family:'JetBrains Mono',monospace;">
+                <div style="font-size:10px;color:var(--text3);margin-top:4px;">
+                  Needs <code style="background:var(--bg3);padding:1px 4px;border-radius:3px;">repo</code> scope.
+                  Stored only in this browser — never uploaded anywhere.
                   <a href="https://github.com/settings/tokens/new?scopes=repo&description=AeroSafe+SMS" target="_blank" style="color:var(--accent);">Generate on GitHub ↗</a>
                 </div>
               </div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn btn-primary" onclick="saveGhConfig()">☁ Connect & Test</button>
+
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+                <button class="btn btn-primary" onclick="saveGhConfig()">☁ Connect</button>
                 <button class="btn btn-ghost" onclick="testGhConnection()">🔌 Test Connection</button>
                 <button class="btn btn-ghost" onclick="forcePushToGitHub()">⬆ Push Now</button>
-                <button class="btn btn-danger btn-sm" onclick="disconnectGitHub()">Disconnect</button>
+                ${GH.token?'<button class="btn btn-danger btn-sm" onclick="disconnectGitHub()">Disconnect</button>':''}
               </div>
               <div id="gh-test-result" style="margin-top:8px;font-size:11px;"></div>
+
+              <!-- One-click setup link generator -->
+              <div class="sep" style="margin:12px 0;"></div>
+              <div style="font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--accent);margin-bottom:6px;">📎 One-Click Setup Link</div>
+              <div style="font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.6;">Open this link on any browser or device to configure GitHub sync automatically — no manual entry needed. Keep it private.</div>
+              <button class="btn btn-ghost btn-sm" onclick="generateSetupLink()">🔗 Generate My Setup Link</button>
+              <div id="gh-setup-link-box" style="display:none;margin-top:8px;">
+                <textarea class="fta" id="gh-setup-link-text" readonly style="min-height:55px;font-size:10px;font-family:'JetBrains Mono',monospace;word-break:break-all;"></textarea>
+                <div style="display:flex;gap:8px;margin-top:6px;">
+                  <button class="btn btn-primary btn-sm" onclick="copySetupLink()">📋 Copy Link</button>
+                  <button class="btn btn-ghost btn-sm" onclick="document.getElementById('gh-setup-link-box').style.display='none'">Hide</button>
+                </div>
+                <div style="font-size:10px;color:var(--orange);margin-top:5px;">⚠ Contains your GitHub token — do not share publicly or send by email. Use only to set up your own devices.</div>
+              </div>
             </div>
           </div>
 
@@ -2730,12 +2753,12 @@ function renderSettings(){
   document.getElementById('s-sfmgr').value=ST.org.sfMgr;
   document.getElementById('s-auth').value=ST.org.auth;
 
-  // Pre-fill GitHub config (never pre-fill token for security)
-  const ghOwnerEl = document.getElementById('gh-owner'); if(ghOwnerEl) ghOwnerEl.value = GH.owner;
-  const ghRepoEl  = document.getElementById('gh-repo');  if(ghRepoEl)  ghRepoEl.value  = GH.repo;
-  const ghPathEl  = document.getElementById('gh-filepath'); if(ghPathEl) ghPathEl.value = GH.filePath;
+  // Show pre-configured GitHub target (read-only display)
+  const ghOwnerEl = document.getElementById('gh-display-owner'); if(ghOwnerEl) ghOwnerEl.textContent = GH_CONFIG.owner;
+  const ghRepoEl  = document.getElementById('gh-display-repo');  if(ghRepoEl)  ghRepoEl.textContent  = GH_CONFIG.repo;
+  const ghPathEl  = document.getElementById('gh-display-path');  if(ghPathEl)  ghPathEl.textContent  = GH_CONFIG.filePath;
   const ghBadge   = document.getElementById('gh-settings-badge');
-  if(ghBadge){ ghBadge.textContent = GH.enabled ? '✅ Connected' : '— Not configured'; ghBadge.style.color = GH.enabled ? 'var(--green)':'var(--text3)'; }
+  if(ghBadge){ ghBadge.textContent = GH.enabled ? '✅ Token set' : '⚠ Token needed'; ghBadge.style.color = GH.enabled ? 'var(--green)':'var(--orange)'; }
 
   // Render all list editors
   const listKeys=['departments','locations','sources','ctrlTypes','effValues','monMethods','freqs','respPersons','respExec','validBy'];
@@ -2776,12 +2799,38 @@ async function testGhConnection(){
   }catch(e){ res.innerHTML=`<span style="color:var(--red);">❌ Network error: ${e.message}</span>`; }
 }
 
+function generateSetupLink(){
+  if(!GH.enabled){ toast('Connect to GitHub first, then generate the link','error'); return; }
+  const base = window.location.origin + window.location.pathname;
+  const params = new URLSearchParams({
+    owner: GH.owner,
+    repo: GH.repo,
+    token: GH.token,
+    path: GH.filePath
+  });
+  const link = `${base}#setup?${params.toString()}`;
+  document.getElementById('gh-setup-link-text').value = link;
+  document.getElementById('gh-setup-link-box').style.display = 'block';
+}
+
+function copySetupLink(){
+  const el = document.getElementById('gh-setup-link-text');
+  el.select();
+  navigator.clipboard.writeText(el.value).then(()=>{
+    toast('Setup link copied — open it on any browser to auto-configure sync','success');
+  }).catch(()=>{
+    document.execCommand('copy');
+    toast('Setup link copied','success');
+  });
+}
+
 function disconnectGitHub(){
   if(!confirm('Disconnect from GitHub? Your local data is safe but will no longer sync.')) return;
-  ['gh_owner','gh_repo','gh_token','gh_filepath','gh_sha'].forEach(k=>localStorage.removeItem(k));
-  updateGhStatus('off','GitHub disconnected');
+  localStorage.removeItem('gh_token');
+  localStorage.removeItem('gh_sha');
+  updateGhStatus('off','Enter your token in Settings → GitHub Cloud Sync');
   renderSettings();
-  toast('GitHub disconnected','warning');
+  toast('GitHub disconnected — enter token again to reconnect','warning');
 }
 
 async function forcePushToGitHub(){
@@ -2868,14 +2917,26 @@ function saveOrg(){
 //  Fallback: localStorage (always kept in sync as offline cache)
 // ═══════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════
+//  GITHUB CONFIG — owner/repo/path are baked into
+//  this file so any browser auto-knows where data lives.
+//  Only the token is per-device (security requirement).
+// ═══════════════════════════════════════════════════
+
+const GH_CONFIG = {
+  owner:    'Frostypilot',           // ← your GitHub username
+  repo:     'aerosafe-data',         // ← your private data repo name
+  filePath: 'data/aerosafe_data.json' // ← path inside that repo
+};
+
 const GH = {
-  get owner(){ return localStorage.getItem('gh_owner')||''; },
-  get repo(){ return localStorage.getItem('gh_repo')||''; },
-  get token(){ return localStorage.getItem('gh_token')||''; },
-  get filePath(){ return localStorage.getItem('gh_filepath')||'data/aerosafe_data.json'; },
-  get sha(){ return localStorage.getItem('gh_sha')||''; },
-  set sha(v){ localStorage.setItem('gh_sha',v); },
-  get enabled(){ return !!(this.owner && this.repo && this.token); }
+  get owner(){    return GH_CONFIG.owner; },
+  get repo(){     return GH_CONFIG.repo; },
+  get filePath(){ return GH_CONFIG.filePath; },
+  get token(){    return localStorage.getItem('gh_token')||''; },
+  get sha(){      return localStorage.getItem('gh_sha')||''; },
+  set sha(v){     localStorage.setItem('gh_sha',v); },
+  get enabled(){  return !!(this.token); }
 };
 
 function autosave(){
@@ -2969,20 +3030,19 @@ function updateGhStatus(state, msg){
 }
 
 function saveGhConfig(){
-  const owner = document.getElementById('gh-owner').value.trim();
-  const repo = document.getElementById('gh-repo').value.trim();
   const token = document.getElementById('gh-token').value.trim();
-  const path = document.getElementById('gh-filepath').value.trim() || 'data/aerosafe_data.json';
-  if(!owner||!repo||!token){ toast('Please fill in owner, repo and token','error'); return; }
-  localStorage.setItem('gh_owner', owner);
-  localStorage.setItem('gh_repo', repo);
+  if(!token){ toast('Please paste your Personal Access Token','error'); return; }
   localStorage.setItem('gh_token', token);
-  localStorage.setItem('gh_filepath', path);
-  localStorage.removeItem('gh_sha'); // reset SHA so next push creates file if needed
-  toast('GitHub config saved — testing connection…','info');
+  localStorage.removeItem('gh_sha'); // reset SHA on new token
+  toast('Token saved — testing connection…','info');
   loadFromGitHub().then(ok=>{
-    if(ok){ toast('✅ Connected to GitHub successfully!','success'); renderSettings(); }
-    else{ toast('Config saved. Push any change to create the data file.','warning'); }
+    if(ok){
+      toast('✅ Connected to GitHub! Data syncing now.','success');
+      renderDashboard(); updateBadges(); renderSettings();
+    } else {
+      toast('Token saved. Make sure the aerosafe-data repo exists.','warning');
+      renderSettings();
+    }
   });
 }
 
@@ -3132,6 +3192,30 @@ function loadDemoData(){
 //  INIT
 // ═══════════════════════════════════════════════════
 async function init(){
+  // ── URL hash auto-setup ──────────────────────────────
+  // If URL contains #setup?owner=X&repo=Y&token=Z&path=P
+  // auto-configure GitHub sync silently — works on any browser
+  const hash = window.location.hash;
+  if(hash.startsWith('#setup?')){
+    try{
+      const params = new URLSearchParams(hash.slice(7));
+      const owner = params.get('owner');
+      const repo  = params.get('repo');
+      const token = params.get('token');
+      const path  = params.get('path') || 'data/aerosafe_data.json';
+      if(owner && repo && token){
+        localStorage.setItem('gh_owner', owner);
+        localStorage.setItem('gh_repo', repo);
+        localStorage.setItem('gh_token', token);
+        localStorage.setItem('gh_filepath', path);
+        localStorage.removeItem('gh_sha');
+        // Clean the token out of the URL immediately so it doesn't sit in browser history
+        history.replaceState(null,'',window.location.pathname);
+        setTimeout(()=>toast('✅ GitHub sync configured automatically from setup link!','success'),1500);
+      }
+    }catch(e){ console.warn('Setup URL parse error',e); }
+  }
+
   // Always load localStorage first for instant display
   const hasLocal = loadFromStorage();
   if(!hasLocal) loadDemoData();
@@ -3154,12 +3238,6 @@ async function init(){
   } else {
     updateGhStatus('off','GitHub not configured — data stored locally');
   }
-
-  // Pre-fill GitHub config fields in settings if already set
-  if(document.getElementById('gh-owner')) document.getElementById('gh-owner').value = GH.owner;
-  if(document.getElementById('gh-repo'))  document.getElementById('gh-repo').value  = GH.repo;
-  if(document.getElementById('gh-filepath')) document.getElementById('gh-filepath').value = GH.filePath;
-  // Never pre-fill token for security
 
   const last=localStorage.getItem('aerosafe_last_backup');
   if(last&&(Date.now()-parseInt(last))/86400000>=1){
