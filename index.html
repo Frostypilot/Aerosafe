@@ -267,6 +267,31 @@ table.resizable{table-layout:fixed;}
 .col-resizer::after{content:'';display:block;width:2px;height:60%;background:var(--border2);border-radius:1px;opacity:0;}
 .col-resizer:hover::after,.col-resizer.dragging::after{opacity:1;background:var(--accent);}
 
+/* ── HELP PAGE ── */
+.help-layout{display:grid;grid-template-columns:220px 1fr;gap:0;height:100%;}
+.help-index{background:var(--bg3);border-right:1px solid var(--border);border-radius:11px 0 0 11px;padding:14px 0;overflow-y:auto;max-height:calc(100vh - 130px);position:sticky;top:0;}
+.help-index-section{font-size:9px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--text3);padding:10px 16px 4px;}
+.help-index-item{padding:7px 16px;font-size:12px;color:var(--text2);cursor:pointer;transition:all .1s;border-left:2px solid transparent;display:block;}
+.help-index-item:hover{background:var(--panel);color:var(--text);}
+.help-index-item.active{color:var(--accent);background:rgba(0,112,204,.06);border-left-color:var(--accent);}
+.help-content{padding:24px 28px;overflow-y:auto;max-height:calc(100vh - 130px);}
+.help-section{margin-bottom:36px;scroll-margin-top:16px;}
+.help-section-title{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:10px;padding-bottom:8px;border-bottom:2px solid var(--border);}
+.help-subsection-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;margin-top:14px;}
+.help-p{font-size:12.5px;color:var(--text2);line-height:1.7;margin-bottom:8px;}
+.help-step{display:flex;gap:12px;padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:6px;align-items:flex-start;}
+.help-step-num{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.help-step-text{font-size:12px;color:var(--text2);line-height:1.6;flex:1;}
+.help-step-text strong{color:var(--text);}
+.help-tip{background:rgba(0,112,204,.06);border:1px solid rgba(0,112,204,.18);border-radius:8px;padding:10px 14px;margin:10px 0;font-size:12px;color:var(--text2);line-height:1.6;}
+.help-tip::before{content:'💡  ';}
+.help-warn{background:rgba(204,34,54,.05);border:1px solid rgba(204,34,54,.18);border-radius:8px;padding:10px 14px;margin:10px 0;font-size:12px;color:var(--text2);line-height:1.6;}
+.help-warn::before{content:'⚠  ';}
+.help-search-box{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 13px;margin-bottom:16px;}
+.help-search-box input{background:none;border:none;outline:none;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;width:100%;}
+.help-search-box input::placeholder{color:var(--text3);}
+.help-highlight{background:rgba(245,196,0,.35);border-radius:2px;padding:0 1px;}
+
 /* ── SAFETY PROGRAMME ── */
 .prog-cell{width:100%;height:28px;border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;font-weight:700;transition:all .13s;user-select:none;border:1px solid transparent;}
 .prog-cell:hover{filter:brightness(.9);transform:scale(1.08);}
@@ -499,6 +524,7 @@ table.resizable{table-layout:fixed;}
     <div class="nav-section">
       <div class="nav-label">System</div>
       <div class="nav-item" data-page="settings" onclick="nav(this)"><span class="ni">⚙</span><span class="nav-item-text">Settings</span></div>
+      <div class="nav-item" data-page="help" onclick="nav(this)"><span class="ni">?</span><span class="nav-item-text">Help & Guide</span></div>
     </div>
   </nav>
   <div class="sidebar-foot">
@@ -889,6 +915,21 @@ table.resizable{table-layout:fixed;}
             </tr></thead>
             <tbody id="ev-tbody"></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ HELP ══════════════ -->
+    <div class="page" id="page-help">
+      <div class="help-search-box">
+        <span style="color:var(--text3);font-size:16px;">🔍</span>
+        <input type="text" id="help-search" placeholder="Search the help guide… e.g. 'how to add a hazard', 'bow-tie', 'GitHub'" oninput="renderHelp()">
+        <button class="btn btn-ghost btn-xs" onclick="document.getElementById('help-search').value='';renderHelp()">✕</button>
+      </div>
+      <div class="card" style="overflow:hidden;">
+        <div class="help-layout">
+          <div class="help-index" id="help-index"></div>
+          <div class="help-content" id="help-content"></div>
         </div>
       </div>
     </div>
@@ -1782,6 +1823,7 @@ function nav(el){
   if(pg==='bowtie')    renderBowtie();
   if(pg==='events')    renderEvents();
   if(pg==='settings')  renderSettings();
+  if(pg==='help')      renderHelp();
 }
 
 // Navigate to a page and optionally apply filters
@@ -4350,7 +4392,311 @@ function loadDemoData(){
 }
 
 // ═══════════════════════════════════════════════════
-//  SIDEBAR COLLAPSE
+//  HELP PAGE
+// ═══════════════════════════════════════════════════
+
+const HELP_SECTIONS = [
+  {
+    id:'intro', icon:'✈', title:'Introduction to AeroSafe SMS',
+    index:'Introduction',
+    content:`
+      <div class="help-p">AeroSafe SMS is a digital Safety Management System platform built specifically for <strong>ExecuJet MRO Services Middle East (EJME)</strong>, a GCAA Part 145 approved maintenance organisation. It replaces Excel-based workflows with a structured, auditable, browser-based tool that operates fully within your GitHub infrastructure — no servers, no subscriptions.</div>
+      <div class="help-p">The system is aligned with <strong>ICAO Annex 19</strong>, <strong>GCAA CAR-OPS</strong>, and <strong>EASA Part-145</strong> SMS requirements, and follows the 4-pillar SMS framework: Safety Policy, Safety Risk Management, Safety Assurance, and Safety Promotion.</div>
+      <div class="help-tip">All data is saved automatically to your private GitHub repository within 2 seconds of any change. Every change creates a permanent audit trail via Git commit history.</div>
+
+      <div class="help-subsection-title">What this system can do</div>
+      <div class="help-p">• Manage your complete <strong>Hazard Register</strong> with 118 EJME hazards pre-loaded</div>
+      <div class="help-p">• Conduct formal <strong>Risk Assessments</strong> using your 5×5 P×S matrix (1–4 Low / 5–14 Medium / 15–25 High)</div>
+      <div class="help-p">• Maintain a <strong>Control Register</strong> with formal verification, effectiveness tracking, and audit history</div>
+      <div class="help-p">• Run <strong>Bow-Tie analysis</strong> showing threats, barriers, and consequences for any hazard</div>
+      <div class="help-p">• Log and track <strong>Safety Events</strong>, link them to hazards and risks, record failed controls</div>
+      <div class="help-p">• Manage your <strong>Safety Programme</strong> with month-by-month scheduling and completion recording</div>
+      <div class="help-p">• Sync everything securely to <strong>GitHub</strong> — accessible from any device, anywhere</div>
+
+      <div class="help-subsection-title">Navigation</div>
+      <div class="help-p">Use the sidebar on the left to move between modules. Click the <strong>‹ ›</strong> button at the top of the sidebar to collapse it to icon-only view for more screen space. Your preference is remembered.</div>
+      <div class="help-tip">On mobile, tap the ☰ hamburger button to open the sidebar, or use the bottom tab bar for quick access to the main modules.</div>
+    `
+  },
+  {
+    id:'hazards', icon:'⚠', title:'Hazard Register',
+    index:'Hazard Register',
+    content:`
+      <div class="help-p">The Hazard Register is the master log of all identified safety hazards at EJME. It is the foundation of the SMS — every risk assessment, control, and bow-tie diagram traces back to a hazard.</div>
+      <div class="help-p">EJME currently has <strong>118 hazards</strong> (EJME-HA-01 through EJME-HA-118) pre-loaded from the Excel register MRO-SMS-017.</div>
+
+      <div class="help-subsection-title">Reading the Hazard Register</div>
+      <div class="help-p">Each row shows the hazard ID, description, source incidents, department, location, date identified, owner, auto-calculated status, <strong>highest residual risk</strong> across all linked risks, and remarks.</div>
+      <div class="help-tip">The <strong>Residual Risk</strong> column always shows the worst-case residual score from all risks linked to that hazard — so if a hazard has 3 risks with residual scores of 4, 6, and 9, it shows 9.</div>
+
+      <div class="help-subsection-title">Adding a new hazard</div>
+      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-text">Click <strong>+ New Hazard</strong> in the top right</div></div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-text">The Hazard ID is auto-assigned (next in sequence). Fill in the <strong>description</strong> — be specific: "Operation of powered GSE near parked aircraft"</div></div>
+      <div class="help-step"><div class="help-step-num">3</div><div class="help-step-text">Select <strong>Department</strong>, <strong>Location</strong>, and <strong>Hazard Owner</strong> from the dropdowns (configurable in Settings)</div></div>
+      <div class="help-step"><div class="help-step-num">4</div><div class="help-step-text">Enter <strong>Source(s)</strong> — comma-separated incident references e.g. <span class="help-badge">INC893, INC1424</span></div></div>
+      <div class="help-step"><div class="help-step-num">5</div><div class="help-step-text">Add <strong>Remarks</strong> for monitoring notes, then click <strong>💾 Save Hazard</strong></div></div>
+
+      <div class="help-subsection-title">Viewing linked risks</div>
+      <div class="help-p">Click any <strong>EJME-HA-XX</strong> chip or the <strong>Risks(N)</strong> button to see all risk assessments linked to that hazard, with their scores and status. From this panel you can also add a new risk directly linked to that hazard.</div>
+
+      <div class="help-subsection-title">Hazard status (auto-calculated)</div>
+      <div class="help-p">Status is calculated automatically from the effectiveness of all linked controls:<br>
+      • <strong>Closed</strong> — all controls are Effective and Present<br>
+      • <strong>Monitoring</strong> — some controls are Partially Effective or Not Checked<br>
+      • <strong>Open</strong> — any control is Not Effective, Absent, or no risks assessed</div>
+
+      <div class="help-subsection-title">Filtering and searching</div>
+      <div class="help-p">Use the search box to find by hazard ID or description. Filter by Department or Status using the dropdowns. Resize columns by dragging the column border — sizes are saved in your browser.</div>
+    `
+  },
+  {
+    id:'risks', icon:'◈', title:'Risk Register',
+    index:'Risk Register',
+    content:`
+      <div class="help-p">Each hazard has one or more Risk Assessments. A risk describes <em>what could go wrong</em> (the outcome), quantified using the 5×5 probability × severity matrix, with controls linked to reduce the residual score.</div>
+
+      <div class="help-subsection-title">Risk matrix — EJME scoring</div>
+      <div class="help-p">Scores are calculated as <strong>Probability × Severity</strong>:</div>
+      <div class="help-step"><div class="help-step-num" style="background:var(--green);">L</div><div class="help-step-text"><strong>Low (1–4)</strong> — Acceptable with existing controls. Monitor at regular intervals.</div></div>
+      <div class="help-step"><div class="help-step-num" style="background:var(--yellow);color:#333;">M</div><div class="help-step-text"><strong>Medium (5–14)</strong> — Additional controls required. Safety Manager review needed.</div></div>
+      <div class="help-step"><div class="help-step-num" style="background:var(--red);">H</div><div class="help-step-text"><strong>High (15–25)</strong> — Immediate action required. Accountable Manager notification.</div></div>
+
+      <div class="help-subsection-title">Creating a risk assessment</div>
+      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-text">Click <strong>+ New Risk</strong>, or from the Hazard Register click a hazard's Risks panel then <strong>+ New Risk Assessment</strong></div></div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-text">Select the <strong>Linked Hazard</strong> using the searchable dropdown — type to filter all 118 hazards</div></div>
+      <div class="help-step"><div class="help-step-num">3</div><div class="help-step-text">Write the <strong>Risk Description</strong> — describe the potential outcome e.g. "Collision with landing gear causing structural damage"</div></div>
+      <div class="help-step"><div class="help-step-num">4</div><div class="help-step-text">Set <strong>Initial Probability and Severity</strong> (1–5 each) using the coloured buttons. The initial risk score calculates automatically.</div></div>
+      <div class="help-step"><div class="help-step-num">5</div><div class="help-step-text"><strong>Link existing controls</strong> from the register using the searchable dropdown, or add new controls via the Additional Controls section</div></div>
+      <div class="help-step"><div class="help-step-num">6</div><div class="help-step-text">Set <strong>Residual Probability and Severity</strong> — the risk score after controls are applied</div></div>
+      <div class="help-step"><div class="help-step-num">7</div><div class="help-step-text">Set <strong>Risk Owner</strong> and <strong>Target Date</strong>, then save</div></div>
+
+      <div class="help-subsection-title">Viewing full risk detail</div>
+      <div class="help-p">Click any <strong>RISK-XXX</strong> chip in the register to open the full detail panel. This shows the linked hazard, initial/residual scores, all controls with their effectiveness, and quick links to edit or view filtered controls.</div>
+
+      <div class="help-subsection-title">Sign-off</div>
+      <div class="help-p">Once a risk assessment is complete and controls are verified, it requires manager sign-off. Click <strong>Sign Off</strong> in the row or detail panel, enter your name, role, and date.</div>
+
+      <div class="help-warn">Risks flagged as <strong>Review</strong> (purple badge) have had a control marked Not Effective or a safety event logged against them — they need re-assessment.</div>
+    `
+  },
+  {
+    id:'controls', icon:'◼', title:'Control Register',
+    index:'Control Register',
+    content:`
+      <div class="help-p">Controls (also called barriers or mitigations) are the measures in place to reduce risk. The Control Register tracks all 525 controls across EJME's 118 hazards, with formal effectiveness verification.</div>
+
+      <div class="help-subsection-title">Control effectiveness states</div>
+      <div class="help-step"><div class="help-step-num" style="background:var(--green);">✓</div><div class="help-step-text"><strong>Effective</strong> — control is in place and fully achieving its intended purpose</div></div>
+      <div class="help-step"><div class="help-step-num" style="background:var(--yellow);color:#333;">~</div><div class="help-step-text"><strong>Partially Effective</strong> — control exists but has gaps or inconsistencies</div></div>
+      <div class="help-step"><div class="help-step-num" style="background:var(--red);">✗</div><div class="help-step-text"><strong>Not Effective</strong> — control is failing. Linked risks are automatically flagged for review.</div></div>
+      <div class="help-step"><div class="help-step-num" style="background:var(--text3);">?</div><div class="help-step-text"><strong>Not Checked</strong> — default state. Awaiting first verification.</div></div>
+
+      <div class="help-subsection-title">Recording a control verification</div>
+      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-text">Find the control — use the search box or filter by Risk using the searchable dropdown</div></div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-text">Click the effectiveness badge (e.g. <span class="help-badge">NOT CHECKED</span>) or the <strong>✓ Verify</strong> button</div></div>
+      <div class="help-step"><div class="help-step-num">3</div><div class="help-step-text">In the verification modal: set the <strong>date</strong>, <strong>who verified</strong>, whether the control is <strong>Present or Absent</strong>, and the <strong>effectiveness</strong></div></div>
+      <div class="help-step"><div class="help-step-num">4</div><div class="help-step-text">Enter <strong>Verification Remarks</strong> — mandatory. Describe what was checked, method used, and any findings.</div></div>
+      <div class="help-step"><div class="help-step-num">5</div><div class="help-step-text">Click <strong>✓ Save Verification Record</strong></div></div>
+      <div class="help-tip">Every verification is stored in a permanent history trail — you can see the full history of checks in the Bow-Tie barrier detail panel. This satisfies ICAO Annex 19 and GCAA audit requirements.</div>
+
+      <div class="help-subsection-title">Adding controls to a risk</div>
+      <div class="help-p">Controls can be added in two ways from the Risk Assessment form:<br>
+      • <strong>Link existing</strong> — use the searchable dropdown to link an already-registered control<br>
+      • <strong>Add new (Additional Controls)</strong> — type a description and click "+ Add to Register". This immediately creates a new CTRL-XXX entry linked to the risk.</div>
+
+      <div class="help-warn">If a control is marked <strong>Not Effective or Absent</strong>, all linked risks are automatically flagged for Review status and you will see a warning toast.</div>
+    `
+  },
+  {
+    id:'bowtie', icon:'⧖', title:'Bow-Tie Analysis',
+    index:'Bow-Tie Analysis',
+    content:`
+      <div class="help-p">The Bow-Tie diagram is a visual risk analysis tool that shows how threats lead to a top event (hazard) and how consequences flow from it, with barriers (controls) on both sides preventing or mitigating harm. It is the standard tool used in aviation SMS per ICAO Doc 9859.</div>
+
+      <div class="help-subsection-title">Reading the diagram</div>
+      <div class="help-p">• <strong>Centre (Top Event)</strong> — the hazard itself, coloured by its auto-status<br>
+      • <strong>Left side (Threats)</strong> — risk assessments tagged as causes/threats leading to the top event<br>
+      • <strong>Right side (Consequences)</strong> — risk assessments tagged as outcomes<br>
+      • <strong>Barriers (vertical pills)</strong> — controls on each arm, coloured by effectiveness</div>
+
+      <div class="help-subsection-title">Using the Bow-Tie</div>
+      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-text">Select a <strong>Hazard</strong> from the searchable dropdown at the top</div></div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-text">In the <strong>Assign Risk Roles</strong> panel, tag each linked risk as either <strong>◀ Threat</strong> (left/cause) or <strong>Consequence ▶</strong> (right/outcome)</div></div>
+      <div class="help-step"><div class="help-step-num">3</div><div class="help-step-text">The diagram renders automatically. Barrier pills are coloured: 🟢 Effective · 🟡 Partial · 🔴 Not Effective · ⬛ Not Checked · 🟠 Absent</div></div>
+      <div class="help-step"><div class="help-step-num">4</div><div class="help-step-text">Click any <strong>barrier pill</strong> to see full control details and verification history. Click any <strong>risk node</strong> to see its full detail.</div></div>
+      <div class="help-tip">Roles are saved per hazard. Once tagged, they persist so the bow-tie is ready for future reviews without needing to re-assign roles.</div>
+    `
+  },
+  {
+    id:'events', icon:'▶', title:'Safety Event Log',
+    index:'Event Log',
+    content:`
+      <div class="help-p">The Event Log records safety occurrences, near misses, incidents, and accidents. Logging an event triggers an automatic cascade — linking to the affected hazard, identifying which controls failed, and flagging risks for review.</div>
+
+      <div class="help-subsection-title">Logging a safety event</div>
+      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-text">Click <strong>⚡ Log Event</strong> in the top right of the Event Log page</div></div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-text">Enter the <strong>Event Date</strong> and <strong>Description</strong> of what occurred</div></div>
+      <div class="help-step"><div class="help-step-num">3</div><div class="help-step-text"><strong>Step 1 — Select the linked Hazard</strong> using the searchable dropdown (type any part of the hazard ID or description)</div></div>
+      <div class="help-step"><div class="help-step-num">4</div><div class="help-step-text"><strong>Step 2 — Controls that failed</strong>: tick any controls that failed or were bypassed. These are automatically marked Not Effective.</div></div>
+      <div class="help-step"><div class="help-step-num">5</div><div class="help-step-text"><strong>Step 3 — Link to a specific Risk</strong> from the filtered list, or describe a new previously unknown risk</div></div>
+      <div class="help-step"><div class="help-step-num">6</div><div class="help-step-text">Select the <strong>Consequence</strong> level and click <strong>⚡ Log Event & Trigger Review</strong></div></div>
+      <div class="help-tip">You can also add a new source reference (e.g. an incident report number) that will be attached to the hazard's sources list.</div>
+      <div class="help-warn">Marking controls as failed automatically flags all linked risks as <strong>Review</strong> status — this ensures nothing slips through after an occurrence.</div>
+    `
+  },
+  {
+    id:'programme', icon:'📅', title:'Safety Programme',
+    index:'Safety Programme',
+    content:`
+      <div class="help-p">The Safety Programme tracks all scheduled safety activities across the year — meetings, audits, submissions, drills, and communications. It replaces the Excel-based MRO-SMS-017 Safety Programme with a live, interactive version.</div>
+
+      <div class="help-subsection-title">Three tabs</div>
+      <div class="help-p">• <strong>Safety Programme</strong> — main programme (SRB, SAG, manual reviews, GAP analysis, SPIs, drills, communications)<br>
+      • <strong>SMS Audit Schedule</strong> — internal and external audit plan<br>
+      • <strong>Safety Dept Schedule</strong> — Safety Officer and Safety Admin recurring tasks</div>
+
+      <div class="help-subsection-title">Recording a completion</div>
+      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-text">Click any month cell — <strong>✓</strong> (scheduled) or <strong>!</strong> (overdue) or <strong>—</strong> (ad-hoc)</div></div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-text">In the popup, enter the <strong>day of month</strong> the activity was completed (e.g. <span class="help-badge">15</span>)</div></div>
+      <div class="help-step"><div class="help-step-num">3</div><div class="help-step-text">Enter the <strong>responsible person</strong> (SM, SO, SA etc.) and <strong>remarks</strong> about what was done</div></div>
+      <div class="help-step"><div class="help-step-num">4</div><div class="help-step-text">Click <strong>✅ Record Completion</strong>. The day number appears in green in the cell.</div></div>
+      <div class="help-tip">Weekly activities (e.g. OT Assessment) can have multiple completions per month — click the cell again to add another. All dates stack in the cell.</div>
+
+      <div class="help-subsection-title">Filters and summary cards</div>
+      <div class="help-p">Click the <strong>Overdue</strong> card to filter to only overdue items. Click <strong>Due This Month</strong> to see what needs action now. Use the <strong>By</strong> dropdown to filter by responsible person (e.g. show only SO tasks). Use the search box to find any activity by name.</div>
+
+      <div class="help-subsection-title">Colour coding</div>
+      <div class="help-p">• ✓ grey = Scheduled, not yet due<br>
+      • ✓ blue border = Due this month<br>
+      • ! red = Overdue (scheduled month has passed with no completion)<br>
+      • Day number green = Completed<br>
+      • — = Not scheduled (click to record ad-hoc)</div>
+    `
+  },
+  {
+    id:'github', icon:'☁', title:'GitHub Cloud Sync',
+    index:'GitHub Sync',
+    content:`
+      <div class="help-p">AeroSafe SMS stores all data in a <strong>private GitHub repository</strong> that you control. Data is saved automatically after every change and loaded from GitHub when you open the app. This means your data is accessible from any device, anywhere.</div>
+
+      <div class="help-subsection-title">How it works</div>
+      <div class="help-p">• Every change autosaves to your browser's localStorage <strong>immediately</strong><br>
+      • 2 seconds after any change, it pushes to GitHub in the background<br>
+      • On startup, it loads the latest data from GitHub (overwriting local cache)<br>
+      • Every push creates a Git commit — full version history, forever</div>
+
+      <div class="help-subsection-title">Setting up on a new device</div>
+      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-text">Open <strong>frostypilot.github.io/Aerosafe/</strong> in any browser</div></div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-text">Go to <strong>Settings → ☁ GitHub Cloud Sync</strong></div></div>
+      <div class="help-step"><div class="help-step-num">3</div><div class="help-step-text">Paste your Personal Access Token (starts with <span class="help-badge">ghp_</span>) — stored only in this browser</div></div>
+      <div class="help-step"><div class="help-step-num">4</div><div class="help-step-text">Click <strong>☁ Connect</strong> — data loads automatically</div></div>
+      <div class="help-tip">The repository owner, name, and file path are pre-configured in the app — you only ever need to enter your token, once per device.</div>
+      <div class="help-warn">Never share your Personal Access Token. If compromised, generate a new one at github.com/settings/tokens and update it in Settings on each device.</div>
+
+      <div class="help-subsection-title">Status indicator</div>
+      <div class="help-p">The topbar shows the sync status: <span class="help-badge">☁ ✅</span> saved · <span class="help-badge">☁ ⟳</span> syncing · <span class="help-badge">☁ ⚠</span> error. Click it to jump to Settings.</div>
+
+      <div class="help-subsection-title">Manual backup</div>
+      <div class="help-p">Even with GitHub sync active, download a local backup regularly: <strong>Dashboard → ⬇ Backup</strong>. This saves a <span class="help-badge">.json</span> file to your computer. Restore it anytime with <strong>⬆ Restore</strong>.</div>
+    `
+  },
+  {
+    id:'settings', icon:'⚙', title:'Settings & Configuration',
+    index:'Settings',
+    content:`
+      <div class="help-p">The Settings page lets you configure your organisation details, customise all dropdown lists, manage GitHub sync, and import/export data.</div>
+
+      <div class="help-subsection-title">Organisation</div>
+      <div class="help-p">Set your organisation name, Part 145 approval number, Accountable Manager, Safety Manager, and regulatory authority. These appear in the sidebar footer and any printed reports.</div>
+
+      <div class="help-subsection-title">Customising dropdown lists</div>
+      <div class="help-p">All dropdown options in the app are configurable: Departments, Locations, Sources, Control Types, Effectiveness Values, Monitoring Methods, Frequencies, Responsible Persons, and Validators. Click <strong>+ Add</strong> on any list to add a new option, or edit/delete existing ones.</div>
+      <div class="help-tip">Changes to lists take effect immediately across the entire app — all dropdowns update dynamically.</div>
+
+      <div class="help-subsection-title">Data Management</div>
+      <div class="help-p">• <strong>⬇ Download Backup</strong> — saves your complete dataset as a <span class="help-badge">.json</span> file<br>
+      • <strong>⬆ Restore from File</strong> — loads a previously saved backup, replacing current data</div>
+      <div class="help-warn">Restoring from a backup replaces ALL current data. Make sure to download a current backup first if you want to keep recent changes.</div>
+    `
+  },
+  {
+    id:'abbreviations', icon:'📖', title:'Abbreviations & Reference',
+    index:'Abbreviations',
+    content:`
+      <div class="help-subsection-title">People</div>
+      <div class="help-p"><span class="help-badge">SM</span> Safety Manager &nbsp; <span class="help-badge">SO</span> Safety Officer &nbsp; <span class="help-badge">SA</span> Safety Admin Assistant &nbsp; <span class="help-badge">AM</span> Accountable Manager &nbsp; <span class="help-badge">GM-M</span> General Manager Maintenance &nbsp; <span class="help-badge">GM-TS</span> General Manager Technical Services</div>
+
+      <div class="help-subsection-title">System IDs</div>
+      <div class="help-p"><span class="help-badge">EJME-HA-XX</span> Hazard ID &nbsp; <span class="help-badge">RISK-XXX</span> Risk Assessment ID &nbsp; <span class="help-badge">CTRL-XXX</span> Control ID &nbsp; <span class="help-badge">EV-XXX</span> Safety Event ID</div>
+
+      <div class="help-subsection-title">SMS Terms</div>
+      <div class="help-p"><span class="help-badge">SRB</span> Safety Review Board &nbsp; <span class="help-badge">SAG</span> Safety Action Group &nbsp; <span class="help-badge">SPI</span> Safety Performance Indicator &nbsp; <span class="help-badge">SPM</span> Safety Performance Monitoring &nbsp; <span class="help-badge">HIRA</span> Hazard Identification and Risk Assessment &nbsp; <span class="help-badge">ALoSP</span> Acceptable Level of Safety Performance</div>
+
+      <div class="help-subsection-title">Regulatory</div>
+      <div class="help-p"><span class="help-badge">GCAA</span> General Civil Aviation Authority (UAE) &nbsp; <span class="help-badge">EASA</span> European Union Aviation Safety Agency &nbsp; <span class="help-badge">ICAO</span> International Civil Aviation Organisation &nbsp; <span class="help-badge">CAR-OPS</span> Civil Aviation Regulation — Operations &nbsp; <span class="help-badge">MOE</span> Maintenance Organisation Exposition &nbsp; <span class="help-badge">SMM</span> Safety Management Manual</div>
+
+      <div class="help-subsection-title">Document References</div>
+      <div class="help-p"><span class="help-badge">MRO-SMS-017</span> Hazard Register form &nbsp; <span class="help-badge">MRO-SMS-016</span> HIRA form &nbsp; <span class="help-badge">GTF-SMS-006</span> SPI Report &nbsp; <span class="help-badge">GTF-SMS-002A</span> SMS Assessment Tool &nbsp; <span class="help-badge">ICAO Doc 9859</span> SMS Manual (4th Edition)</div>
+    `
+  }
+];
+
+function renderHelp(){
+  const query = (document.getElementById('help-search')?.value||'').toLowerCase().trim();
+
+  // Build index
+  const indexEl = document.getElementById('help-index');
+  const contentEl = document.getElementById('help-content');
+  if(!indexEl||!contentEl) return;
+
+  // Filter sections by search
+  const visible = query
+    ? HELP_SECTIONS.filter(s => s.title.toLowerCase().includes(query) || s.content.toLowerCase().includes(query))
+    : HELP_SECTIONS;
+
+  // Index
+  indexEl.innerHTML = `
+    <div class="help-index-section">Contents</div>
+    ${HELP_SECTIONS.map(s=>`
+      <div class="help-index-item ${visible.find(v=>v.id===s.id)?'':''}${query&&!visible.find(v=>v.id===s.id)?'':''}"
+           onclick="scrollToHelpSection('${s.id}')"
+           id="hi-${s.id}"
+           style="${query&&!visible.find(v=>v.id===s.id)?'opacity:.35;':''}">
+        ${s.icon} ${s.index}
+      </div>`).join('')}`;
+
+  // Content
+  if(!visible.length){
+    contentEl.innerHTML = `<div style="text-align:center;padding:60px;color:var(--text3);font-size:13px;">No results for "<strong>${query}</strong>"<br><span style="font-size:11px;">Try different keywords</span></div>`;
+    return;
+  }
+
+  contentEl.innerHTML = visible.map(s=>`
+    <div class="help-section" id="hs-${s.id}">
+      <div class="help-section-title"><span>${s.icon}</span>${s.title}</div>
+      ${query ? highlightHelpText(s.content, query) : s.content}
+    </div>`).join('');
+}
+
+function highlightHelpText(html, query){
+  // Simple highlight — wrap matched text in spans (avoid breaking HTML tags)
+  return html.replace(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),
+    '<span class="help-highlight">$1</span>');
+}
+
+function scrollToHelpSection(id){
+  // Clear search when clicking index
+  const search = document.getElementById('help-search');
+  if(search&&search.value){ search.value=''; renderHelp(); }
+  setTimeout(()=>{
+    const el = document.getElementById(`hs-${id}`);
+    if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+    // Update active index item
+    document.querySelectorAll('.help-index-item').forEach(i=>i.classList.remove('active'));
+    const idx = document.getElementById(`hi-${id}`);
+    if(idx) idx.classList.add('active');
+  }, 50);
+}
 // ═══════════════════════════════════════════════════
 function toggleSidebarCollapse(){
   const sb = document.getElementById('sidebar');
