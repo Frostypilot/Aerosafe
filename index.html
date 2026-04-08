@@ -518,18 +518,18 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
         <div class="tbl-wrap">
           <table style="table-layout:fixed;width:100%;">
             <colgroup>
-              <col style="width:90px;">   <!-- Hazard ID -->
-              <col style="width:200px;">  <!-- Description -->
+              <col style="width:110px;">  <!-- Hazard ID -->
+              <col style="width:180px;">  <!-- Description -->
               <col style="width:110px;">  <!-- Sources -->
-              <col style="width:120px;">  <!-- Department -->
+              <col style="width:130px;">  <!-- Department -->
               <col style="width:90px;">   <!-- Location -->
-              <col style="width:90px;">   <!-- Date -->
-              <col style="width:110px;">  <!-- Owner -->
-              <col style="width:75px;">   <!-- Status -->
-              <col style="width:80px;">   <!-- Initial Risk -->
-              <col style="width:80px;">   <!-- Residual Risk -->
+              <col style="width:88px;">   <!-- Date -->
+              <col style="width:100px;">  <!-- Owner -->
+              <col style="width:80px;">   <!-- Status -->
+              <col style="width:62px;">   <!-- Initial -->
+              <col style="width:62px;">   <!-- Residual -->
               <col>                       <!-- Remarks (flex) -->
-              <col style="width:120px;">  <!-- Actions -->
+              <col style="width:130px;">  <!-- Actions -->
             </colgroup>
             <thead><tr>
               <th>Hazard ID</th><th>Hazard Description</th><th>Source(s)</th><th>Department</th>
@@ -546,7 +546,15 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
     <div class="page" id="page-risks">
       <div class="search-row">
         <div class="search-box"><span style="color:var(--text3);">🔍</span><input type="text" placeholder="Search risks…" id="rk-srch" oninput="renderRisks()"></div>
-        <select class="fs" style="width:130px;" id="rk-f-hz" onchange="renderRisks()"><option value="">All Hazards</option></select>
+        <div class="sd-wrap" style="width:160px;">
+          <input class="sd-input" id="sd-rk-f-hz-display" placeholder="All Hazards" readonly onclick="toggleSd('sd-rk-f-hz')" style="font-size:11px;padding:5px 28px 5px 9px;">
+          <span class="sd-arrow">▾</span>
+          <input type="hidden" id="rk-f-hz" onchange="renderRisks()">
+          <div class="sd-dropdown" id="sd-rk-f-hz">
+            <div class="sd-search-wrap"><input class="sd-search" placeholder="Search hazards…" oninput="filterSd('sd-rk-f-hz',this.value)" autocomplete="off"></div>
+            <div class="sd-list" id="sd-rk-f-hz-list"></div>
+          </div>
+        </div>
         <select class="fs" style="width:130px;" id="rk-f-level" onchange="renderRisks()">
           <option value="">All Levels</option><option>LOW</option><option>MEDIUM</option><option>HIGH</option>
         </select>
@@ -602,7 +610,15 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
       </div>
       <div class="search-row">
         <div class="search-box"><span style="color:var(--text3);">🔍</span><input type="text" placeholder="Search controls…" id="ct-srch" oninput="renderControls()"></div>
-        <select class="fs" style="width:150px;" id="ct-f-risk" onchange="renderControls()"><option value="">All Risks</option></select>
+        <div class="sd-wrap" style="width:180px;">
+          <input class="sd-input" id="sd-ct-f-risk-display" placeholder="All Risks" readonly onclick="toggleSd('sd-ct-f-risk')" style="font-size:11px;padding:5px 28px 5px 9px;">
+          <span class="sd-arrow">▾</span>
+          <input type="hidden" id="ct-f-risk" onchange="renderControls()">
+          <div class="sd-dropdown" id="sd-ct-f-risk">
+            <div class="sd-search-wrap"><input class="sd-search" placeholder="Search risks…" oninput="filterSd('sd-ct-f-risk',this.value)" autocomplete="off"></div>
+            <div class="sd-list" id="sd-ct-f-risk-list"></div>
+          </div>
+        </div>
         <select class="fs" style="width:150px;" id="ct-f-eff" onchange="renderControls()">
           <option value="">All Effectiveness</option><option>Effective</option><option>Partially Effective</option><option>Not Effective</option><option>Not Checked</option>
         </select>
@@ -650,7 +666,15 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:8px;">
           <label style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);white-space:nowrap;">Select Hazard</label>
-          <select class="fs" id="bt-hz-sel" onchange="onBtHzChange()" style="min-width:320px;"></select>
+          <div class="sd-wrap" id="sd-bt-hz-wrap" style="min-width:320px;">
+            <input class="sd-input" id="sd-bt-hz-display" placeholder="-- Select a Hazard --" readonly onclick="toggleSd('sd-bt-hz')">
+            <span class="sd-arrow">▾</span>
+            <input type="hidden" id="bt-hz-sel">
+            <div class="sd-dropdown" id="sd-bt-hz">
+              <div class="sd-search-wrap"><input class="sd-search" placeholder="Search hazards…" oninput="filterSd('sd-bt-hz',this.value)" autocomplete="off"></div>
+              <div class="sd-list" id="sd-bt-hz-list"></div>
+            </div>
+          </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap;">
           <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);"><span style="width:12px;height:12px;border-radius:2px;background:var(--green);display:inline-block;"></span>Effective</div>
@@ -961,7 +985,15 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
       <div style="font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">EXISTING CONTROLS</div>
       <div class="fg">
         <label class="fl">Link controls from register</label>
-        <select class="fs" id="r-ctrl-sel" onchange="addRiskCtrl()"><option value="">-- Select control to link --</option></select>
+        <div class="sd-wrap" id="sd-r-ctrl-wrap">
+          <input class="sd-input" id="sd-r-ctrl-display" placeholder="-- Select control to link --" readonly onclick="toggleSd('sd-r-ctrl')">
+          <span class="sd-arrow">▾</span>
+          <input type="hidden" id="r-ctrl-sel">
+          <div class="sd-dropdown" id="sd-r-ctrl">
+            <div class="sd-search-wrap"><input class="sd-search" placeholder="Search controls…" oninput="filterSd('sd-r-ctrl',this.value)" autocomplete="off"></div>
+            <div class="sd-list" id="sd-r-ctrl-list"></div>
+          </div>
+        </div>
         <div id="r-ctrl-list" style="margin-top:7px;"></div>
       </div>
       <div class="fg">
@@ -1034,7 +1066,17 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
     <div class="modal-body">
       <div class="g2">
         <div class="fg"><label class="fl">Control ID</label><input class="fi" id="c-id" readonly></div>
-        <div class="fg"><label class="fl">Linked Risk</label><select class="fs" id="c-risk"></select></div>
+        <div class="fg"><label class="fl">Linked Risk</label>
+          <div class="sd-wrap" id="sd-c-risk-wrap">
+            <input class="sd-input" id="sd-c-risk-display" placeholder="-- Select Risk --" readonly onclick="toggleSd('sd-c-risk')">
+            <span class="sd-arrow">▾</span>
+            <input type="hidden" id="c-risk">
+            <div class="sd-dropdown" id="sd-c-risk">
+              <div class="sd-search-wrap"><input class="sd-search" placeholder="Search risks…" oninput="filterSd('sd-c-risk',this.value)" autocomplete="off"></div>
+              <div class="sd-list" id="sd-c-risk-list"></div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="fg"><label class="fl">Control Description</label><textarea class="fta" id="c-desc" style="min-height:60px;"></textarea></div>
       <div class="g2">
@@ -1405,19 +1447,19 @@ function toggleSd(id){
 }
 
 function selectSd(id, value, label){
-  // Set hidden input value
   const hiddenId = id.replace(/^sd-/,'');
   const hidden = document.getElementById(hiddenId);
   if(hidden) hidden.value = value || '';
-  // Set display input
   const display = document.getElementById(`${id}-display`);
   if(display) display.value = value ? label : '';
-  // Close dropdown
   const dd = document.getElementById(id);
   if(dd) dd.classList.remove('open');
-  // Trigger onchange handlers
-  if(id==='sd-ev-hz') onEvHzChange();
-  // Re-render to update selected highlight
+  // Trigger handlers per dropdown
+  if(id==='sd-ev-hz')     onEvHzChange();
+  if(id==='sd-bt-hz')     onBtHzChange();
+  if(id==='sd-rk-f-hz')   renderRisks();
+  if(id==='sd-ct-f-risk') renderControls();
+  if(id==='sd-r-ctrl')    addRiskCtrl();
   renderSdList(id, '');
 }
 
@@ -1654,18 +1696,19 @@ function renderHazards(){
       const linkedRisks=ST.risks.filter(r=>r.hzId===h.id);
       const initSc=linkedRisks.length?Math.max(...linkedRisks.map(r=>rScore(r.prob,r.sev))):0;
       const resSc=linkedRisks.length?Math.max(...linkedRisks.map(r=>rScore(r.resProb||r.prob,r.resSev||r.sev))):0;
+      const esc=s=>(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
       return `<tr>
-        <td style="white-space:nowrap;"><span class="id-chip" style="white-space:nowrap;">${h.id}</span></td>
-        <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);max-width:0;" title="${h.desc}">${h.desc}</td>
-        <td style="font-size:10.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${(h.sources||[]).join(', ')}">${(h.sources||[]).join(', ')}</td>
-        <td style="overflow:hidden;white-space:nowrap;"><span class="dept-pill">${h.dept||'—'}</span></td>
-        <td style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0;" title="${h.loc||''}">${h.loc||'—'}</td>
-        <td style="font-family:'JetBrains Mono',monospace;font-size:10.5px;white-space:nowrap;">${h.date}</td>
-        <td style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${h.owner||''}">${h.owner||'—'}</td>
-        <td style="white-space:nowrap;"><span class="sbadge ${stCls}">${status}</span></td>
-        <td style="white-space:nowrap;">${initSc?`<span class="rbadge ${rClass(rLevel(initSc))}">${initSc}</span>`:'—'}</td>
-        <td style="white-space:nowrap;">${resSc?`<span class="rbadge ${rClass(rLevel(resSc))}">${resSc}</span>`:'—'}</td>
-        <td style="font-size:10.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${h.remarks||''}">${h.remarks||'—'}</td>
+        <td style="white-space:nowrap;" title="${esc(h.id)}"><span class="id-chip" style="white-space:nowrap;">${h.id}</span></td>
+        <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);max-width:0;" title="${esc(h.desc)}">${h.desc}</td>
+        <td style="font-size:10.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${esc((h.sources||[]).join(', '))}">${(h.sources||[]).join(', ')}</td>
+        <td style="overflow:hidden;white-space:nowrap;max-width:0;" title="${esc(h.dept)}"><span class="dept-pill">${h.dept||'—'}</span></td>
+        <td style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0;" title="${esc(h.loc)}">${h.loc||'—'}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:10px;white-space:nowrap;" title="${esc(h.date)}">${h.date}</td>
+        <td style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${esc(h.owner)}">${h.owner||'—'}</td>
+        <td style="white-space:nowrap;" title="${status}"><span class="sbadge ${stCls}">${status}</span></td>
+        <td style="white-space:nowrap;text-align:center;" title="Initial risk score: ${initSc}">${initSc?`<span class="rbadge ${rClass(rLevel(initSc))}">${initSc}</span>`:'—'}</td>
+        <td style="white-space:nowrap;text-align:center;" title="Residual risk score: ${resSc}">${resSc?`<span class="rbadge ${rClass(rLevel(resSc))}">${resSc}</span>`:'—'}</td>
+        <td style="font-size:10.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${esc(h.remarks)}">${h.remarks||'—'}</td>
         <td style="white-space:nowrap;">
           <button class="btn btn-ghost btn-xs" onclick="openAddHazard('${h.id}')">Edit</button>
           <button class="btn btn-ghost btn-xs" onclick="viewHazardDetail('${h.id}')">Risks(${linked})</button>
@@ -1734,7 +1777,14 @@ function openAddRisk(id=null, preHzId=null){
 
   // ctrl selector
   const cSel=document.getElementById('r-ctrl-sel');
-  cSel.innerHTML='<option value="">-- Select control to link --</option>'+ST.controls.map(c=>`<option value="${c.id}">${c.id}: ${c.desc.substring(0,50)}</option>`).join('');
+  if(cSel) cSel.value='';
+  // Populate controls searchable dropdown
+  initSd('sd-r-ctrl', ST.controls.map(c=>({
+    value: c.id,
+    label: `${c.id}: ${c.desc.substring(0,55)}`,
+    id_tag: c.id,
+    sublabel: c.rkId
+  })), '-- Select control to link --');
 
   document.getElementById('m-risk-title').textContent=id?'◈ Edit Risk':'◈ New Risk Assessment';
 
@@ -1804,10 +1854,14 @@ function updateRiskScoreDisplay(){
 }
 
 function addRiskCtrl(){
-  const sel=document.getElementById('r-ctrl-sel');
-  const id=sel.value; if(!id)return;
+  const id=document.getElementById('r-ctrl-sel').value;
+  if(!id) return;
   if(!rLinkedCtrls.includes(id)){ rLinkedCtrls.push(id); renderLinkedCtrls(); }
-  sel.value='';
+  // Reset the searchable dropdown display
+  const disp=document.getElementById('sd-r-ctrl-display');
+  if(disp) disp.value='';
+  document.getElementById('r-ctrl-sel').value='';
+  setSdValue('sd-r-ctrl','');
 }
 
 function renderLinkedCtrls(){
@@ -1975,9 +2029,11 @@ function renderRisks(){
   const fLv=document.getElementById('rk-f-level')?.value||'';
   const fSt=document.getElementById('rk-f-status')?.value||'';
 
-  // Refresh hz filter
-  const hf=document.getElementById('rk-f-hz');
-  if(hf){ const cv=hf.value; hf.innerHTML='<option value="">All Hazards</option>'+ST.hazards.map(h=>`<option value="${h.id}" ${h.id===cv?'selected':''}>${h.id}</option>`).join('');}
+  // Populate hazard filter searchable dropdown (only on first render or when hazards change)
+  if(!sdData['sd-rk-f-hz']||sdData['sd-rk-f-hz'].length!==ST.hazards.length+1){
+    initSd('sd-rk-f-hz', ST.hazards.map(h=>({value:h.id,label:`${h.id}: ${h.desc.substring(0,50)}`,id_tag:h.id})), 'All Hazards');
+    if(fHz) setSdValue('sd-rk-f-hz', fHz);
+  }
 
   const rows=ST.risks.filter(r=>{
     const sc=rScore(r.prob,r.sev); const lv=rLevel(sc);
@@ -1987,6 +2043,7 @@ function renderRisks(){
   });
 
   document.getElementById('rk-count-lbl').textContent=`(${ST.risks.length} total)`;
+  const esc=s=>(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
   document.getElementById('rk-tbody').innerHTML=rows.length
     ?rows.map(r=>{
@@ -1995,27 +2052,26 @@ function renderRisks(){
       const st=calcRiskStatus(r.id);
       const stCls={'Open':'sb-open','Monitoring':'sb-monitoring','Closed':'sb-closed','Review':'sb-review'}[st]||'sb-open';
       const ctrls=r.ctrlIds.map(id=>ST.controls.find(c=>c.id===id)).filter(Boolean);
-      // addlCtrls are now ctrl IDs too — show them as chips, distinct from existing
       const addlCtrls=(r.addlCtrls||[]).map(id=>ST.controls.find(c=>c.id===id)).filter(Boolean);
       const addlHtml=addlCtrls.length
         ?addlCtrls.map(c=>`<div style="display:flex;align-items:center;gap:4px;margin-bottom:2px;"><span class="id-chip ctrl" style="font-size:9.5px;">${c.id}</span><span style="font-size:10px;color:var(--text3);">${c.desc.substring(0,35)}</span></div>`).join('')
         :'—';
       return`<tr class="${r.flaggedNew?'flagged-new':''}">
-        <td style="white-space:nowrap;"><span class="id-chip risk" style="white-space:nowrap;">${r.id}</span></td>
-        <td style="white-space:nowrap;"><span class="id-chip" style="white-space:nowrap;">${r.hzId}</span></td>
-        <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;color:var(--text);font-size:11.5px;" title="${r.desc}">${r.desc}</td>
-        <td style="overflow:hidden;white-space:nowrap;font-size:10.5px;">${ctrls.slice(0,3).map(c=>`<span class="id-chip ctrl" style="margin:1px 1px 2px;white-space:nowrap;">${c.id}</span>`).join('')}${ctrls.length>3?`<span style="font-size:9px;color:var(--text3);"> +${ctrls.length-3}</span>`:''}${!ctrls.length?'—':''}</td>
-        <td style="font-weight:700;color:var(--accent);text-align:center;white-space:nowrap;">${r.prob}</td>
-        <td style="font-weight:700;color:var(--orange);text-align:center;white-space:nowrap;">${r.sev}</td>
-        <td style="white-space:nowrap;"><span class="rbadge ${rClass(lv)}">${sc}</span></td>
-        <td style="overflow:hidden;white-space:nowrap;font-size:10.5px;max-width:0;">${addlHtml||'—'}</td>
-        <td style="font-weight:700;color:var(--accent);text-align:center;white-space:nowrap;">${r.resProb||'—'}</td>
-        <td style="font-weight:700;color:var(--orange);text-align:center;white-space:nowrap;">${r.resSev||'—'}</td>
-        <td style="white-space:nowrap;">${r.resProb?`<span class="rbadge ${rClass(rlv)}">${rsc}</span>`:'—'}</td>
-        <td style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${r.owner||''}">${r.owner||'—'}</td>
-        <td style="font-family:'JetBrains Mono',monospace;font-size:10px;white-space:nowrap;">${r.target||'—'}</td>
-        <td style="white-space:nowrap;">${r.signedOff?`<span style="color:var(--green);font-size:10px;">✅ ${r.signedOff.name.split(' ')[0]}</span>`:`<button class="btn btn-ghost btn-xs" onclick="openSignOff('${r.id}')">Sign Off</button>`}</td>
-        <td style="white-space:nowrap;"><span class="sbadge ${stCls}">${st}</span></td>
+        <td style="white-space:nowrap;" title="${r.id}"><span class="id-chip risk" style="white-space:nowrap;">${r.id}</span></td>
+        <td style="white-space:nowrap;" title="${r.hzId}"><span class="id-chip" style="white-space:nowrap;">${r.hzId}</span></td>
+        <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;color:var(--text);font-size:11.5px;" title="${esc(r.desc)}">${r.desc}</td>
+        <td style="overflow:hidden;white-space:nowrap;font-size:10.5px;" title="${ctrls.map(c=>c.id).join(', ')}">${ctrls.slice(0,3).map(c=>`<span class="id-chip ctrl" style="margin:1px 1px 2px;white-space:nowrap;">${c.id}</span>`).join('')}${ctrls.length>3?`<span style="font-size:9px;color:var(--text3);"> +${ctrls.length-3}</span>`:''}${!ctrls.length?'—':''}</td>
+        <td style="font-weight:700;color:var(--accent);text-align:center;white-space:nowrap;" title="Probability">${r.prob}</td>
+        <td style="font-weight:700;color:var(--orange);text-align:center;white-space:nowrap;" title="Severity">${r.sev}</td>
+        <td style="white-space:nowrap;" title="Initial: ${sc} — ${lv}"><span class="rbadge ${rClass(lv)}">${sc}</span></td>
+        <td style="overflow:hidden;white-space:nowrap;font-size:10.5px;max-width:0;" title="${addlCtrls.map(c=>c.id).join(', ')}">${addlHtml||'—'}</td>
+        <td style="font-weight:700;color:var(--accent);text-align:center;white-space:nowrap;" title="Residual Probability">${r.resProb||'—'}</td>
+        <td style="font-weight:700;color:var(--orange);text-align:center;white-space:nowrap;" title="Residual Severity">${r.resSev||'—'}</td>
+        <td style="white-space:nowrap;" title="Residual: ${rsc} — ${rlv}">${r.resProb?`<span class="rbadge ${rClass(rlv)}">${rsc}</span>`:'—'}</td>
+        <td style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${esc(r.owner)}">${r.owner||'—'}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:10px;white-space:nowrap;" title="Target: ${r.target||'—'}">${r.target||'—'}</td>
+        <td style="white-space:nowrap;" title="${r.signedOff?'Signed off by '+r.signedOff.name:'Pending sign-off'}">${r.signedOff?`<span style="color:var(--green);font-size:10px;">✅ ${r.signedOff.name.split(' ')[0]}</span>`:`<button class="btn btn-ghost btn-xs" onclick="openSignOff('${r.id}')">Sign Off</button>`}</td>
+        <td style="white-space:nowrap;" title="${st}"><span class="sbadge ${stCls}">${st}</span></td>
         <td style="white-space:nowrap;">
           <button class="btn btn-ghost btn-xs" onclick="openAddRisk('${r.id}')">Edit</button>
           <button class="btn btn-ghost btn-xs" onclick="viewRiskDetail('${r.id}')">Detail</button>
@@ -2111,6 +2167,7 @@ function confirmSignOff(){
 function openAddCtrl(id=null, preRkId=null){
   editCtId=id;
   fillSelKV('c-risk', ST.risks.map(r=>[r.id,`${r.id}: ${r.desc.substring(0,50)}`]), '-- Select Risk --');
+  populateRiskSd('sd-c-risk', null, '-- Select Risk --');
   fillSel('c-type', ST.lists.ctrlTypes);
   fillSel('c-mon', ST.lists.monMethods, '-- Select --');
   fillSel('c-freq', ST.lists.freqs, '-- Select --');
@@ -2123,6 +2180,7 @@ function openAddCtrl(id=null, preRkId=null){
     const c=ST.controls.find(x=>x.id===id); if(!c)return;
     document.getElementById('c-id').value=c.id;
     document.getElementById('c-risk').value=c.rkId;
+    setSdValue('sd-c-risk', c.rkId);
     document.getElementById('c-desc').value=c.desc;
     document.getElementById('c-type').value=c.type;
     document.getElementById('c-mon').value=c.mon;
@@ -2140,7 +2198,7 @@ function openAddCtrl(id=null, preRkId=null){
     document.getElementById('c-lastchk').value='';
     document.getElementById('c-eff').value='Not Checked';
     document.getElementById('c-present').value='present';
-    if(preRkId) document.getElementById('c-risk').value=preRkId;
+    if(preRkId){ document.getElementById('c-risk').value=preRkId; setSdValue('sd-c-risk', preRkId); }
   }
   openM('m-ctrl');
 }
@@ -2183,9 +2241,11 @@ function renderControls(){
   const fEff=document.getElementById('ct-f-eff')?.value||'';
   const fType=document.getElementById('ct-f-type')?.value||'';
 
-  // Refresh risk filter
-  const rf=document.getElementById('ct-f-risk');
-  if(rf){ const cv=rf.value; rf.innerHTML='<option value="">All Risks</option>'+ST.risks.map(r=>`<option value="${r.id}" ${r.id===cv?'selected':''}>${r.id}</option>`).join('');}
+  // Populate risk filter searchable dropdown
+  if(!sdData['sd-ct-f-risk']||sdData['sd-ct-f-risk'].length!==ST.risks.length+1){
+    initSd('sd-ct-f-risk', ST.risks.map(r=>({value:r.id,label:`${r.id}: ${r.desc.substring(0,50)}`,id_tag:r.id})), 'All Risks');
+    if(fRk) setSdValue('sd-ct-f-risk', fRk);
+  }
 
   let eff=0,part=0,neff=0,nchk=0;
   ST.controls.forEach(c=>{
@@ -2211,21 +2271,22 @@ function renderControls(){
   document.getElementById('ct-tbody').innerHTML=rows.length
     ?rows.map(c=>{
       const rk=ST.risks.find(r=>r.id===c.rkId)||{};
+      const esc=s=>(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
       return`<tr>
-        <td style="white-space:nowrap;"><span class="id-chip ctrl" style="white-space:nowrap;">${c.id}</span></td>
-        <td style="white-space:nowrap;"><span class="id-chip risk" style="white-space:nowrap;">${c.rkId||'—'}</span></td>
-        <td style="font-size:10.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${rk.desc||''}">${rk.desc?rk.desc.substring(0,45):'—'}</td>
-        <td style="color:var(--text);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${c.desc}">${c.desc}</td>
-        <td style="white-space:nowrap;"><span style="font-size:10px;background:var(--bg3);border-radius:3px;padding:2px 6px;color:var(--text2);">${c.type}</span></td>
-        <td style="font-size:10.5px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${c.mon||''}">${c.mon||'—'}</td>
-        <td style="font-size:10.5px;color:var(--text2);white-space:nowrap;">${c.freq||'—'}</td>
-        <td style="font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${c.resp||''}">${c.resp||'—'}</td>
-        <td style="font-size:10.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${c.verBy||''}">${c.verBy||'—'}</td>
-        <td style="white-space:nowrap;">
-          <span class="eff-badge ${effCls(c.eff)}" style="cursor:pointer;" title="Click to record verification" onclick="openVerifyCtrl('${c.id}')">${c.eff}</span>
+        <td style="white-space:nowrap;" title="${c.id}"><span class="id-chip ctrl" style="white-space:nowrap;">${c.id}</span></td>
+        <td style="white-space:nowrap;" title="${c.rkId||'—'}"><span class="id-chip risk" style="white-space:nowrap;">${c.rkId||'—'}</span></td>
+        <td style="font-size:10.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${esc(rk.desc)}">${rk.desc?rk.desc.substring(0,45):'—'}</td>
+        <td style="color:var(--text);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${esc(c.desc)}">${c.desc}</td>
+        <td style="white-space:nowrap;" title="${c.type}"><span style="font-size:10px;background:var(--bg3);border-radius:3px;padding:2px 6px;color:var(--text2);">${c.type}</span></td>
+        <td style="font-size:10.5px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${esc(c.mon)}">${c.mon||'—'}</td>
+        <td style="font-size:10.5px;color:var(--text2);white-space:nowrap;" title="${esc(c.freq)}">${c.freq||'—'}</td>
+        <td style="font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${esc(c.resp)}">${c.resp||'—'}</td>
+        <td style="font-size:10.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${esc(c.verBy)}">${c.verBy||'—'}</td>
+        <td style="white-space:nowrap;" title="${c.eff} — click to verify">
+          <span class="eff-badge ${effCls(c.eff)}" style="cursor:pointer;" onclick="openVerifyCtrl('${c.id}')">${c.eff}</span>
         </td>
-        <td style="font-family:'JetBrains Mono',monospace;font-size:10px;white-space:nowrap;">${c.lastChk||'—'}</td>
-        <td style="font-size:10px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${c.verRemarks||c.remarks||''}">${c.verRemarks||c.remarks||'—'}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:10px;white-space:nowrap;" title="Last checked: ${c.lastChk||'Never'}">${c.lastChk||'—'}</td>
+        <td style="font-size:10px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${esc(c.verRemarks||c.remarks)}">${c.verRemarks||c.remarks||'—'}</td>
         <td style="white-space:nowrap;">
           <button class="btn btn-primary btn-xs" onclick="openVerifyCtrl('${c.id}')">✓ Verify</button>
           <button class="btn btn-ghost btn-xs" onclick="openAddCtrl('${c.id}')">Edit</button>
@@ -2575,19 +2636,11 @@ function viewEventDetail(id){
 // ═══════════════════════════════════════════════════
 
 function renderBowtie(){
-  // Populate hazard selector — preserve selection
-  const sel = document.getElementById('bt-hz-sel');
-  const curVal = sel.value;
-
-  // Only rebuild options if hazard list changed (avoid losing selection on re-render)
-  const newOptions = '<option value="">-- Select a Hazard --</option>' +
-    ST.hazards.map(h=>`<option value="${h.id}">${h.id}: ${h.desc.substring(0,70)}</option>`).join('');
-  if(sel.innerHTML !== newOptions) sel.innerHTML = newOptions;
-
-  // Restore selection after innerHTML rebuild
-  if(curVal && ST.hazards.find(h=>h.id===curVal)) sel.value = curVal;
-
-  drawBowtie(sel.value);
+  // Populate hazard searchable dropdown — preserve current selection
+  const curVal = document.getElementById('bt-hz-sel').value;
+  populateHazardSd('sd-bt-hz', '-- Select a Hazard --');
+  if(curVal) setSdValue('sd-bt-hz', curVal);
+  drawBowtie(document.getElementById('bt-hz-sel').value);
 }
 
 function onBtHzChange(){
