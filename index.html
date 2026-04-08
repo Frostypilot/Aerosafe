@@ -267,6 +267,25 @@ table.resizable{table-layout:fixed;}
 .col-resizer::after{content:'';display:block;width:2px;height:60%;background:var(--border2);border-radius:1px;opacity:0;}
 .col-resizer:hover::after,.col-resizer.dragging::after{opacity:1;background:var(--accent);}
 
+/* ── AI ASSIST ── */
+.ai-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:6px;border:1px solid rgba(107,63,212,.3);background:rgba(107,63,212,.06);color:var(--purple);font-size:11px;font-weight:600;cursor:pointer;transition:all .13s;white-space:nowrap;}
+.ai-btn:hover{background:rgba(107,63,212,.12);border-color:rgba(107,63,212,.5);}
+.ai-btn:disabled{opacity:.4;cursor:not-allowed;}
+.ai-btn .ai-spin{display:inline-block;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.ai-result{margin-top:10px;border:1px solid rgba(107,63,212,.2);border-radius:8px;background:rgba(107,63,212,.04);overflow:hidden;}
+.ai-result-head{padding:8px 12px;background:rgba(107,63,212,.08);font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--purple);display:flex;align-items:center;gap:6px;}
+.ai-result-body{padding:10px 12px;}
+.ai-suggestion{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;background:var(--panel);border:1px solid var(--border);border-radius:7px;margin-bottom:6px;cursor:pointer;transition:all .13s;}
+.ai-suggestion:hover{border-color:var(--purple);background:rgba(107,63,212,.04);}
+.ai-suggestion:last-child{margin-bottom:0;}
+.ai-sug-id{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;white-space:nowrap;padding:2px 6px;border-radius:4px;background:rgba(107,63,212,.1);color:var(--purple);flex-shrink:0;}
+.ai-sug-body{flex:1;min-width:0;}
+.ai-sug-desc{font-size:12px;color:var(--text);margin-bottom:2px;font-weight:500;}
+.ai-sug-reason{font-size:10.5px;color:var(--text3);font-style:italic;}
+.ai-sug-action{font-size:10px;color:var(--purple);font-weight:600;white-space:nowrap;margin-top:3px;}
+.ai-usage-bar{display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--text3);}
+
 /* ── HELP PAGE ── */
 .help-layout{display:grid;grid-template-columns:220px 1fr;gap:0;height:100%;}
 .help-index{background:var(--bg3);border-right:1px solid var(--border);border-radius:11px 0 0 11px;padding:14px 0;overflow-y:auto;max-height:calc(100vh - 130px);position:sticky;top:0;}
@@ -1028,6 +1047,23 @@ table.resizable{table-layout:fixed;}
             </div>
           </div>
 
+          <!-- AI ASSIST USAGE -->
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-head">
+              <span class="card-title">✦ AI Assist Usage</span>
+            </div>
+            <div class="card-body">
+              <div id="ai-usage-display"></div>
+              <div class="fg" style="margin-top:10px;">
+                <label class="fl">Monthly Call Limit</label>
+                <input type="number" class="fi" id="ai-limit-input" min="100" max="9999" placeholder="500"
+                  style="width:120px;" onchange="ST.aiUsage.limit=parseInt(this.value)||500;autosave();">
+                <div style="font-size:10px;color:var(--text3);margin-top:3px;">Calls reset automatically on the 1st of each month. Haiku ~$0.0003 per call.</div>
+              </div>
+              <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="resetAiUsage()">↺ Reset Counter</button>
+            </div>
+          </div>
+
           <!-- DEPARTMENTS -->
           <div class="card" style="margin-bottom:14px;">
             <div class="card-head"><span class="card-title">Departments</span><button class="btn btn-ghost btn-xs" onclick="addListItem('s-departments')">+ Add</button></div>
@@ -1141,6 +1177,16 @@ table.resizable{table-layout:fixed;}
         </div>
       </div>
       <div class="fg"><label class="fl">Risk Description</label><textarea class="fta" id="r-desc" style="min-height:55px;" placeholder="What could go wrong?"></textarea></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px;margin-bottom:2px;">
+        <button class="ai-btn" id="ai-rk-btn" onclick="aiSuggestControls()" title="AI will suggest existing controls that cover this risk">
+          <span>✦</span> Suggest Controls
+        </button>
+        <button class="ai-btn" id="ai-rk-improve-btn" onclick="aiImproveRiskDesc()" title="AI will rewrite your description in proper SMS format">
+          <span>✦</span> Improve Description
+        </button>
+        <span id="ai-rk-usage" class="ai-usage-bar"></span>
+      </div>
+      <div id="ai-rk-result" style="display:none;"></div>
 
       <div class="sep"></div>
       <div style="font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">INITIAL RISK RATING</div>
@@ -1266,6 +1312,13 @@ table.resizable{table-layout:fixed;}
         </div>
       </div>
       <div class="fg"><label class="fl">Control Description</label><textarea class="fta" id="c-desc" style="min-height:60px;"></textarea></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px;margin-bottom:2px;">
+        <button class="ai-btn" id="ai-ct-btn" onclick="aiCheckDuplicate()" title="AI will check if a similar control already exists">
+          <span>✦</span> Check for Duplicates
+        </button>
+        <span id="ai-ct-usage" class="ai-usage-bar"></span>
+      </div>
+      <div id="ai-ct-result" style="display:none;"></div>
       <div class="g2">
         <div class="fg"><label class="fl">Control Type</label><select class="fs" id="c-type"></select></div>
         <div class="fg"><label class="fl">Monitoring Method</label><select class="fs" id="c-mon"></select></div>
@@ -1519,6 +1572,13 @@ table.resizable{table-layout:fixed;}
         <div class="fg"><label class="fl">Event Date</label><input type="date" class="fi" id="ev-date"></div>
       </div>
       <div class="fg"><label class="fl">Event Description</label><textarea class="fta" id="ev-desc" style="min-height:60px;" placeholder="Describe what occurred…"></textarea></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px;margin-bottom:2px;">
+        <button class="ai-btn" id="ai-ev-btn" onclick="aiSuggestHazard()" title="AI will match your description to existing hazards">
+          <span>✦</span> Find Matching Hazard
+        </button>
+        <span id="ai-ev-usage" class="ai-usage-bar"></span>
+      </div>
+      <div id="ai-ev-result" style="display:none;"></div>
       <div class="g2">
         <div class="fg"><label class="fl">Consequence</label>
           <select class="fs" id="ev-conseq"><option>Near Miss</option><option>Minor Incident</option><option>Significant Incident</option><option>Serious Incident</option><option>Accident</option></select>
@@ -1611,6 +1671,7 @@ const ST = {
   },
   hazards:[], risks:[], controls:[], events:[],
   bowtieRoles:{}, programme:null,
+  aiUsage:{ count:0, limit:500, resetMonth:'' },
   _hzN:1, _rkN:1, _ctN:1, _evN:1
 };
 
@@ -1662,6 +1723,9 @@ function calcRiskStatus(rkId){
 }
 
 function sanitiseData(){
+  // Ensure aiUsage is always initialised
+  if(!ST.aiUsage || typeof ST.aiUsage !== 'object') ST.aiUsage = {count:0, limit:500, resetMonth:''};
+  if(!ST.aiUsage.limit) ST.aiUsage.limit = 500;
   // Ensure all risks have required array fields (guards against legacy data)
   ST.risks.forEach(r=>{
     if(!Array.isArray(r.ctrlIds)) r.ctrlIds=[];
@@ -2119,7 +2183,11 @@ function openAddRisk(id=null, preHzId=null){
   renderLinkedCtrls();
   renderAddlCtrls();
   renderExistingList();
+  // Clear any previous AI results
+  const aiRkRes = document.getElementById('ai-rk-result');
+  if(aiRkRes) aiRkRes.style.display='none';
   openM('m-risk');
+  updateAiUsageDisplays();
 }
 
 function renderRPbtns(divId,val,bg,col,bgActive){
@@ -2600,7 +2668,11 @@ function openAddCtrl(id=null, preRkId=null){
     document.getElementById('c-risk').value='';
     setSdValue('sd-c-risk', preRkId||'');
   }
+  // Clear previous AI results
+  const aiCtRes = document.getElementById('ai-ct-result');
+  if(aiCtRes) aiCtRes.style.display='none';
   openM('m-ctrl');
+  updateAiUsageDisplays();
 }
 
 function saveControl(){
@@ -2834,8 +2906,11 @@ function openAddEvent(id=null){
     setSdValue('sd-ev-hz','');
     setSdValue('sd-ev-risk','');
     document.getElementById('ev-cascade').style.display='none';
+    const aiEvRes = document.getElementById('ai-ev-result');
+    if(aiEvRes) aiEvRes.style.display='none';
   }
   openM('m-event');
+  updateAiUsageDisplays();
 }
 
 function onEvHzChange(){
@@ -4009,6 +4084,7 @@ function renderSettings(){
   // Render all list editors
   const listKeys=['departments','locations','sources','ctrlTypes','effValues','monMethods','freqs','respPersons','respExec','validBy'];
   listKeys.forEach(k=>renderListEditor(`s-${k}`,k));
+  updateAiUsageDisplays();
   updateBackupBar();
 }
 
@@ -4739,6 +4815,320 @@ function scrollToHelpSection(id){
     if(idx) idx.classList.add('active');
   }, 50);
 }
+
+// ═══════════════════════════════════════════════════
+//  AI ASSIST ENGINE
+// ═══════════════════════════════════════════════════
+
+function aiCheckMonth(){
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  if(!ST.aiUsage) ST.aiUsage = {count:0, limit:500, resetMonth:''};
+  if(ST.aiUsage.resetMonth !== thisMonth){
+    ST.aiUsage.count = 0;
+    ST.aiUsage.resetMonth = thisMonth;
+  }
+}
+
+function aiCanCall(){
+  aiCheckMonth();
+  return ST.aiUsage.count < (ST.aiUsage.limit||500);
+}
+
+function aiIncrementCount(){
+  aiCheckMonth();
+  ST.aiUsage.count++;
+  autosave();
+  updateAiUsageDisplays();
+}
+
+function updateAiUsageDisplays(){
+  aiCheckMonth();
+  const count = ST.aiUsage.count||0;
+  const limit = ST.aiUsage.limit||500;
+  const pct = Math.round(count/limit*100);
+  const colour = pct>90?'var(--red)':pct>70?'var(--yellow)':'var(--purple)';
+  const txt = `${count}/${limit} calls`;
+  ['ai-ev-usage','ai-rk-usage','ai-ct-usage'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el){ el.textContent = txt; el.style.color = colour; }
+  });
+  const disp = document.getElementById('ai-usage-display');
+  if(disp){
+    disp.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:12px;color:var(--text2);">${count} of ${limit} calls used this month</span>
+        <span style="font-size:11px;font-weight:700;color:${colour};">${pct}%</span>
+      </div>
+      <div class="prog-bar" style="height:8px;">
+        <div class="prog-fill" style="width:${pct}%;background:${colour};transition:width .3s;"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px;">Resets 1st of each month · ${limit-count} remaining · ~$${((count||1)*0.0003).toFixed(3)} est. cost</div>`;
+    const inp = document.getElementById('ai-limit-input');
+    if(inp) inp.value = limit;
+  }
+}
+
+function resetAiUsage(){
+  if(!confirm('Reset AI call counter to 0?')) return;
+  ST.aiUsage.count = 0;
+  autosave(); updateAiUsageDisplays();
+  toast('AI usage counter reset','success');
+}
+
+async function aiCall(prompt, systemPrompt){
+  if(!aiCanCall()){
+    toast(`AI monthly limit reached (${ST.aiUsage.limit} calls). Reset in Settings → AI Assist.`,'error');
+    return null;
+  }
+  try {
+    aiIncrementCount();
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:1024,
+        system: systemPrompt,
+        messages:[{role:'user', content: prompt}]
+      })
+    });
+    const data = await resp.json();
+    if(data.error) throw new Error(data.error.message);
+    return data.content?.[0]?.text || null;
+  } catch(e){
+    console.warn('AI call failed:', e.message);
+    toast('AI call failed — check console for details','error');
+    return null;
+  }
+}
+
+function aiSetLoading(btnId, resultId, loading){
+  const btn = document.getElementById(btnId);
+  const res = document.getElementById(resultId);
+  if(btn){
+    btn.disabled = loading;
+    const icon = btn.querySelector('span:first-child');
+    if(icon) icon.innerHTML = loading ? '<span class="ai-spin">⟳</span>' : '✦';
+  }
+  if(res && loading) res.style.display = 'none';
+}
+
+function aiParseJSON(text){
+  try { return JSON.parse(text.replace(/```json?|```/g,'').trim()); }
+  catch(e){ return null; }
+}
+
+// ── Feature 1: Event → Hazard Matching ──────────────
+async function aiSuggestHazard(){
+  const desc = document.getElementById('ev-desc').value.trim();
+  if(!desc || desc.length < 10){ toast('Please describe the event first','error'); return; }
+  aiSetLoading('ai-ev-btn','ai-ev-result', true);
+
+  const hazardList = ST.hazards.slice(0,80).map(h=>`${h.id}: ${h.desc} [${h.dept||''}]`).join('\n');
+  const result = await aiCall(
+    `Event: "${desc}"\n\nHazards:\n${hazardList}`,
+    `You are an aviation SMS analyst for a GCAA Part 145 MRO.
+Match the event to the most relevant existing hazards from the list.
+Return ONLY valid JSON, nothing else:
+[{"id":"EJME-HA-XX","desc":"hazard desc","reason":"one sentence why","confidence":"high|medium|low"}]
+Maximum 3 items. Return [] if none match well.`
+  );
+
+  aiSetLoading('ai-ev-btn','ai-ev-result', false);
+  const el = document.getElementById('ai-ev-result'); if(!el) return;
+  const suggestions = result ? aiParseJSON(result) : null;
+
+  if(!suggestions){
+    el.innerHTML=`<div class="ai-result"><div class="ai-result-body" style="color:var(--red);font-size:12px;">AI response error. Try again.</div></div>`;
+  } else if(!suggestions.length){
+    el.innerHTML=`<div class="ai-result"><div class="ai-result-head">✦ AI Assist</div><div class="ai-result-body" style="color:var(--text3);font-size:12px;">No closely matching hazards found. Consider adding a new hazard.</div></div>`;
+  } else {
+    el.innerHTML=`<div class="ai-result">
+      <div class="ai-result-head">✦ Matching Hazards <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;">— click to select</span></div>
+      <div class="ai-result-body">${suggestions.map(s=>{
+        const hz=ST.hazards.find(h=>h.id===s.id);
+        const cc=s.confidence==='high'?'var(--green)':s.confidence==='medium'?'var(--yellow)':'var(--text3)';
+        return `<div class="ai-suggestion" onclick="aiSelectHazard('${s.id}')">
+          <span class="ai-sug-id">${s.id}</span>
+          <div class="ai-sug-body">
+            <div class="ai-sug-desc">${hz?hz.desc:s.desc}</div>
+            <div class="ai-sug-reason">${s.reason}</div>
+            <div class="ai-sug-action" style="color:${cc};">● ${s.confidence} confidence — tap to select</div>
+          </div></div>`;
+      }).join('')}</div></div>`;
+  }
+  el.style.display='block';
+}
+
+function aiSelectHazard(hzId){
+  document.getElementById('ev-hz').value = hzId;
+  setSdValue('sd-ev-hz', hzId);
+  onEvHzChange();
+  document.getElementById('ai-ev-result').style.display='none';
+  toast(`Hazard ${hzId} selected`,'success');
+}
+
+// ── Feature 2a: Risk → Control Suggestions ──────────
+async function aiSuggestControls(){
+  const desc = document.getElementById('r-desc').value.trim();
+  if(!desc || desc.length < 10){ toast('Please enter a risk description first','error'); return; }
+  aiSetLoading('ai-rk-btn','ai-rk-result', true);
+
+  const hzId = document.getElementById('r-hz').value;
+  const hzDesc = hzId ? (ST.hazards.find(h=>h.id===hzId)||{}).desc||'' : '';
+  const ctrlList = ST.controls.slice(0,150).map(c=>`${c.id}: ${c.desc} [${c.type||'Preventive'}]`).join('\n');
+
+  const result = await aiCall(
+    `Risk: "${desc}"${hzDesc?`\nHazard: "${hzDesc}"`:''}
+\nExisting controls:\n${ctrlList}`,
+    `You are an aviation SMS analyst for a GCAA Part 145 MRO.
+Suggest existing controls from the list that would mitigate this risk.
+Return ONLY valid JSON, nothing else:
+[{"id":"CTRL-XXX","desc":"desc","reason":"one sentence why relevant","type":"Preventive|Detective|Mitigating|Corrective"}]
+Maximum 5 items. Only suggest controls that genuinely apply. Return [] if none fit.`
+  );
+
+  aiSetLoading('ai-rk-btn','ai-rk-result', false);
+  const el = document.getElementById('ai-rk-result'); if(!el) return;
+  const suggestions = result ? aiParseJSON(result) : null;
+
+  if(!suggestions){
+    el.innerHTML=`<div class="ai-result"><div class="ai-result-body" style="color:var(--red);font-size:12px;">AI response error. Try again.</div></div>`;
+  } else if(!suggestions.length){
+    el.innerHTML=`<div class="ai-result"><div class="ai-result-head">✦ AI Assist</div><div class="ai-result-body" style="color:var(--text3);font-size:12px;">No matching controls found. Add new controls in the Additional Controls section.</div></div>`;
+  } else {
+    el.innerHTML=`<div class="ai-result">
+      <div class="ai-result-head">✦ Suggested Controls <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;">— click to link</span></div>
+      <div class="ai-result-body">${suggestions.map(s=>{
+        const ctrl=ST.controls.find(c=>c.id===s.id);
+        const linked=rLinkedCtrls.includes(s.id);
+        return `<div class="ai-suggestion" onclick="${linked?'':'aiLinkControl(\''+s.id+'\')'}" style="${linked?'opacity:.5;cursor:default;':''}">
+          <span class="ai-sug-id">${s.id}</span>
+          <div class="ai-sug-body">
+            <div class="ai-sug-desc">${ctrl?ctrl.desc:s.desc}</div>
+            <div class="ai-sug-reason">${s.reason}</div>
+            <div class="ai-sug-action">${linked?'✓ Already linked':'+ Click to link'}</div>
+          </div></div>`;
+      }).join('')}</div></div>`;
+  }
+  el.style.display='block';
+}
+
+function aiLinkControl(ctrlId){
+  if(!rLinkedCtrls.includes(ctrlId)){
+    rLinkedCtrls.push(ctrlId);
+    renderLinkedCtrls();
+    toast(`${ctrlId} linked`,'success');
+    // Refresh to show new linked state
+    setTimeout(aiSuggestControls, 300);
+  }
+}
+
+// ── Feature 2b: Risk Description Improver ──────────
+async function aiImproveRiskDesc(){
+  const desc = document.getElementById('r-desc').value.trim();
+  if(!desc || desc.length < 5){ toast('Please enter a risk description first','error'); return; }
+  aiSetLoading('ai-rk-improve-btn','ai-rk-result', true);
+
+  const result = await aiCall(
+    `Rewrite this risk for an aviation Part 145 MRO risk register: "${desc}"`,
+    `You are an aviation SMS expert (ICAO Annex 19, GCAA UAE, EASA Part-145).
+Rewrite the risk description in proper SMS format:
+- Lead with the potential outcome (injury/damage/failure/event)
+- Be specific about mechanism of harm  
+- Use aviation MRO terminology
+- 15-25 words maximum
+Return ONLY valid JSON, nothing else:
+{"improved":"<rewritten>","explanation":"<one sentence explaining change>"}`
+  );
+
+  aiSetLoading('ai-rk-improve-btn','ai-rk-result', false);
+  const el = document.getElementById('ai-rk-result'); if(!el) return;
+  const parsed = result ? aiParseJSON(result) : null;
+
+  if(!parsed){
+    el.innerHTML=`<div class="ai-result"><div class="ai-result-body" style="color:var(--red);font-size:12px;">AI response error. Try again.</div></div>`;
+  } else {
+    const safe = (parsed.improved||'').replace(/'/g,"&#39;");
+    el.innerHTML=`<div class="ai-result">
+      <div class="ai-result-head">✦ Improved Description</div>
+      <div class="ai-result-body">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Original: <em>${desc}</em></div>
+        <div style="background:rgba(107,63,212,.08);border:1px solid rgba(107,63,212,.2);border-radius:6px;padding:10px 12px;margin-bottom:8px;">
+          <div style="font-size:13px;color:var(--text);font-weight:500;">${parsed.improved}</div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);font-style:italic;margin-bottom:10px;">${parsed.explanation}</div>
+        <div style="display:flex;gap:7px;">
+          <button class="btn btn-primary btn-sm" onclick="aiApplyRiskDesc('${safe}')">✓ Use This</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ai-rk-result').style.display='none'">Dismiss</button>
+        </div>
+      </div></div>`;
+  }
+  el.style.display='block';
+}
+
+function aiApplyRiskDesc(text){
+  document.getElementById('r-desc').value = text;
+  document.getElementById('ai-rk-result').style.display='none';
+  toast('Description updated','success');
+}
+
+// ── Feature 3: Control Duplicate Check ──────────────
+async function aiCheckDuplicate(){
+  const desc = document.getElementById('c-desc').value.trim();
+  if(!desc || desc.length < 10){ toast('Please enter a control description first','error'); return; }
+  aiSetLoading('ai-ct-btn','ai-ct-result', true);
+
+  const ctrlList = ST.controls.slice(0,200).map(c=>`${c.id}: ${c.desc} [${c.type||''}]`).join('\n');
+
+  const result = await aiCall(
+    `New control: "${desc}"\n\nExisting controls:\n${ctrlList}`,
+    `You are an aviation SMS analyst for a GCAA Part 145 MRO.
+Check if the new control duplicates or significantly overlaps with any existing controls.
+Return ONLY valid JSON, nothing else:
+{"hasDuplicate":true/false,"matches":[{"id":"CTRL-XXX","desc":"desc","similarity":"identical|very similar|partially overlaps","explanation":"one sentence"}],"recommendation":"add|merge|skip"}`
+  );
+
+  aiSetLoading('ai-ct-btn','ai-ct-result', false);
+  const el = document.getElementById('ai-ct-result'); if(!el) return;
+  const parsed = result ? aiParseJSON(result) : null;
+
+  if(!parsed){
+    el.innerHTML=`<div class="ai-result"><div class="ai-result-body" style="color:var(--red);font-size:12px;">AI response error. Try again.</div></div>`;
+  } else if(!parsed.hasDuplicate || !parsed.matches?.length){
+    el.innerHTML=`<div class="ai-result"><div class="ai-result-head" style="color:var(--green);">✓ No Duplicates Found</div><div class="ai-result-body" style="font-size:12px;color:var(--text3);">This appears to be a unique control. Safe to add.</div></div>`;
+  } else {
+    const recMsg={'skip':'Use the existing control instead','merge':'Update the existing control rather than adding new','add':'Different enough to add — proceed'}[parsed.recommendation]||'';
+    const recCol=parsed.recommendation==='skip'?'var(--red)':parsed.recommendation==='merge'?'var(--yellow)':'var(--green)';
+    el.innerHTML=`<div class="ai-result">
+      <div class="ai-result-head" style="color:var(--yellow);">⚠ Similar Controls Found</div>
+      <div class="ai-result-body">
+        <div style="font-size:11.5px;font-weight:600;color:${recCol};margin-bottom:8px;">${recMsg}</div>
+        ${parsed.matches.map(m=>{
+          const ctrl=ST.controls.find(c=>c.id===m.id);
+          const sc=m.similarity==='identical'?'var(--red)':m.similarity==='very similar'?'var(--yellow)':'var(--text3)';
+          return `<div class="ai-suggestion" onclick="aiOpenExistingControl('${m.id}')">
+            <span class="ai-sug-id">${m.id}</span>
+            <div class="ai-sug-body">
+              <div class="ai-sug-desc">${ctrl?ctrl.desc:m.desc}</div>
+              <div class="ai-sug-reason">${m.explanation}</div>
+              <div class="ai-sug-action" style="color:${sc};">● ${m.similarity} — click to open existing</div>
+            </div></div>`;
+        }).join('')}
+        <div style="margin-top:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ai-ct-result').style.display='none'">Add Anyway</button>
+        </div>
+      </div></div>`;
+  }
+  el.style.display='block';
+}
+
+function aiOpenExistingControl(ctrlId){
+  closeM('m-ctrl');
+  setTimeout(()=>openAddCtrl(ctrlId),100);
+}
+
 // ═══════════════════════════════════════════════════
 function toggleSidebarCollapse(){
   const sb = document.getElementById('sidebar');
