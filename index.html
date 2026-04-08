@@ -1050,15 +1050,32 @@ table.resizable{table-layout:fixed;}
           <!-- AI ASSIST USAGE -->
           <div class="card" style="margin-bottom:14px;">
             <div class="card-head">
-              <span class="card-title">✦ AI Assist Usage</span>
+              <span class="card-title">✦ AI Assist</span>
             </div>
             <div class="card-body">
+              <div class="fg" style="margin-bottom:12px;">
+                <label class="fl">Anthropic API Key <span style="color:var(--red);">*</span></label>
+                <input type="password" class="fi" id="ai-api-key"
+                  placeholder="sk-ant-api03-..."
+                  style="font-family:'JetBrains Mono',monospace;">
+                <div style="font-size:10px;color:var(--text3);margin-top:3px;">
+                  Stored only in this browser. Get your key at
+                  <a href="https://console.anthropic.com/account/keys" target="_blank" style="color:var(--accent);">console.anthropic.com</a>
+                  — uses claude-haiku-4-5 (~$0.0003/call)
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;margin-bottom:14px;">
+                <button class="btn btn-primary btn-sm" onclick="saveAiKey()">💾 Save API Key</button>
+                <button class="btn btn-ghost btn-sm" onclick="testAiKey()">🔗 Test Connection</button>
+                <button class="btn btn-danger btn-xs" onclick="clearAiKey()">✕ Remove Key</button>
+              </div>
+              <div id="ai-key-status" style="font-size:11px;margin-bottom:12px;"></div>
               <div id="ai-usage-display"></div>
               <div class="fg" style="margin-top:10px;">
                 <label class="fl">Monthly Call Limit</label>
                 <input type="number" class="fi" id="ai-limit-input" min="100" max="9999" placeholder="500"
                   style="width:120px;" onchange="ST.aiUsage.limit=parseInt(this.value)||500;autosave();">
-                <div style="font-size:10px;color:var(--text3);margin-top:3px;">Calls reset automatically on the 1st of each month. Haiku ~$0.0003 per call.</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:3px;">Calls reset automatically on the 1st of each month.</div>
               </div>
               <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="resetAiUsage()">↺ Reset Counter</button>
             </div>
@@ -4085,6 +4102,7 @@ function renderSettings(){
   const listKeys=['departments','locations','sources','ctrlTypes','effValues','monMethods','freqs','respPersons','respExec','validBy'];
   listKeys.forEach(k=>renderListEditor(`s-${k}`,k));
   updateAiUsageDisplays();
+  updateAiKeyStatus();
   updateBackupBar();
 }
 
@@ -4876,16 +4894,90 @@ function resetAiUsage(){
   toast('AI usage counter reset','success');
 }
 
+function saveAiKey(){
+  const key = document.getElementById('ai-api-key')?.value.trim();
+  if(!key){ toast('Please enter an API key','error'); return; }
+  if(!key.startsWith('sk-ant-')){
+    toast('Invalid key format — should start with sk-ant-','error'); return;
+  }
+  localStorage.setItem('aerosafe_ai_key', key);
+  updateAiKeyStatus();
+  toast('API key saved to this browser','success');
+}
+
+function clearAiKey(){
+  if(!confirm('Remove the stored API key from this browser?')) return;
+  localStorage.removeItem('aerosafe_ai_key');
+  const inp = document.getElementById('ai-api-key');
+  if(inp) inp.value = '';
+  updateAiKeyStatus();
+  toast('API key removed','success');
+}
+
+async function testAiKey(){
+  const key = localStorage.getItem('aerosafe_ai_key')||'';
+  if(!key){ toast('No API key set — save one first','error'); return; }
+  const statusEl = document.getElementById('ai-key-status');
+  if(statusEl){ statusEl.textContent = '⟳ Testing connection…'; statusEl.style.color='var(--text3)'; }
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': key,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:20,
+        messages:[{role:'user',content:'Reply with just the word OK'}]
+      })
+    });
+    const data = await resp.json();
+    if(data.error) throw new Error(data.error.message);
+    if(statusEl){ statusEl.textContent = '✅ Connection successful — AI features are ready'; statusEl.style.color='var(--green)'; }
+    toast('AI connection working','success');
+  } catch(e){
+    if(statusEl){ statusEl.textContent = `❌ Failed: ${e.message}`; statusEl.style.color='var(--red)'; }
+    toast(`AI test failed: ${e.message}`,'error');
+  }
+}
+
+function updateAiKeyStatus(){
+  const key = localStorage.getItem('aerosafe_ai_key')||'';
+  const statusEl = document.getElementById('ai-key-status');
+  const inp = document.getElementById('ai-api-key');
+  if(inp && key) inp.value = key.substring(0,12)+'…'+key.slice(-4);
+  if(statusEl){
+    statusEl.textContent = key ? `✅ API key set (${key.substring(0,16)}…)` : '⚠ No API key set — AI features disabled';
+    statusEl.style.color = key ? 'var(--green)' : 'var(--yellow)';
+  }
+}
+
 async function aiCall(prompt, systemPrompt){
   if(!aiCanCall()){
     toast(`AI monthly limit reached (${ST.aiUsage.limit} calls). Reset in Settings → AI Assist.`,'error');
     return null;
   }
+
+  // Get API key from localStorage
+  const apiKey = localStorage.getItem('aerosafe_ai_key')||'';
+  if(!apiKey){
+    toast('AI API key not set — go to Settings → AI Assist and enter your Anthropic API key','error');
+    return null;
+  }
+
   try {
     aiIncrementCount();
     const resp = await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
       body: JSON.stringify({
         model:'claude-haiku-4-5-20251001',
         max_tokens:1024,
@@ -4898,7 +4990,7 @@ async function aiCall(prompt, systemPrompt){
     return data.content?.[0]?.text || null;
   } catch(e){
     console.warn('AI call failed:', e.message);
-    toast('AI call failed — check console for details','error');
+    toast(`AI call failed: ${e.message}`,'error');
     return null;
   }
 }
