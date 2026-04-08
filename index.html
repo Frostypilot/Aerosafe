@@ -106,8 +106,8 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
 .rbadge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:4px;font-size:10.5px;font-weight:700;font-family:'JetBrains Mono',monospace;}
 .rb-low{background:rgba(0,147,79,.12);color:var(--green);border:1px solid rgba(0,147,79,.3);}
 .rb-med{background:rgba(192,138,0,.12);color:var(--yellow);border:1px solid rgba(192,138,0,.3);}
-.rb-high{background:rgba(212,92,0,.12);color:var(--orange);border:1px solid rgba(212,92,0,.3);}
-.rb-crit{background:rgba(204,34,54,.1);color:var(--red);border:1px solid rgba(204,34,54,.25);}
+.rb-high{background:rgba(204,34,54,.1);color:var(--red);border:1px solid rgba(204,34,54,.25);}
+.rb-crit{background:rgba(204,34,54,.1);color:var(--red);border:1px solid rgba(204,34,54,.25);} /* kept for data compat */
 
 .sbadge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
 .sb-open{background:rgba(212,92,0,.1);color:var(--orange);}
@@ -180,11 +180,11 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
 .mc{border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;height:44px;cursor:default;transition:transform .1s;}
 .mc:hover{transform:scale(1.07);}
 .mc.lbl{background:transparent;color:var(--text3);font-size:9.5px;height:20px;}
-.mc.r1{background:rgba(0,147,79,.75);color:#fff;}   /* score 1-5: Low — green */
-.mc.r2{background:rgba(192,138,0,.70);color:#fff;}   /* score 6-9: Medium — yellow */
-.mc.r3{background:rgba(212,92,0,.80);color:#fff;}    /* score 10-14: High — orange */
-.mc.r4{background:rgba(204,34,54,.85);color:#fff;}   /* score 15-24: Critical — red */
-.mc.r5{background:rgba(204,34,54,.95);color:#fff;}   /* score 25: Critical max — deep red */
+.mc.r1{background:rgba(0,147,79,.80);color:#fff;}    /* 1-4: LOW — green */
+.mc.r2{background:rgba(192,138,0,.75);color:#fff;}   /* 5-14: MEDIUM — yellow */
+.mc.r3{background:rgba(192,138,0,.75);color:#fff;}   /* 5-14: MEDIUM — yellow */
+.mc.r4{background:rgba(204,34,54,.85);color:#fff;}   /* 15-25: HIGH — red */
+.mc.r5{background:rgba(204,34,54,.95);color:#fff;}   /* 15-25: HIGH — red (25) */
 
 /* ── CONTROL CARD ── */
 .ctrl-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:11px 13px;margin-bottom:7px;display:flex;align-items:flex-start;gap:11px;}
@@ -548,7 +548,7 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
         <div class="search-box"><span style="color:var(--text3);">🔍</span><input type="text" placeholder="Search risks…" id="rk-srch" oninput="renderRisks()"></div>
         <select class="fs" style="width:130px;" id="rk-f-hz" onchange="renderRisks()"><option value="">All Hazards</option></select>
         <select class="fs" style="width:130px;" id="rk-f-level" onchange="renderRisks()">
-          <option value="">All Levels</option><option>LOW</option><option>MEDIUM</option><option>HIGH</option><option>CRITICAL</option>
+          <option value="">All Levels</option><option>LOW</option><option>MEDIUM</option><option>HIGH</option>
         </select>
         <select class="fs" style="width:130px;" id="rk-f-status" onchange="renderRisks()">
           <option value="">All Status</option><option>Open</option><option>Monitoring</option><option>Closed</option><option>Review</option>
@@ -1304,9 +1304,9 @@ let editHzId=null, editRkId=null, editCtId=null, editEvId=null;
 //  RISK HELPERS
 // ═══════════════════════════════════════════════════
 const rScore=(p,s)=>p*s;
-function rLevel(sc){ if(sc<=5)return'LOW'; if(sc<=9)return'MEDIUM'; if(sc<=14)return'HIGH'; return'CRITICAL'; }
-function rClass(lv){ return{LOW:'rb-low',MEDIUM:'rb-med',HIGH:'rb-high',CRITICAL:'rb-crit'}[lv]||''; }
-function rColor(sc){ if(sc<=5)return'var(--green)'; if(sc<=9)return'var(--yellow)'; if(sc<=14)return'var(--orange)'; return'var(--red)'; }
+function rLevel(sc){ if(sc<=4)return'LOW'; if(sc<=14)return'MEDIUM'; return'HIGH'; }
+function rClass(lv){ return{LOW:'rb-low',MEDIUM:'rb-med',HIGH:'rb-high'}[lv]||'rb-high'; }
+function rColor(sc){ if(sc<=4)return'var(--green)'; if(sc<=14)return'var(--yellow)'; return'var(--red)'; }
 function mClass(p,s){ const sc=p*s; if(sc<=4)return'r1'; if(sc<=9)return'r2'; if(sc<=14)return'r4'; return'r5'; }
 
 // ═══════════════════════════════════════════════════
@@ -1363,8 +1363,8 @@ function renderSdList(id, query){
   const list = document.getElementById(`${id}-list`); if(!list) return;
   const items = sdData[id] || [];
   const q = query.toLowerCase().trim();
-  const hidden = document.getElementById(id.replace('sd-',''))?.value ||
-                 document.querySelector(`input[id="${id.replace('sd-','')}"]`)?.value || '';
+  const hiddenEl = document.getElementById(id.replace(/^sd-/,''));
+  const currentVal = hiddenEl ? hiddenEl.value : '';
   const filtered = q
     ? items.filter(it=> it.value==='' || it.label.toLowerCase().includes(q) || (it.sublabel||'').toLowerCase().includes(q))
     : items;
@@ -1372,10 +1372,19 @@ function renderSdList(id, query){
     list.innerHTML=`<div class="sd-option no-results">No results for "${query}"</div>`;
     return;
   }
-  list.innerHTML = filtered.map(it=>`
-    <div class="sd-option${it.value===hidden?' selected':''}" data-value="${it.value}" onclick="selectSd('${id}','${it.value}',${JSON.stringify(it.label)})">
-      ${it.id_tag?`<span class="sd-id">${it.id_tag}</span>`:''}${it.label}
+  // Store filtered items on the list element for click handler lookup
+  list._sdFiltered = filtered;
+  list.innerHTML = filtered.map((it, idx)=>`
+    <div class="sd-option${it.value===currentVal?' selected':''}" data-idx="${idx}" onclick="selectSdByIdx('${id}',${idx})">
+      ${it.id_tag?`<span class="sd-id">${it.id_tag}</span>`:''}${it.label.replace(/<[^>]*>/g,'')}
     </div>`).join('');
+}
+
+function selectSdByIdx(id, idx){
+  const list = document.getElementById(`${id}-list`); if(!list) return;
+  const items = list._sdFiltered || sdData[id] || [];
+  const it = items[idx]; if(!it) return;
+  selectSd(id, it.value, it.label);
 }
 
 function filterSd(id, query){
@@ -1399,17 +1408,16 @@ function selectSd(id, value, label){
   // Set hidden input value
   const hiddenId = id.replace(/^sd-/,'');
   const hidden = document.getElementById(hiddenId);
-  if(hidden) hidden.value = value;
+  if(hidden) hidden.value = value || '';
   // Set display input
   const display = document.getElementById(`${id}-display`);
   if(display) display.value = value ? label : '';
   // Close dropdown
   const dd = document.getElementById(id);
   if(dd) dd.classList.remove('open');
-  // Trigger any onchange handlers
+  // Trigger onchange handlers
   if(id==='sd-ev-hz') onEvHzChange();
-  if(id==='sd-r-hz') { /* risk modal hz change if needed */ }
-  // Re-render list to update selected highlight
+  // Re-render to update selected highlight
   renderSdList(id, '');
 }
 
@@ -2851,7 +2859,7 @@ function buildBowtieSVG(hz, threats, consequences){
 
   const hzStatus = calcHazardStatus(hz.id);
   const hzStatusColor = {'Open':'#cc2236','Monitoring':'#c08a00','Closed':'#00934f'}[hzStatus]||'#cc2236';
-  const allRiskScore = risks.length ? Math.max(...risks.map(r=>rScore(r.prob,r.sev))) : 0;
+  const allRiskScore = [...threats,...consequences].length ? Math.max(...[...threats,...consequences].map(r=>rScore(r.prob,r.sev))) : 0;
   const allRiskColor = rColor(allRiskScore);
 
   // Bow-tie shape: two triangles meeting at centre point
@@ -2910,8 +2918,9 @@ function buildBowtieSVG(hz, threats, consequences){
   `);
 
   // ── STATS FOOTER ──
-  const totalBarriers = risks.flatMap(r=>r.ctrlIds).length;
-  const effectiveBarriers = risks.flatMap(r=>r.ctrlIds).filter(id=>{
+  const allRisks = [...threats, ...consequences];
+  const totalBarriers = allRisks.flatMap(r=>r.ctrlIds).length;
+  const effectiveBarriers = allRisks.flatMap(r=>r.ctrlIds).filter(id=>{
     const c=ST.controls.find(x=>x.id===id);
     return c && c.eff==='Effective' && c.present==='present';
   }).length;
