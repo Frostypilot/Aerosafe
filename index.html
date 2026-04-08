@@ -841,7 +841,7 @@ table.resizable{table-layout:fixed;}
           <div class="sd-wrap" id="sd-bt-hz-wrap" style="min-width:320px;">
             <input class="sd-input" id="sd-bt-hz-display" placeholder="-- Select a Hazard --" readonly onclick="toggleSd('sd-bt-hz')">
             <span class="sd-arrow">▾</span>
-            <input type="hidden" id="bt-hz-sel">
+            <input type="hidden" id="bt-hz">
             <div class="sd-dropdown" id="sd-bt-hz">
               <div class="sd-search-wrap"><input class="sd-search" placeholder="Search hazards…" oninput="filterSd('sd-bt-hz',this.value)" autocomplete="off"></div>
               <div class="sd-list" id="sd-bt-hz-list"></div>
@@ -910,7 +910,7 @@ table.resizable{table-layout:fixed;}
               <col style="width:120px;">  <!-- Actions -->
             </colgroup>
             <thead><tr>
-              <th>Event ID</th><th>Date</th><th>Hazard</th><th>Risk</th><th>Description</th>
+              <th>Source Ref</th><th>Date</th><th>Hazard</th><th>Risk</th><th>Description</th>
               <th>Controls Failed</th><th>Consequence</th><th>New Risk?</th><th>Status</th><th>Actions</th>
             </tr></thead>
             <tbody id="ev-tbody"></tbody>
@@ -1175,7 +1175,7 @@ table.resizable{table-layout:fixed;}
         <div class="sd-wrap" id="sd-r-ctrl-wrap">
           <input class="sd-input" id="sd-r-ctrl-display" placeholder="-- Select control to link --" readonly onclick="toggleSd('sd-r-ctrl')">
           <span class="sd-arrow">▾</span>
-          <input type="hidden" id="r-ctrl-sel">
+          <input type="hidden" id="r-ctrl">
           <div class="sd-dropdown" id="sd-r-ctrl">
             <div class="sd-search-wrap"><input class="sd-search" placeholder="Search controls…" oninput="filterSd('sd-r-ctrl',this.value)" autocomplete="off"></div>
             <div class="sd-list" id="sd-r-ctrl-list"></div>
@@ -1515,7 +1515,7 @@ table.resizable{table-layout:fixed;}
     <div class="modal-head"><div class="modal-title">⚡ Log Safety Event</div><button class="modal-x" onclick="closeM('m-event')">✕</button></div>
     <div class="modal-body">
       <div class="g2">
-        <div class="fg"><label class="fl">Event ID</label><input class="fi" id="ev-id" readonly></div>
+        <div class="fg"><label class="fl">Source Reference <span style="color:var(--text3);font-weight:400;">(e.g. INC-1234, OCR-456 from Q-Pulse)</span></label><input class="fi" id="ev-id" placeholder="e.g. INC-1234"></div>
         <div class="fg"><label class="fl">Event Date</label><input type="date" class="fi" id="ev-date"></div>
       </div>
       <div class="fg"><label class="fl">Event Description</label><textarea class="fta" id="ev-desc" style="min-height:60px;" placeholder="Describe what occurred…"></textarea></div>
@@ -1639,32 +1639,51 @@ function mClass(p,s){ const sc=p*s; if(sc<=4)return'r1'; if(sc<=9)return'r2'; if
 function calcHazardStatus(hzId){
   const linkedRisks = ST.risks.filter(r=>r.hzId===hzId);
   if(!linkedRisks.length) return 'Open';
-  const ctrlIds = [...new Set(linkedRisks.flatMap(r=>r.ctrlIds))];
+  const ctrlIds = [...new Set(linkedRisks.flatMap(r=>r.ctrlIds||[]))];
   if(!ctrlIds.length) return 'Open';
   const ctrls = ctrlIds.map(id=>ST.controls.find(c=>c.id===id)).filter(Boolean);
   if(!ctrls.length) return 'Open';
-  const hasAbsent = ctrls.some(c=>c.present==='absent');
-  if(hasAbsent) return 'Open';
-  const hasNotEff = ctrls.some(c=>c.eff==='Not Effective');
-  const hasPart = ctrls.some(c=>c.eff==='Partially Effective');
-  const hasNotChk = ctrls.some(c=>c.eff==='Not Checked');
-  if(hasNotEff) return 'Open';
-  if(hasPart||hasNotChk) return 'Monitoring';
-  const allEff = ctrls.every(c=>c.eff==='Effective' && c.present==='present');
-  return allEff ? 'Closed' : 'Monitoring';
+  if(ctrls.some(c=>c.present==='absent')) return 'Open';
+  if(ctrls.some(c=>c.eff==='Not Effective')) return 'Open';
+  if(ctrls.some(c=>c.eff==='Partially Effective'||c.eff==='Not Checked')) return 'Monitoring';
+  return ctrls.every(c=>c.eff==='Effective'&&c.present==='present') ? 'Closed' : 'Monitoring';
 }
 
-// Same logic for Risk status based on its controls
 function calcRiskStatus(rkId){
   const rk = ST.risks.find(r=>r.id===rkId);
   if(!rk) return 'Open';
   if(rk.flaggedNew) return 'Review';
-  if(!rk.ctrlIds.length) return 'Open';
-  const ctrls = rk.ctrlIds.map(id=>ST.controls.find(c=>c.id===id)).filter(Boolean);
+  if(!(rk.ctrlIds||[]).length) return 'Open';
+  const ctrls = (rk.ctrlIds||[]).map(id=>ST.controls.find(c=>c.id===id)).filter(Boolean);
   if(!ctrls.length) return 'Open';
   if(ctrls.some(c=>c.present==='absent'||c.eff==='Not Effective')) return 'Open';
   if(ctrls.some(c=>c.eff==='Partially Effective'||c.eff==='Not Checked')) return 'Monitoring';
   return ctrls.every(c=>c.eff==='Effective'&&c.present==='present') ? 'Closed' : 'Monitoring';
+}
+
+function sanitiseData(){
+  // Ensure all risks have required array fields (guards against legacy data)
+  ST.risks.forEach(r=>{
+    if(!Array.isArray(r.ctrlIds)) r.ctrlIds=[];
+    if(!Array.isArray(r.addlCtrls)) r.addlCtrls=[];
+    if(!Array.isArray(r.events)) r.events=[];
+    if(!r.desc) r.desc='';
+    if(!r.hzId) r.hzId='';
+  });
+  ST.hazards.forEach(h=>{
+    if(!Array.isArray(h.sources)) h.sources=[];
+    if(!h.desc) h.desc='';
+  });
+  ST.controls.forEach(c=>{
+    if(!c.desc) c.desc='';
+    if(!c.eff) c.eff='Not Checked';
+    if(!c.present) c.present='present';
+    if(!Array.isArray(c.verHistory)) c.verHistory=[];
+  });
+  ST.events.forEach(e=>{
+    if(!Array.isArray(e.failedCtrls)) e.failedCtrls=[];
+    if(!e.desc) e.desc='';
+  });
 }
 
 // ═══════════════════════════════════════════════════
@@ -2051,12 +2070,11 @@ function openAddRisk(id=null, preHzId=null){
   rProb=0; rSev=0; rResProb=0; rResSev=0;
   rLinkedCtrls=[]; rAddlCtrls=[];
 
-  fillSelKV('r-hz', ST.hazards.map(h=>[h.id,`${h.id}: ${h.desc.substring(0,55)}`]), '-- Select Hazard --');
   populateHazardSd('sd-r-hz', '-- Select Hazard --');
   fillSel('r-owner', ST.lists.respPersons, '-- Select --');
 
   // ctrl selector
-  const cSel=document.getElementById('r-ctrl-sel');
+  const cSel=document.getElementById('r-ctrl');
   if(cSel) cSel.value='';
   // Populate controls searchable dropdown
   initSd('sd-r-ctrl', ST.controls.map(c=>({
@@ -2092,9 +2110,11 @@ function openAddRisk(id=null, preHzId=null){
     document.getElementById('r-existing-txt').value='';
     document.getElementById('r-owner').value='';
     document.getElementById('r-target').value='';
+    document.getElementById('r-hz').value='';
+    setSdValue('sd-r-hz', preHzId||'');
     const exList=document.getElementById('r-existing-list'); if(exList) exList.innerHTML='';
     // Pre-select hazard if launched from hazard detail
-    if(preHzId){ document.getElementById('r-hz').value=preHzId; setSdValue('sd-r-hz', preHzId); }
+    if(preHzId){ document.getElementById('r-hz').value=preHzId; }
   }
   renderLinkedCtrls();
   renderAddlCtrls();
@@ -2134,13 +2154,13 @@ function updateRiskScoreDisplay(){
 }
 
 function addRiskCtrl(){
-  const id=document.getElementById('r-ctrl-sel').value;
+  const id=document.getElementById('r-ctrl').value;
   if(!id) return;
   if(!rLinkedCtrls.includes(id)){ rLinkedCtrls.push(id); renderLinkedCtrls(); }
   // Reset the searchable dropdown display
   const disp=document.getElementById('sd-r-ctrl-display');
   if(disp) disp.value='';
-  document.getElementById('r-ctrl-sel').value='';
+  document.getElementById('r-ctrl').value='';
   setSdValue('sd-r-ctrl','');
 }
 
@@ -2546,7 +2566,6 @@ function confirmSignOff(){
 // ═══════════════════════════════════════════════════
 function openAddCtrl(id=null, preRkId=null){
   editCtId=id;
-  fillSelKV('c-risk', ST.risks.map(r=>[r.id,`${r.id}: ${r.desc.substring(0,50)}`]), '-- Select Risk --');
   populateRiskSd('sd-c-risk', null, '-- Select Risk --');
   fillSel('c-type', ST.lists.ctrlTypes);
   fillSel('c-mon', ST.lists.monMethods, '-- Select --');
@@ -2578,7 +2597,8 @@ function openAddCtrl(id=null, preRkId=null){
     document.getElementById('c-lastchk').value='';
     document.getElementById('c-eff').value='Not Checked';
     document.getElementById('c-present').value='present';
-    if(preRkId){ document.getElementById('c-risk').value=preRkId; setSdValue('sd-c-risk', preRkId); }
+    document.getElementById('c-risk').value='';
+    setSdValue('sd-c-risk', preRkId||'');
   }
   openM('m-ctrl');
 }
@@ -2602,13 +2622,26 @@ function saveControl(){
   };
   if(editCtId){
     const i=ST.controls.findIndex(x=>x.id===editCtId);
-    if(i>=0) ST.controls[i]=ct;
+    if(i>=0){
+      const oldRkId = ST.controls[i].rkId;
+      ct.verHistory = ST.controls[i].verHistory || []; // preserve history
+      ST.controls[i]=ct;
+      // If risk link changed — remove from old risk, add to new
+      if(oldRkId !== rkId){
+        const oldRk = ST.risks.find(r=>r.id===oldRkId);
+        if(oldRk) oldRk.ctrlIds = (oldRk.ctrlIds||[]).filter(id=>id!==ct.id);
+        if(rkId){
+          const newRk = ST.risks.find(r=>r.id===rkId);
+          if(newRk && !(newRk.ctrlIds||[]).includes(ct.id)) newRk.ctrlIds.push(ct.id);
+        }
+      }
+    }
   } else {
     ST.controls.push(ct); ST._ctN++;
     // Auto-link to risk's ctrlIds
     if(rkId){
       const rk=ST.risks.find(r=>r.id===rkId);
-      if(rk&&!rk.ctrlIds.includes(ct.id)) rk.ctrlIds.push(ct.id);
+      if(rk&&!(rk.ctrlIds||[]).includes(ct.id)) rk.ctrlIds.push(ct.id);
     }
   }
   closeM('m-ctrl'); autosave(); renderControls(); updateBadges();
@@ -2768,8 +2801,6 @@ function openAddEvent(id=null){
   const isEdit=!!id;
   document.querySelector('#m-event .modal-title').textContent=isEdit?'⚡ Edit Safety Event':'⚡ Log Safety Event';
 
-  const hSel=document.getElementById('ev-hz');
-  hSel.innerHTML='<option value="">-- Select Hazard --</option>'+ST.hazards.map(h=>`<option value="${h.id}">${h.id}: ${h.desc.substring(0,60)}</option>`).join('');
   populateHazardSd('sd-ev-hz', '-- Select Hazard --');
 
   if(isEdit){
@@ -2777,11 +2808,10 @@ function openAddEvent(id=null){
     document.getElementById('ev-id').value=ev.id;
     document.getElementById('ev-date').value=ev.date;
     document.getElementById('ev-desc').value=ev.desc;
-    document.getElementById('ev-newsrc').value=''; // sources already applied
+    document.getElementById('ev-newsrc').value='';
     document.getElementById('ev-newrisk').value=ev.newRiskFlagged||'';
     document.getElementById('ev-conseq').value=ev.conseq;
-    // Set hazard and trigger cascade
-    hSel.value=ev.hzId;
+    document.getElementById('ev-hz').value=ev.hzId;
     setSdValue('sd-ev-hz', ev.hzId);
     onEvHzChange();
     // After cascade renders, restore checked controls and selected risk
@@ -2794,11 +2824,15 @@ function openAddEvent(id=null){
       });
     },60);
   } else {
-    document.getElementById('ev-id').value='EV-'+String(ST._evN).padStart(3,'0');
+    document.getElementById('ev-id').value='';  // user enters source ref e.g. INC-1234
     document.getElementById('ev-date').value=new Date().toISOString().split('T')[0];
     document.getElementById('ev-desc').value='';
     document.getElementById('ev-newsrc').value='';
     document.getElementById('ev-newrisk').value='';
+    document.getElementById('ev-hz').value='';
+    document.getElementById('ev-risk').value='';
+    setSdValue('sd-ev-hz','');
+    setSdValue('sd-ev-risk','');
     document.getElementById('ev-cascade').style.display='none';
   }
   openM('m-event');
@@ -2809,6 +2843,8 @@ function onEvHzChange(){
   const casc=document.getElementById('ev-cascade');
   if(!hzId){casc.style.display='none';return;}
   casc.style.display='block';
+
+  const linkedRisks=ST.risks.filter(r=>r.hzId===hzId);
 
   // Populate risk searchable dropdown filtered by this hazard
   populateRiskSd('sd-ev-risk', hzId, '-- None / Unknown --');
@@ -2823,7 +2859,7 @@ function onEvHzChange(){
   const seen=new Set();
   let html='';
   linkedRisks.forEach(r=>{
-    const rCtrls=r.ctrlIds.map(cid=>ST.controls.find(c=>c.id===cid)).filter(Boolean);
+    const rCtrls=(r.ctrlIds||[]).map(cid=>ST.controls.find(c=>c.id===cid)).filter(Boolean);
     html+=`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:7px;">
       <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;">
         <span class="id-chip risk">${r.id}</span>
@@ -2857,8 +2893,10 @@ function onEvHzChange(){
 }
 
 function saveEvent(){
+  const srcRef=document.getElementById('ev-id').value.trim();
   const desc=document.getElementById('ev-desc').value.trim();
   const hzId=document.getElementById('ev-hz').value;
+  if(!srcRef){toast('Please enter a Source Reference (e.g. INC-1234)','error');return;}
   if(!desc||!hzId){toast('Select a hazard and enter description','error');return;}
 
   const failedCtrlIds=[...document.querySelectorAll('.ev-ctrl-chk:checked')].map(cb=>cb.value);
@@ -2905,9 +2943,14 @@ function saveEvent(){
     return;
   }
 
-  // ADD MODE
+  // ADD MODE — check for duplicate source reference
+  if(ST.events.find(e=>e.id===srcRef)){
+    toast(`Source Reference "${srcRef}" already exists — use a unique ID`,'error');
+    return;
+  }
+
   const ev={
-    id: document.getElementById('ev-id').value,
+    id: srcRef,
     date: document.getElementById('ev-date').value,
     hzId, rkId, desc,
     failedCtrls: failedCtrlIds,
@@ -2917,7 +2960,7 @@ function saveEvent(){
     status:'open'
   };
 
-  ST.events.push(ev); ST._evN++;
+  ST.events.push(ev);
 
   // Link to risk
   if(rkId){ const r=ST.risks.find(x=>x.id===rkId); if(r){r.events.push(ev.id);} }
@@ -2947,7 +2990,7 @@ function saveEvent(){
 
   closeM('m-event'); autosave(); renderEvents(); updateBadges();
   const fc=failedCtrlIds.length;
-  toast(`${ev.id} logged. ${fc} control${fc!==1?'s':''} marked Not Effective.`,'warning');
+  toast(`${ev.id} logged.${fc?` ${fc} control${fc!==1?'s':''} marked Not Effective.`:''}`,'success');
 }
 
 function renderEvents(){
@@ -3018,14 +3061,14 @@ function viewEventDetail(id){
 
 function renderBowtie(){
   // Populate hazard searchable dropdown — preserve current selection
-  const curVal = document.getElementById('bt-hz-sel').value;
+  const curVal = document.getElementById('bt-hz').value;
   populateHazardSd('sd-bt-hz', '-- Select a Hazard --');
   if(curVal) setSdValue('sd-bt-hz', curVal);
-  drawBowtie(document.getElementById('bt-hz-sel').value);
+  drawBowtie(document.getElementById('bt-hz').value);
 }
 
 function onBtHzChange(){
-  drawBowtie(document.getElementById('bt-hz-sel').value);
+  drawBowtie(document.getElementById('bt-hz').value);
 }
 
 function drawBowtie(hzId){
@@ -3038,7 +3081,7 @@ function drawBowtie(hzId){
     return;
   }
 
-  const hz = ST.hazards.find(h=>h.id===hzId);
+  const hz = ST.hazards.find(h=>h.id===hzId) || {id:hzId, desc:'Unknown hazard', dept:''};
   const risks = ST.risks.filter(r=>r.hzId===hzId);
 
   if(!risks.length){
@@ -3159,8 +3202,8 @@ function buildBowtieSVG(hz, threats, consequences){
     const ry = startY + idx * V_SPACING;
     const rx = 30;
 
-    // Controls for this risk
-    const ctrls = r.ctrlIds.map(id=>ST.controls.find(c=>c.id===id)).filter(Boolean);
+    // Controls for this risk — guard against missing ctrlIds
+    const ctrls = (r.ctrlIds||[]).map(id=>ST.controls.find(c=>c.id===id)).filter(Boolean);
     const numBarriers = ctrls.length || 0;
 
     // Arm line from risk node to centre
@@ -3231,7 +3274,7 @@ function buildBowtieSVG(hz, threats, consequences){
     const ry = startY + idx * V_SPACING;
     const rx = W - 30 - RISK_NODE_W;
 
-    const ctrls = r.ctrlIds.map(id=>ST.controls.find(c=>c.id===id)).filter(Boolean);
+    const ctrls = (r.ctrlIds||[]).map(id=>ST.controls.find(c=>c.id===id)).filter(Boolean);
     const numBarriers = ctrls.length || 0;
 
     const armStartX = CONSQ_X_START;
@@ -3353,8 +3396,8 @@ function buildBowtieSVG(hz, threats, consequences){
 
   // ── STATS FOOTER ──
   const allRisks = [...threats, ...consequences];
-  const totalBarriers = allRisks.flatMap(r=>r.ctrlIds).length;
-  const effectiveBarriers = allRisks.flatMap(r=>r.ctrlIds).filter(id=>{
+  const totalBarriers = allRisks.flatMap(r=>(r.ctrlIds||[])).length;
+  const effectiveBarriers = allRisks.flatMap(r=>(r.ctrlIds||[])).filter(id=>{
     const c=ST.controls.find(x=>x.id===id);
     return c && c.eff==='Effective' && c.present==='present';
   }).length;
@@ -4198,8 +4241,7 @@ async function loadFromGitHub(){
     const raw = decodeURIComponent(escape(atob(meta.content.replace(/\n/g,''))));
     const {_meta,...d} = JSON.parse(raw);
     Object.assign(ST,d);
-    // Migration guard
-    if(ST.risks) ST.risks.forEach(r=>{ if(r.addlCtrls&&r.addlCtrls.length&&typeof r.addlCtrls[0]==='string'&&!r.addlCtrls[0].startsWith('CTRL-')) r.addlCtrls=[]; });
+    sanitiseData();
     localStorage.setItem('aerosafe_v2', JSON.stringify(ST));
     updateGhStatus('ok',`Loaded from GitHub`);
     return true;
@@ -4216,7 +4258,7 @@ function loadFromStorage(){
     if(raw){
       const d=JSON.parse(raw);
       Object.assign(ST,d);
-      if(ST.risks) ST.risks.forEach(r=>{ if(r.addlCtrls&&r.addlCtrls.length&&typeof r.addlCtrls[0]==='string'&&!r.addlCtrls[0].startsWith('CTRL-')) r.addlCtrls=[]; });
+      sanitiseData();
       return true;
     }
   }catch(e){}
@@ -4269,7 +4311,7 @@ function importData(){
     rd.onload=ev=>{
       try{
         const {_meta,...d}=JSON.parse(ev.target.result);
-        Object.assign(ST,d); autosave(); updateBadges(); renderDashboard();
+        Object.assign(ST,d); sanitiseData(); autosave(); updateBadges(); renderDashboard();
         toast(`✅ Restored from ${f.name}`,'success');
       }catch(err){ toast('Invalid backup file','error'); }
     };
