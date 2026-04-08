@@ -236,16 +236,163 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
 
 /* ── RESPONSIVE ── */
 @media(max-width:1100px){.s4{grid-template-columns:1fr 1fr;}}
+
+/* ── MOBILE (≤768px) ── */
+@media(max-width:768px){
+
+  /* Sidebar becomes off-canvas drawer */
+  .sidebar{
+    transform:translateX(-100%);
+    transition:transform .25s ease;
+    z-index:300;
+    width:240px;
+    box-shadow:4px 0 24px rgba(26,32,51,.18);
+  }
+  .sidebar.open{ transform:translateX(0); }
+
+  /* Overlay behind open drawer */
+  .mob-overlay{
+    display:none;position:fixed;inset:0;background:rgba(26,32,51,.4);
+    z-index:299;backdrop-filter:blur(2px);
+  }
+  .mob-overlay.open{ display:block; }
+
+  /* Main fills full width */
+  .main{ margin-left:0; }
+
+  /* Topbar: hamburger on left, title centre, actions right */
+  .topbar{ padding:0 14px; gap:8px; }
+  .pg-title{ font-size:15px; }
+
+  /* Hamburger button */
+  .mob-hamburger{
+    display:flex;flex-direction:column;justify-content:center;gap:5px;
+    width:36px;height:36px;cursor:pointer;flex-shrink:0;padding:4px;
+    border-radius:7px;border:1px solid var(--border);background:var(--bg3);
+  }
+  .mob-hamburger span{
+    display:block;height:2px;background:var(--text2);border-radius:2px;
+    transition:all .2s;
+  }
+
+  /* Content padding tighter on mobile */
+  .content{ padding:14px 12px; }
+
+  /* Cards */
+  .card-body{ padding:12px; }
+  .card-head{ padding:10px 12px; }
+
+  /* Grids → single column */
+  .g2,.g3,.s3{ grid-template-columns:1fr !important; }
+  .s4{ grid-template-columns:1fr 1fr !important; }
+
+  /* Stats row 2-col on mobile */
+  .stats-row.s4{ grid-template-columns:1fr 1fr; }
+
+  /* Hide GitHub status indicator (too long for mobile topbar) */
+  #gh-status-indicator{ display:none; }
+
+  /* Tables: horizontal scroll with card wrapper */
+  .tbl-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  table{ min-width:700px; }
+
+  /* Make table text slightly smaller */
+  tbody td{ font-size:11px; padding:7px 8px; }
+  thead th{ font-size:8.5px; padding:7px 8px; }
+
+  /* Hide less important columns on mobile */
+  .mob-hide{ display:none !important; }
+
+  /* Search rows wrap tightly */
+  .search-row{ gap:6px; }
+  .search-box{ min-width:0; flex:1; }
+  .search-row select{ font-size:11px; padding:5px 7px; }
+
+  /* Buttons smaller on mobile */
+  .btn{ padding:5px 10px; font-size:11px; }
+  .btn-sm{ padding:3px 8px; font-size:10px; }
+  .btn-xs{ padding:2px 6px; font-size:9.5px; }
+
+  /* Stat cards */
+  .stat{ padding:10px 12px; }
+  .stat-val{ font-size:22px; }
+  .stat-lbl{ font-size:9px; }
+
+  /* Modals full-screen on mobile */
+  .modal-overlay{ padding:0; align-items:flex-end; }
+  .modal,.modal-lg,.modal-xl{
+    max-width:100% !important;
+    width:100%;
+    max-height:92vh;
+    border-radius:16px 16px 0 0;
+  }
+
+  /* Risk matrix buttons */
+  .rms{ grid-template-columns:repeat(5,34px); }
+  .rms-cell{ width:34px; height:34px; font-size:11px; }
+
+  /* Bowtie page */
+  #bt-diagram{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+
+  /* Hide comp-strip on mobile */
+  .comp-strip{ display:none; }
+
+  /* Form inputs full width */
+  .fg{ margin-bottom:10px; }
+
+  /* Topbar action buttons — icon only hints */
+  .topbar-right .btn{ padding:5px 8px; }
+
+  /* Bottom nav bar for quick access */
+  .mob-bottomnav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;
+    background:var(--bg2);border-top:1px solid var(--border);
+    z-index:200;height:58px;
+  }
+  .mob-bottomnav-item{
+    flex:1;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:2px;cursor:pointer;
+    font-size:9px;font-weight:600;color:var(--text3);
+    text-transform:uppercase;letter-spacing:.4px;
+    transition:color .13s;padding:4px 2px;
+    border:none;background:none;
+  }
+  .mob-bottomnav-item.active{ color:var(--accent); }
+  .mob-bottomnav-item .mob-ni{ font-size:18px;line-height:1; }
+
+  /* Push content above bottom nav */
+  .content{ padding-bottom:72px; }
+
+  /* Sidebar close button */
+  .mob-sidebar-close{
+    display:flex;align-items:center;justify-content:center;
+    width:28px;height:28px;border-radius:6px;cursor:pointer;
+    background:var(--bg3);border:1px solid var(--border);
+    color:var(--text2);font-size:16px;margin-left:auto;
+  }
+}
+
+/* Desktop: hide mobile-only elements */
+@media(min-width:769px){
+  .mob-hamburger{ display:none; }
+  .mob-overlay{ display:none !important; }
+  .mob-bottomnav{ display:none; }
+  .mob-sidebar-close{ display:none; }
+}
 </style>
 </head>
 <body>
 
+<!-- MOBILE OVERLAY -->
+<div class="mob-overlay" id="mob-overlay" onclick="closeSidebar()"></div>
+
 <!-- SIDEBAR -->
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
   <div class="logo">
     <div class="logo-row">
       <div class="logo-icon">✈</div>
       <span class="logo-name">AeroSafe</span>
+      <div class="mob-sidebar-close" onclick="closeSidebar()">✕</div>
     </div>
     <div class="logo-cert" id="sb-cert">Part 145 · SMS</div>
   </div>
@@ -284,6 +431,9 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
 <!-- MAIN -->
 <div class="main">
   <div class="topbar">
+    <div class="mob-hamburger" onclick="openSidebar()" title="Menu">
+      <span></span><span></span><span></span>
+    </div>
     <div class="pg-title" id="pg-title">Dashboard</div>
     <div style="display:flex;align-items:center;gap:12px;">
       <span id="gh-status-indicator" style="font-size:10.5px;color:var(--text3);white-space:nowrap;font-family:'JetBrains Mono',monospace;cursor:pointer;" onclick="nav(document.querySelector('[data-page=settings]'))" title="Click to configure GitHub sync">☁ —</span>
@@ -1043,6 +1193,25 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
   </div>
 </div>
 
+<!-- MOBILE BOTTOM NAV -->
+<div class="mob-bottomnav" id="mob-bottomnav">
+  <button class="mob-bottomnav-item active" data-page="dashboard" onclick="mobNav(this)">
+    <span class="mob-ni">⬡</span>Home
+  </button>
+  <button class="mob-bottomnav-item" data-page="hazards" onclick="mobNav(this)">
+    <span class="mob-ni">⚠</span>Hazards
+  </button>
+  <button class="mob-bottomnav-item" data-page="risks" onclick="mobNav(this)">
+    <span class="mob-ni">◈</span>Risks
+  </button>
+  <button class="mob-bottomnav-item" data-page="controls" onclick="mobNav(this)">
+    <span class="mob-ni">◼</span>Controls
+  </button>
+  <button class="mob-bottomnav-item" data-page="events" onclick="mobNav(this)">
+    <span class="mob-ni">▶</span>Events
+  </button>
+</div>
+
 <div class="toast-wrap" id="toast-wrap"></div>
 
 <script>
@@ -1122,8 +1291,28 @@ function calcRiskStatus(rkId){
 }
 
 // ═══════════════════════════════════════════════════
-//  NAVIGATION
+//  MOBILE NAV
 // ═══════════════════════════════════════════════════
+function openSidebar(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('mob-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('mob-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+function mobNav(el){
+  // Sync bottom nav active state
+  document.querySelectorAll('.mob-bottomnav-item').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  // Trigger main nav
+  const pg = el.dataset.page;
+  const navEl = document.querySelector(`.nav-item[data-page="${pg}"]`);
+  if(navEl) nav(navEl);
+}
+// Close sidebar when a nav item is clicked on mobile
 function nav(el){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   el.classList.add('active');
@@ -1132,6 +1321,12 @@ function nav(el){
   document.getElementById('page-'+pg).classList.add('active');
   document.getElementById('pg-title').textContent=el.textContent.trim();
   renderTopbar(pg);
+  // Sync bottom nav
+  document.querySelectorAll('.mob-bottomnav-item').forEach(b=>{
+    b.classList.toggle('active', b.dataset.page===pg);
+  });
+  // Close sidebar on mobile after navigation
+  if(window.innerWidth<=768) closeSidebar();
   if(pg==='dashboard') renderDashboard();
   if(pg==='hazards')   renderHazards();
   if(pg==='risks')     renderRisks();
@@ -1146,7 +1341,6 @@ function nav(el){
 function navTo(page, filters={}){
   const navEl=document.querySelector(`.nav-item[data-page="${page}"]`);
   if(navEl) nav(navEl);
-  // Apply filters after render
   setTimeout(()=>{
     if(filters.status){
       const el=document.getElementById('rk-f-status')||document.getElementById('hz-f-status');
