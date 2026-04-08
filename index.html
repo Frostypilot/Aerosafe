@@ -4895,7 +4895,10 @@ function resetAiUsage(){
 }
 
 function saveAiKey(){
-  const key = document.getElementById('ai-api-key')?.value.trim();
+  const inp = document.getElementById('ai-api-key');
+  if(!inp) return;
+  // Strip ALL non-ASCII characters and whitespace to prevent ISO-8859-1 errors
+  const key = inp.value.replace(/[^\x20-\x7E]/g,'').trim();
   if(!key){ toast('Please enter an API key','error'); return; }
   if(!key.startsWith('sk-ant-')){
     toast('Invalid key format — should start with sk-ant-','error'); return;
@@ -4915,7 +4918,7 @@ function clearAiKey(){
 }
 
 async function testAiKey(){
-  const key = localStorage.getItem('aerosafe_ai_key')||'';
+  const key = (localStorage.getItem('aerosafe_ai_key')||'').replace(/[^\x20-\x7E]/g,'').trim();
   if(!key){ toast('No API key set — save one first','error'); return; }
   const statusEl = document.getElementById('ai-key-status');
   if(statusEl){ statusEl.textContent = '⟳ Testing connection…'; statusEl.style.color='var(--text3)'; }
@@ -4948,9 +4951,11 @@ function updateAiKeyStatus(){
   const key = localStorage.getItem('aerosafe_ai_key')||'';
   const statusEl = document.getElementById('ai-key-status');
   const inp = document.getElementById('ai-api-key');
-  if(inp && key) inp.value = key.substring(0,12)+'…'+key.slice(-4);
+  // Never put the key or masked version back into the input — leave it blank so user must re-enter to change
+  if(inp) inp.value = '';
+  if(inp) inp.placeholder = key ? `Key saved — enter new key to replace (${key.substring(0,8)}…${key.slice(-4)})` : 'sk-ant-api03-…';
   if(statusEl){
-    statusEl.textContent = key ? `✅ API key set (${key.substring(0,16)}…)` : '⚠ No API key set — AI features disabled';
+    statusEl.textContent = key ? `✅ API key saved to this browser (${key.substring(0,8)}…${key.slice(-4)})` : '⚠ No API key set — AI features disabled';
     statusEl.style.color = key ? 'var(--green)' : 'var(--yellow)';
   }
 }
@@ -4961,8 +4966,8 @@ async function aiCall(prompt, systemPrompt){
     return null;
   }
 
-  // Get API key from localStorage
-  const apiKey = localStorage.getItem('aerosafe_ai_key')||'';
+  // Get API key from localStorage — strip any non-ASCII characters
+  const apiKey = (localStorage.getItem('aerosafe_ai_key')||'').replace(/[^\x20-\x7E]/g,'').trim();
   if(!apiKey){
     toast('AI API key not set — go to Settings → AI Assist and enter your Anthropic API key','error');
     return null;
