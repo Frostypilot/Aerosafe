@@ -220,6 +220,48 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
 .mmx{display:grid;grid-template-columns:repeat(5,14px);gap:2px;}
 .mmx-c{width:14px;height:14px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:6.5px;font-weight:700;color:rgba(255,255,255,.9);}
 
+/* ── COLUMN RESIZE ── */
+.resizable-table{ table-layout:fixed; width:100%; }
+.resizable-table th{ position:relative; user-select:none; }
+.col-resize-handle{
+  position:absolute; right:0; top:0; bottom:0;
+  width:5px; cursor:col-resize;
+  background:transparent; z-index:10;
+}
+.col-resize-handle:hover{ background:rgba(0,112,204,.25); border-radius:2px; }
+.col-resize-handle.resizing{ background:rgba(0,112,204,.4); }
+
+/* ── COLUMN RESIZER ── */
+.tbl-wrap{overflow-x:auto;position:relative;}
+th{position:relative;}
+.col-resizer{position:absolute;right:-3px;top:0;bottom:0;width:6px;cursor:col-resize;z-index:10;user-select:none;background:transparent;}
+.col-resizer:hover,.col-resizer.dragging{background:var(--accent);opacity:.4;border-radius:2px;}
+table.resizable{table-layout:fixed;width:100%;}
+
+/* ── RESIZABLE COLUMNS ── */
+thead th{position:relative;}
+.col-resizer{position:absolute;right:0;top:0;bottom:0;width:5px;cursor:col-resize;z-index:10;background:transparent;user-select:none;}
+.col-resizer:hover,.col-resizer.active{background:var(--accent);opacity:.5;}
+table.resizable{table-layout:fixed;}
+
+/* ── COLUMN RESIZER ── */
+.resizable-table th{position:relative;user-select:none;}
+.col-resizer{position:absolute;right:0;top:0;bottom:0;width:6px;cursor:col-resize;z-index:10;display:flex;align-items:center;justify-content:center;}
+.col-resizer::after{content:'';display:block;width:2px;height:60%;background:var(--border2);border-radius:1px;opacity:0;}
+.col-resizer:hover::after,.col-resizer.dragging::after{opacity:1;background:var(--accent);}
+
+/* ── SAFETY PROGRAMME ── */
+.prog-cell{width:100%;height:28px;border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;font-weight:700;transition:all .13s;user-select:none;border:1px solid transparent;}
+.prog-cell:hover{filter:brightness(.9);transform:scale(1.08);}
+.prog-cell.sched{background:var(--bg3);border-color:var(--border);color:var(--text2);}
+.prog-cell.done{background:rgba(0,147,79,.14);border-color:rgba(0,147,79,.3);color:var(--green);}
+.prog-cell.overdue{background:rgba(204,34,54,.12);border-color:rgba(204,34,54,.28);color:var(--red);}
+.prog-cell.empty{background:transparent;border-color:transparent;color:var(--text3);cursor:pointer;}
+.prog-cell.empty:hover{background:var(--bg3);border-color:var(--border);}
+.prog-section-row td{background:var(--bg3);font-weight:700;font-size:10.5px;color:var(--text);letter-spacing:.5px;padding:6px 11px;border-bottom:1px solid var(--border);}
+.prog-section-row td:first-child{border-left:3px solid var(--accent);}
+.prog-month-highlight{background:rgba(0,112,204,.05) !important;}
+
 /* ── BOWTIE ── */
 .bt-wrap{position:relative;min-height:500px;padding:24px 0;}
 .bt-threat-label,.bt-consq-label{position:absolute;font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);}
@@ -425,6 +467,10 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
       <div class="nav-item" data-page="controls" onclick="nav(this)"><span class="ni">◼</span>Control Register<span class="nbadge" id="nb-ct">0</span></div>
     </div>
     <div class="nav-section">
+      <div class="nav-label">Planning</div>
+      <div class="nav-item" data-page="programme" onclick="nav(this)"><span class="ni">📅</span>Safety Programme</div>
+    </div>
+    <div class="nav-section">
       <div class="nav-label">Analysis</div>
       <div class="nav-item" data-page="bowtie" onclick="nav(this)"><span class="ni">⧖</span>Bow-Tie</div>
     </div>
@@ -516,20 +562,20 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
           <span class="card-title">Hazard Register <span style="font-weight:400;font-size:12px;color:var(--text3);" id="hz-count-lbl"></span></span>
         </div>
         <div class="tbl-wrap">
-          <table style="table-layout:fixed;width:100%;">
+          <table id="tbl-hz" class="resizable-table" style="table-layout:fixed;width:100%;">
             <colgroup>
-              <col style="width:110px;">  <!-- Hazard ID -->
-              <col style="width:180px;">  <!-- Description -->
-              <col style="width:110px;">  <!-- Sources -->
-              <col style="width:130px;">  <!-- Department -->
-              <col style="width:90px;">   <!-- Location -->
-              <col style="width:88px;">   <!-- Date -->
-              <col style="width:100px;">  <!-- Owner -->
-              <col style="width:80px;">   <!-- Status -->
-              <col style="width:62px;">   <!-- Initial -->
-              <col style="width:62px;">   <!-- Residual -->
-              <col>                       <!-- Remarks (flex) -->
-              <col style="width:130px;">  <!-- Actions -->
+              <col data-col="hz-0" style="width:110px;">  <!-- Hazard ID -->
+              <col data-col="hz-1" style="width:220px;">  <!-- Description — wider default -->
+              <col data-col="hz-2" style="width:110px;">  <!-- Sources -->
+              <col data-col="hz-3" style="width:130px;">  <!-- Department -->
+              <col data-col="hz-4" style="width:85px;">   <!-- Location -->
+              <col data-col="hz-5" style="width:88px;">   <!-- Date -->
+              <col data-col="hz-6" style="width:100px;">  <!-- Owner -->
+              <col data-col="hz-7" style="width:80px;">   <!-- Status -->
+              <col data-col="hz-8" style="width:62px;">   <!-- Initial -->
+              <col data-col="hz-9" style="width:62px;">   <!-- Residual -->
+              <col data-col="hz-10" style="width:120px;"> <!-- Remarks — smaller default -->
+              <col data-col="hz-11" style="width:130px;"> <!-- Actions -->
             </colgroup>
             <thead><tr>
               <th>Hazard ID</th><th>Hazard Description</th><th>Source(s)</th><th>Department</th>
@@ -567,24 +613,24 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
           <span class="card-title">Risk Register <span style="font-weight:400;font-size:12px;color:var(--text3);" id="rk-count-lbl"></span></span>
         </div>
         <div class="tbl-wrap">
-          <table style="table-layout:fixed;width:100%;">
+          <table id="tbl-rk" class="resizable-table" style="table-layout:fixed;width:100%;">
             <colgroup>
-              <col style="width:90px;">   <!-- Risk ID -->
-              <col style="width:80px;">   <!-- Hazard -->
-              <col style="width:220px;">  <!-- Risk Description -->
-              <col style="width:160px;">  <!-- Existing Controls -->
-              <col style="width:36px;">   <!-- P -->
-              <col style="width:36px;">   <!-- S -->
-              <col style="width:80px;">   <!-- Initial Risk -->
-              <col style="width:160px;">  <!-- Additional Controls -->
-              <col style="width:40px;">   <!-- Res.P -->
-              <col style="width:40px;">   <!-- Res.S -->
-              <col style="width:80px;">   <!-- Residual Risk -->
-              <col style="width:110px;">  <!-- Risk Owner -->
-              <col style="width:90px;">   <!-- Target Date -->
-              <col style="width:90px;">   <!-- Signed Off -->
-              <col style="width:80px;">   <!-- Status -->
-              <col style="width:100px;">  <!-- Actions -->
+              <col data-col="rk-0" style="width:90px;">
+              <col data-col="rk-1" style="width:80px;">
+              <col data-col="rk-2" style="width:220px;">
+              <col data-col="rk-3" style="width:160px;">
+              <col data-col="rk-4" style="width:36px;">
+              <col data-col="rk-5" style="width:36px;">
+              <col data-col="rk-6" style="width:80px;">
+              <col data-col="rk-7" style="width:160px;">
+              <col data-col="rk-8" style="width:40px;">
+              <col data-col="rk-9" style="width:40px;">
+              <col data-col="rk-10" style="width:80px;">
+              <col data-col="rk-11" style="width:110px;">
+              <col data-col="rk-12" style="width:90px;">
+              <col data-col="rk-13" style="width:90px;">
+              <col data-col="rk-14" style="width:80px;">
+              <col data-col="rk-15" style="width:100px;">
             </colgroup>
             <thead><tr>
               <th>Risk ID</th><th>Hazard</th><th>Risk Description</th>
@@ -631,21 +677,21 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
           <span class="card-title">Control Register <span style="font-weight:400;font-size:12px;color:var(--text3);" id="ct-count-lbl"></span></span>
         </div>
         <div class="tbl-wrap">
-          <table style="table-layout:fixed;width:100%;">
+          <table id="tbl-ct" class="resizable-table" style="table-layout:fixed;width:100%;">
             <colgroup>
-              <col style="width:90px;">   <!-- Control ID -->
-              <col style="width:80px;">   <!-- Risk ID -->
-              <col style="width:140px;">  <!-- Risk Description -->
-              <col style="width:220px;">  <!-- Control Description -->
-              <col style="width:90px;">   <!-- Type -->
-              <col style="width:130px;">  <!-- Monitoring Method -->
-              <col style="width:90px;">   <!-- Frequency -->
-              <col style="width:110px;">  <!-- Responsible -->
-              <col style="width:100px;">  <!-- Verified By -->
-              <col style="width:110px;">  <!-- Effectiveness -->
-              <col style="width:90px;">   <!-- Last Checked -->
-              <col>                       <!-- Remarks (flex) -->
-              <col style="width:80px;">   <!-- Actions -->
+              <col data-col="ct-0" style="width:90px;">
+              <col data-col="ct-1" style="width:80px;">
+              <col data-col="ct-2" style="width:140px;">
+              <col data-col="ct-3" style="width:220px;">
+              <col data-col="ct-4" style="width:90px;">
+              <col data-col="ct-5" style="width:130px;">
+              <col data-col="ct-6" style="width:90px;">
+              <col data-col="ct-7" style="width:110px;">
+              <col data-col="ct-8" style="width:100px;">
+              <col data-col="ct-9" style="width:110px;">
+              <col data-col="ct-10" style="width:90px;">
+              <col data-col="ct-11" style="width:120px;">
+              <col data-col="ct-12" style="width:80px;">
             </colgroup>
             <thead><tr>
               <th>Control ID</th><th>Risk ID</th><th>Risk Description</th><th>Control Description</th>
@@ -654,6 +700,89 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
               <th>Effectiveness</th><th>Last Checked</th><th>Remarks</th><th>Actions</th>
             </tr></thead>
             <tbody id="ct-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ SAFETY PROGRAMME ══════════════ -->
+    <div class="page" id="page-programme">
+
+      <!-- Tab strip -->
+      <div class="tabs" style="margin-bottom:16px;">
+        <div class="tab active" onclick="switchProgTab('prog')" id="pt-prog">Safety Programme</div>
+        <div class="tab" onclick="switchProgTab('audit')" id="pt-audit">SMS Audit Schedule</div>
+        <div class="tab" onclick="switchProgTab('dept')" id="pt-dept">Safety Dept Schedule</div>
+      </div>
+
+      <!-- Legend -->
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);">
+          <span style="width:22px;height:22px;border-radius:4px;background:var(--bg3);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text);">✓</span> Scheduled
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);">
+          <span style="width:22px;height:22px;border-radius:4px;background:rgba(0,147,79,.15);border:1px solid rgba(0,147,79,.3);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--green);">15</span> Done (date)
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);">
+          <span style="width:22px;height:22px;border-radius:4px;background:rgba(204,34,54,.12);border:1px solid rgba(204,34,54,.25);display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:var(--red);">!</span> Overdue
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);">
+          <span style="width:22px;height:22px;border-radius:4px;background:rgba(0,112,204,.08);border:1px solid rgba(0,112,204,.2);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--accent);">—</span> Not scheduled
+        </div>
+        <div style="margin-left:auto;">
+          <button class="btn btn-primary btn-sm" onclick="openAddProgItem()">+ Add Item</button>
+        </div>
+      </div>
+
+      <!-- Progress summary -->
+      <div id="prog-summary" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;"></div>
+
+      <!-- Filter row -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+        <div class="search-box" style="min-width:180px;flex:1;max-width:280px;">
+          <span style="color:var(--text3);">🔍</span>
+          <input type="text" placeholder="Search activities…" id="prog-srch" oninput="renderProgrammeTable()">
+        </div>
+        <select class="fs" id="prog-f-by" onchange="renderProgrammeTable()" style="width:130px;">
+          <option value="">All Responsible</option>
+        </select>
+        <select class="fs" id="prog-f-status" onchange="renderProgrammeTable()" style="width:130px;">
+          <option value="">All Status</option>
+          <option value="due">Due This Month</option>
+          <option value="overdue">Overdue</option>
+          <option value="done">Completed</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="clearProgFilters()">✕ Clear filters</button>
+      </div>
+
+      <!-- Table -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title" id="prog-tab-title">Safety Programme 2026</span>
+          <span style="font-size:11px;color:var(--text3);">Click any month cell to record completion</span>
+        </div>
+        <div class="tbl-wrap" id="prog-tbl-wrap">
+          <table id="prog-table" style="table-layout:fixed;width:100%;min-width:900px;">
+            <colgroup>
+              <col style="width:220px;">
+              <col style="width:70px;">
+              <col style="width:46px;"><col style="width:46px;"><col style="width:46px;">
+              <col style="width:46px;"><col style="width:46px;"><col style="width:46px;">
+              <col style="width:46px;"><col style="width:46px;"><col style="width:46px;">
+              <col style="width:46px;"><col style="width:46px;"><col style="width:46px;">
+              <col style="width:55px;">
+              <col style="width:60px;">
+              <col>
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Activity</th><th>Freq</th>
+                <th>JAN</th><th>FEB</th><th>MAR</th><th>APR</th><th>MAY</th><th>JUN</th>
+                <th>JUL</th><th>AUG</th><th>SEP</th><th>OCT</th><th>NOV</th><th>DEC</th>
+                <th>2027</th><th>By</th><th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody id="prog-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -1131,6 +1260,97 @@ tbody tr.flagged-new td{background:rgba(107,63,212,.05);}
   </div>
 </div>
 
+<!-- PROGRAMME CELL COMPLETION -->
+<div class="modal-overlay" id="m-prog-cell">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-head">
+      <div class="modal-title">📅 Record Completion</div>
+      <button class="modal-x" onclick="closeM('m-prog-cell')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Item context -->
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 13px;margin-bottom:14px;">
+        <div style="font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:3px;">Activity</div>
+        <div style="font-size:12.5px;color:var(--text);font-weight:500;" id="pc-item-name"></div>
+        <div style="display:flex;gap:8px;margin-top:6px;align-items:center;">
+          <span style="font-size:10px;background:rgba(0,112,204,.08);color:var(--accent);border-radius:4px;padding:2px 8px;font-weight:600;" id="pc-month-label"></span>
+          <span id="pc-sched-info"></span>
+        </div>
+      </div>
+
+      <!-- Existing completions -->
+      <div id="pc-existing"></div>
+
+      <!-- New completion entry -->
+      <div style="font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">Record New Completion</div>
+      <div class="g2">
+        <div class="fg">
+          <label class="fl">Day of Month <span style="color:var(--red);">*</span></label>
+          <input class="fi" id="pc-date" type="number" min="1" max="31" placeholder="e.g. 15" style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;text-align:center;">
+          <div style="font-size:10px;color:var(--text3);margin-top:3px;">Enter just the day number — e.g. 15 for the 15th</div>
+        </div>
+        <div class="fg">
+          <label class="fl">Responsible Person</label>
+          <input class="fi" id="pc-by-person" placeholder="e.g. SM, SO">
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Remarks <span style="color:var(--text3);font-weight:400;">(what was done, any observations)</span></label>
+        <textarea class="fta" id="pc-remarks" style="min-height:70px;" placeholder="e.g. SAG meeting held, 8 attendees. Minutes circulated same day. Action items logged in Q-Pulse."></textarea>
+      </div>
+      <input type="hidden" id="pc-idx">
+      <input type="hidden" id="pc-month">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-prog-cell')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProgCompletion()">✅ Record Completion</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT PROGRAMME ITEM -->
+<div class="modal-overlay" id="m-prog-item">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <div class="modal-title" id="m-prog-item-title">📅 Add Programme Item</div>
+      <button class="modal-x" onclick="closeM('m-prog-item')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="pi-tab">
+      <input type="hidden" id="pi-idx">
+      <div class="fg"><label class="fl">Activity / Task Description</label>
+        <input class="fi" id="pi-name" placeholder="e.g. Safety Review Board Meeting"></div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Frequency</label>
+          <input class="fi" id="pi-freq" placeholder="e.g. 3 Mnth, 12 Mnth, AR"></div>
+        <div class="fg"><label class="fl">Responsible (By)</label>
+          <input class="fi" id="pi-by" placeholder="e.g. SM, SO, AM"></div>
+      </div>
+      <div class="fg"><label class="fl">Remarks</label>
+        <input class="fi" id="pi-remarks" placeholder="Optional notes"></div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;margin-top:4px;">Schedule (enter dates or x for scheduled)</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+        <div class="fg"><label class="fl">JAN</label><input class="fi" id="pi-jan" placeholder="x or day"></div>
+        <div class="fg"><label class="fl">FEB</label><input class="fi" id="pi-feb" placeholder="x or day"></div>
+        <div class="fg"><label class="fl">MAR</label><input class="fi" id="pi-mar" placeholder="x or day"></div>
+        <div class="fg"><label class="fl">APR</label><input class="fi" id="pi-apr" placeholder="x or day"></div>
+        <div class="fg"><label class="fl">MAY</label><input class="fi" id="pi-may" placeholder="x or day"></div>
+        <div class="fg"><label class="fl">JUN</label><input class="fi" id="pi-jun" placeholder="x or day"></div>
+        <div class="fg"><label class="fl">JUL</label><input class="fi" id="pi-jul" placeholder="x or day"></div>
+        <div class="fg"><label class="fl">AUG</label><input class="fi" id="pi-aug" placeholder="x or day"></div>
+        <div class="fg"><label class="fl">SEP</label><input class="fi" id="pi-sep" placeholder="x or day"></div>
+        <div class="fg"><label class="fl">OCT</label><input class="fi" id="pi-oct" placeholder="x or day"></div>
+        <div class="fg"><label class="fl">NOV</label><input class="fi" id="pi-nov" placeholder="x or day"></div>
+        <div class="fg"><label class="fl">DEC</label><input class="fi" id="pi-dec" placeholder="x or day"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-prog-item')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProgItem()">💾 Save Item</button>
+    </div>
+  </div>
+</div>
+
 <!-- VERIFY CONTROL -->
 <div class="modal-overlay" id="m-verify-ctrl">
   <div class="modal modal-lg">
@@ -1332,7 +1552,7 @@ const ST = {
     validBy:['Safety Dept','Quality Audit','SAG','Management']
   },
   hazards:[], risks:[], controls:[], events:[],
-  bowtieRoles:{},
+  bowtieRoles:{}, programme:null,
   _hzN:1, _rkN:1, _ctN:1, _evN:1
 };
 
@@ -1540,6 +1760,7 @@ function nav(el){
   if(pg==='hazards')   renderHazards();
   if(pg==='risks')     renderRisks();
   if(pg==='controls')  renderControls();
+  if(pg==='programme') renderProgramme();
   if(pg==='bowtie')    renderBowtie();
   if(pg==='events')    renderEvents();
   if(pg==='settings')  renderSettings();
@@ -1717,6 +1938,7 @@ function renderHazards(){
       </tr>`;
     }).join('')
     :`<tr><td colspan="12" style="text-align:center;color:var(--text3);padding:28px;">No hazards found</td></tr>`;
+  initColResizers();
 }
 
 function deleteHazard(id){
@@ -2080,6 +2302,7 @@ function renderRisks(){
       </tr>`;
     }).join('')
     :`<tr><td colspan="16" style="text-align:center;color:var(--text3);padding:28px;">No risks found</td></tr>`;
+  initColResizers();
 }
 
 function deleteRisk(id){
@@ -2295,6 +2518,7 @@ function renderControls(){
       </tr>`;
     }).join('')
     :`<tr><td colspan="13" style="text-align:center;color:var(--text3);padding:28px;">No controls found</td></tr>`;
+  initColResizers();
 }
 
 function openVerifyCtrl(id){
@@ -3080,6 +3304,403 @@ function showRiskDetail(riskId){
 }
 
 // ═══════════════════════════════════════════════════
+//  SAFETY PROGRAMME
+// ═══════════════════════════════════════════════════
+
+const MONTHS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+const MONTH_LABELS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+// Default programme data loaded from the Excel file
+const DEFAULT_PROGRAMME = {
+  prog: [
+    {section:'Meetings'},
+    {name:'Safety Review Board (& HSE) meeting',freq:'3 Mnth',by:'AM',remarks:'',months:{jan:'x',apr:'x',jul:'x',oct:'x'}},
+    {name:'Safety Action Group Meeting',freq:'3 Mnth',by:'SM/SO',remarks:'as per SMM 2.1.3.4',months:{jan:'29',apr:'x',jul:'x',oct:'x'}},
+    {section:'Submissions / Reviews', remarks:'as per SMM 2.1.5.1'},
+    {name:'SMS Manual Review',freq:'12 Mnth',by:'SM',remarks:'i.a.w EJME SMS Manual',months:{jun:'x'}},
+    {name:'ERP Manual Review',freq:'12 Mnth',by:'SM',remarks:'i.a.w GCAA/EASA/DCAA/DM',months:{feb:'x',jul:'x'}},
+    {name:'HSE Manual Review',freq:'12 Mnth',by:'SM',remarks:'',months:{feb:'x'}},
+    {name:'SMS - SPI / Safety Performance Measurement',freq:'4 Mnth',by:'SM',remarks:'To GCAA, before 5th of month',months:{jan:'15',apr:'x',jul:'x',oct:'x'}},
+    {name:'SPM & Obj to GCAA',freq:'12 Mnth',by:'SM',remarks:'as per SMM 2.1.1.5',months:{jan:'x',feb:'24'}},
+    {name:"Safety 'GAP' Analysis",freq:'12 Mnth',by:'SM',remarks:'i.a.w GTF-SMS-002A',months:{apr:'x'}},
+    {name:'Safety Survey',freq:'12 Mnth',by:'SO',remarks:'Survey in paper format & Online',months:{jun:'x'}},
+    {name:'Safety Department Manpower Plan Review',freq:'12 Mnth',by:'SM',remarks:'',months:{jan:'12'}},
+    {name:'GCAA ALoSP Table',freq:'4 Mnth',by:'SM',remarks:'Submit to GCAA PMI through Email',months:{jan:'16',may:'x',sep:'x'}},
+    {name:'EJGP Group Quarterly Safety Report',freq:'3 Mnth',by:'SM',remarks:'To Group Safety Administrator',months:{jan:'30',apr:'x',jul:'x',oct:'x'}},
+    {section:'Exercises / Drills'},
+    {name:'Fire Drill',freq:'12 Mnth',by:'SO',remarks:'AFS Approval required',months:{nov:'x'}},
+    {name:'Emergency Response Drill (As per Drill Plan)',freq:'12 Mnth',by:'SM',remarks:'as per SMM 2.1.4 & As per Emergency drill plan',months:{may:'x',jul:'x',aug:'x',sep:'x',nov:'x'}},
+    {section:'Safety Audits'},
+    {name:'SMS Audit',freq:'',by:'SM/SO',remarks:'Refer to SMS Audit Schedule',months:{jan:'22',feb:'27',mar:'26',apr:'x',may:'x',aug:'x',nov:'x',dec:'x'}},
+    {name:'Annual Safety Performance Report',freq:'12 Mnth',by:'SM',remarks:'To Accountable Manager & SRB',months:{jan:'29',feb:'x'}},
+    {section:'Safety Communication'},
+    {name:'SPI - 4 Monthly Report to Department Heads',freq:'4 Mnth',by:'SO',remarks:'Through Q-Pulse Doc GTF-SMS-006',months:{feb:'x',may:'x',aug:'x',nov:'x'}},
+    {name:'Safety Newsletters - EJME',freq:'6 Mnth',by:'SO',remarks:'',months:{jan:'x',jul:'x'}},
+    {name:'Safety Notices',freq:'AR',by:'SM',remarks:'',months:{}},
+    {name:'Safety Awareness Posters',freq:'AR',by:'SO',remarks:'All facility',months:{}},
+    {name:'SID Screen Update',freq:'1 Mnth',by:'SO',remarks:'Hangar SID',months:{jan:'x',feb:'20',mar:'18',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+    {name:'Safety Workshops',freq:'1 Mnth',by:'SM/SO',remarks:'',months:{jan:'19',feb:'16',mar:'16',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+    {name:'Group On The Wing Publication Content',freq:'3 Mnth',by:'SM',remarks:'Submit to EJME VP-PA',months:{jan:'x',apr:'x',jul:'x',oct:'x'}},
+    {section:'Other Meetings'},
+    {name:'Staff Meeting',freq:'1 Mnth',by:'GM-M',remarks:'',months:{jan:'19',feb:'16',mar:'16',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+    {name:'Management Committee Meeting (MANCO)',freq:'1 Mnth',by:'AM',remarks:'',months:{jan:'29',feb:'19',mar:'x',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+    {name:'Training Department Safety Meeting',freq:'Bi-Weekly',by:'GM-TS',remarks:'',months:{jan:'14',feb:'11',mar:'11',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+    {section:'Miscellaneous'},
+    {name:'Fire Fighting Equipment Inspection (Hose reel, Sprinkler)',freq:'3 Mnth',by:'SM',remarks:'Facility Management Company / Farnek',months:{jan:'x',apr:'x',jul:'x',oct:'x'}},
+    {name:'Review of Safety Programme',freq:'12 Mnth',by:'SM',remarks:'',months:{dec:'x'}},
+  ],
+  audit: [
+    {section:'Internal Audits'},
+    {name:'SMS Audit - Maintenance (Line & Base)',freq:'12 Mnth',by:'SO',remarks:'',months:{aug:'x'}},
+    {name:'SMS Audit - Workshop - NDT & X-Ray',freq:'12 Mnth',by:'SO',remarks:'',months:{nov:'x'}},
+    {name:'SMS Audit - Workshop - Wheel Shop',freq:'12 Mnth',by:'SO',remarks:'',months:{dec:'x'}},
+    {name:'SMS Audit - Workshop - Battery Shop',freq:'12 Mnth',by:'SO',remarks:'',months:{jan:'22'}},
+    {name:'SMS Audit - Workshop - Avionics & ELT',freq:'12 Mnth',by:'SO',remarks:'',months:{feb:'27'}},
+    {name:'SMS Audit - Workshop - Sheet Metal',freq:'12 Mnth',by:'SO',remarks:'',months:{mar:'25'}},
+    {name:'SMS Audit - Workshop - Paintshop',freq:'12 Mnth',by:'SO',remarks:'',months:{apr:'x'}},
+    {name:'SMS Audit - Planning',freq:'12 Mnth',by:'SO',remarks:'',months:{may:'x'}},
+    {name:'SMS Audit - Subcontractors (As per MOE 5.2)',freq:'12 Mnth',by:'QA Auditor',remarks:'Subcontractor SMS audit elements carried out during QA subcontractor audits',months:{}},
+    {section:'External Audits'},
+    {name:'SMS Department Audit',freq:'12 Mnth',by:'SM',remarks:'By External (Regional Compliance Manager)',months:{oct:'x'}},
+    {name:'GCAA SMS Audit',freq:'12 Mnth',by:'GCAA',remarks:'',months:{feb:'x'}},
+    {name:'EASA SMS Audit',freq:'12 Mnth',by:'EASA',remarks:'',months:{may:'x'}},
+  ],
+  dept: [
+    {name:'Update Safety Programme',freq:'1 Month',by:'SO',remarks:'Carry out first of every month',months:{jan:'7',feb:'2',mar:'31',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+    {name:'Update Fire Cabinets (Checklist, Roll call list)',freq:'1 Month',by:'SA',remarks:'',months:{jan:'5',feb:'3',mar:'x',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+    {name:'Verification of Safety Controls from SAG Group',freq:'1 Month',by:'SO',remarks:'',months:{jan:'9',feb:'26',mar:'x',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+    {name:'SID Screen Update',freq:'1 Month',by:'SA',remarks:'',months:{jan:'5',feb:'2',mar:'18',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+    {name:'Follow-up CA/PA Corrective Actions (Reports, Audits)',freq:'2 Weeks',by:'SA',remarks:'',months:{jan:'x',feb:'16',mar:'x',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+    {name:'Check Safety Posters (All facility)',freq:'6 Month',by:'SO',remarks:'',months:{mar:'x',sep:'x'}},
+    {name:'Hazard Register Verification',freq:'1 Month',by:'SM',remarks:'Ref to SMS Manual 2.2.6',months:{jan:'x',feb:'x',mar:'x',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+    {name:'Hazard Register Publish + Update in Q-Risk',freq:'1 Month',by:'SO',remarks:'Publish first of every month',months:{jan:'30',feb:'x',mar:'26',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+    {name:'Check First Aid Kits',freq:'1 Month',by:'SO',remarks:'Ensure all are still tagged, report opened kits',months:{jan:'9',feb:'19',mar:'11',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+    {name:'Check all Bandaid Holders are Replenished',freq:'1 Month',by:'SO',remarks:'',months:{jan:'9',feb:'19',mar:'11',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+    {name:'OT Assessment Sheet Updation',freq:'Weekly',by:'SA',remarks:'',months:{jan:'x',feb:'x',mar:'x',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+    {name:'SPI Data Update in Excel',freq:'1 Month',by:'SA',remarks:'',months:{jan:'x',feb:'x',mar:'x',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+    {name:'Monthly Group Safety Report',freq:'1 Month',by:'SA',remarks:'',months:{jan:'x',feb:'x',mar:'x',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+    {name:'Quarterly Group Safety Report',freq:'3 Month',by:'SO',remarks:'',months:{jan:'30',apr:'x',jul:'x',oct:'x'}},
+    {name:'Collection of SMS Reports from Drop Box & Update QPulse',freq:'1 Month',by:'SA',remarks:'',months:{jan:'x',feb:'x',mar:'x',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+    {name:'Send SAG Members the Safety Controls Due List',freq:'1 Month',by:'SO',remarks:'',months:{feb:'x',mar:'x',apr:'x',may:'x',jun:'x',jul:'x',aug:'x',sep:'x',oct:'x',nov:'x',dec:'x'}},
+  ]
+};
+
+let activeProgTab = 'prog';
+
+function initProgrammeData(){
+  if(!ST.programme) ST.programme = JSON.parse(JSON.stringify(DEFAULT_PROGRAMME));
+}
+
+function switchProgTab(tab){
+  activeProgTab = tab;
+  ['prog','audit','dept'].forEach(t=>{
+    document.getElementById(`pt-${t}`)?.classList.toggle('active', t===tab);
+  });
+  renderProgrammeTable();
+}
+
+function renderProgramme(){
+  initProgrammeData();
+  const titles = {prog:'Safety Programme 2026', audit:'SMS Audit Schedule 2026', dept:'Safety Department Schedule 2026'};
+  document.getElementById('prog-tab-title').textContent = titles[activeProgTab];
+  renderProgrammeSummary();
+  renderProgrammeTable();
+}
+
+function renderProgrammeSummary(){
+  const items = ST.programme[activeProgTab].filter(i=>i.name);
+  const curMonth = new Date().getMonth(); // 0=Jan
+  let sched=0, done=0, overdue=0;
+  items.forEach(item=>{
+    MONTHS.forEach((m,mi)=>{
+      const v = (item.months||{})[m];
+      if(!v) return;
+      const st = item.status?.[m] || 'sched';
+      if(st==='done') done++;
+      else if(st==='overdue') overdue++;
+      else if(mi <= curMonth) { if(v && v!=='—') sched++; }
+    });
+  });
+  const total = sched+done+overdue;
+  const pct = total ? Math.round(done/(done+overdue+sched)*100) : 0;
+  document.getElementById('prog-summary').innerHTML = `
+    <div class="stat gr" style="padding:10px 14px;min-width:120px;">
+      <div class="stat-lbl">Completed</div>
+      <div class="stat-val" style="font-size:22px;">${done}</div>
+    </div>
+    <div class="stat re" style="padding:10px 14px;min-width:120px;">
+      <div class="stat-lbl">Overdue</div>
+      <div class="stat-val" style="font-size:22px;">${overdue}</div>
+    </div>
+    <div class="stat ye" style="padding:10px 14px;min-width:120px;">
+      <div class="stat-lbl">Pending (this year)</div>
+      <div class="stat-val" style="font-size:22px;">${sched}</div>
+    </div>
+    <div class="stat ac" style="padding:10px 14px;min-width:140px;">
+      <div class="stat-lbl">% Complete</div>
+      <div class="stat-val" style="font-size:22px;">${pct}%</div>
+      <div class="prog-bar" style="margin-top:4px;"><div class="prog-fill" style="width:${pct}%;background:var(--green);"></div></div>
+    </div>`;
+}
+
+function renderProgrammeTable(){
+  const data = ST.programme[activeProgTab];
+  const curMonth = new Date().getMonth();
+  const tbody = document.getElementById('prog-tbody');
+  if(!tbody) return;
+
+  const srch = (document.getElementById('prog-srch')?.value||'').toLowerCase();
+  const fBy = document.getElementById('prog-f-by')?.value||'';
+  const fStatus = document.getElementById('prog-f-status')?.value||'';
+
+  function itemMatchesStatus(item){
+    if(!fStatus) return true;
+    const months = item.months||{};
+    const completions = item.completions||{};
+    return MONTHS.some((m,mi)=>{
+      const v = months[m]; if(!v||v==='-') return false;
+      const done = (completions[m]||[]).length > 0;
+      if(fStatus==='done') return done;
+      if(fStatus==='overdue') return !done && mi < curMonth;
+      if(fStatus==='due') return !done && mi === curMonth;
+      return false;
+    });
+  }
+
+  tbody.innerHTML = data.map((item, idx) => {
+    if(item.section !== undefined){
+      const hasVisible = data.slice(idx+1).some(i=>{
+        if(i.section!==undefined) return false;
+        return (!srch||(i.name||'').toLowerCase().includes(srch))
+          && (!fBy||i.by===fBy) && itemMatchesStatus(i);
+      });
+      return hasVisible ? `<tr class="prog-section-row"><td colspan="17">${item.section||''}</td></tr>` : '';
+    }
+
+    if(!(!srch||(item.name||'').toLowerCase().includes(srch))) return '';
+    if(fBy && item.by !== fBy) return '';
+    if(!itemMatchesStatus(item)) return '';
+
+    const months = item.months || {};
+    const completions = item.completions || {};
+
+    const monthCells = MONTHS.map((m,mi)=>{
+      const scheduled = months[m] && months[m] !== '-';
+      const done = completions[m] && completions[m].length > 0;
+      const isOverdue = !done && scheduled && mi < curMonth;
+      const isThisMonth = mi === curMonth;
+      let cellHtml;
+      if(done){
+        cellHtml = `<div class="prog-cell done" onclick="openProgCell(${idx},'${m}')" title="Completed — click to view" style="flex-direction:column;height:auto;min-height:28px;padding:2px 0;gap:1px;">${completions[m].map(c=>`<span style="font-size:9.5px;font-weight:700;line-height:1.3;">${c.date}</span>`).join('')}</div>`;
+      } else if(scheduled){
+        const cls = isOverdue ? 'overdue' : 'sched';
+        const extra = isThisMonth&&!isOverdue ? 'border-color:var(--accent);border-width:2px;' : '';
+        cellHtml = `<div class="prog-cell ${cls}" onclick="openProgCell(${idx},'${m}')" title="${isOverdue?'OVERDUE':'Scheduled'} — click to record" style="${extra}">${isOverdue?'!':'✓'}</div>`;
+      } else {
+        cellHtml = `<div class="prog-cell empty" onclick="openProgCell(${idx},'${m}')" title="Not scheduled — click for ad-hoc">—</div>`;
+      }
+      return `<td style="padding:2px 3px;">${cellHtml}</td>`;
+    }).join('');
+
+    const esc=s=>(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    return `<tr>
+      <td style="font-size:11.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;padding:5px 11px;" title="${esc(item.name)}">${item.name}</td>
+      <td style="font-size:10px;color:var(--text3);white-space:nowrap;padding:5px 8px;">${item.freq||'—'}</td>
+      ${monthCells}
+      <td style="font-size:10px;color:var(--text3);white-space:nowrap;padding:5px 8px;">—</td>
+      <td style="font-size:10px;color:var(--text2);white-space:nowrap;padding:5px 8px;" title="${esc(item.by)}">${item.by||'—'}</td>
+      <td style="font-size:10px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;padding:5px 8px;" title="${esc(item.remarks)}">${item.remarks||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function openProgCell(idx, month){
+  initProgrammeData();
+  const item = ST.programme[activeProgTab][idx];
+  if(!item || item.section !== undefined) return;
+
+  const completions = (item.completions || {})[month] || [];
+  const monthLabel = MONTH_LABELS[MONTHS.indexOf(month)];
+  const scheduled = (item.months||{})[month];
+
+  // Build existing completions list
+  const existingHtml = completions.length ? `
+    <div style="margin-bottom:12px;">
+      <div style="font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;">Recorded Completions (${completions.length})</div>
+      ${completions.map((c,ci)=>`
+        <div style="display:flex;align-items:center;gap:8px;background:rgba(0,147,79,.07);border:1px solid rgba(0,147,79,.2);border-radius:6px;padding:6px 10px;margin-bottom:4px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--green);font-size:14px;min-width:26px;">${c.date}</span>
+          ${c.by?`<span style="font-size:10px;background:rgba(0,112,204,.08);color:var(--accent);border-radius:3px;padding:1px 6px;">${c.by}</span>`:''}
+          <span style="flex:1;font-size:11px;color:var(--text2);">${c.remarks||'—'}</span>
+          <button class="btn btn-danger btn-xs" onclick="removeProgCompletion(${idx},'${month}',${ci})">✕</button>
+        </div>`).join('')}
+    </div>` : '';
+
+  document.getElementById('pc-item-name').textContent = item.name;
+  document.getElementById('pc-month-label').textContent = monthLabel;
+  document.getElementById('pc-idx').value = idx;
+  document.getElementById('pc-month').value = month;
+  document.getElementById('pc-existing').innerHTML = existingHtml;
+  document.getElementById('pc-date').value = new Date().getDate();
+  document.getElementById('pc-remarks').value = '';
+
+  // Show scheduled status
+  const infoEl = document.getElementById('pc-sched-info');
+  if(scheduled && scheduled !== '-'){
+    infoEl.innerHTML = `<span style="color:var(--green);font-size:11px;">✓ Scheduled this month</span>`;
+  } else {
+    infoEl.innerHTML = `<span style="color:var(--text3);font-size:11px;">Not originally scheduled — recording as ad-hoc</span>`;
+  }
+
+  openM('m-prog-cell');
+}
+
+function saveProgCompletion(){
+  const idx = parseInt(document.getElementById('pc-idx').value);
+  const month = document.getElementById('pc-month').value;
+  const dateVal = document.getElementById('pc-date').value.trim();
+  const remarks = document.getElementById('pc-remarks').value.trim();
+  const byPerson = document.getElementById('pc-by-person').value.trim();
+
+  if(!dateVal){ toast('Please enter the completion date','error'); return; }
+  const dayNum = parseInt(dateVal);
+  if(isNaN(dayNum) || dayNum < 1 || dayNum > 31){ toast('Enter a valid day number (1–31)','error'); return; }
+
+  initProgrammeData();
+  const item = ST.programme[activeProgTab][idx];
+  if(!item) return;
+  if(!item.completions) item.completions = {};
+  if(!item.completions[month]) item.completions[month] = [];
+
+  item.completions[month].push({ date: String(dayNum), remarks, by: byPerson });
+
+  closeM('m-prog-cell');
+  autosave();
+  renderProgrammeTable();
+  renderProgrammeSummary();
+  toast(`Completion recorded — ${MONTH_LABELS[MONTHS.indexOf(month)]} ${dayNum}`,'success');
+}
+
+function removeProgCompletion(idx, month, ci){
+  initProgrammeData();
+  const item = ST.programme[activeProgTab][idx];
+  if(!item?.completions?.[month]) return;
+  item.completions[month].splice(ci,1);
+  if(!item.completions[month].length) delete item.completions[month];
+  autosave();
+  // Re-open to refresh the list
+  openProgCell(idx, month);
+  renderProgrammeTable();
+  renderProgrammeSummary();
+}
+
+// Keep for summary — now checks completions array
+function renderProgrammeSummary(){
+  const items = ST.programme[activeProgTab].filter(i=>i.name);
+  const curMonth = new Date().getMonth();
+  let sched=0, done=0, overdue=0, dueThisMonth=0;
+  items.forEach(item=>{
+    MONTHS.forEach((m,mi)=>{
+      const v = (item.months||{})[m];
+      if(!v || v==='-') return;
+      const completions = (item.completions||{})[m]||[];
+      if(completions.length > 0) done++;
+      else if(mi < curMonth) overdue++;
+      else { sched++; if(mi===curMonth) dueThisMonth++; }
+    });
+  });
+  const total = sched+done+overdue;
+  const pct = total ? Math.round(done/total*100) : 0;
+
+  // Populate By filter dropdown
+  const bySet = new Set(items.map(i=>i.by).filter(Boolean));
+  const byEl = document.getElementById('prog-f-by');
+  if(byEl){
+    const curBy = byEl.value;
+    byEl.innerHTML = '<option value="">All Responsible</option>' +
+      [...bySet].sort().map(b=>`<option value="${b}" ${b===curBy?'selected':''}>${b}</option>`).join('');
+  }
+
+  const activeFilter = document.getElementById('prog-f-status')?.value || '';
+
+  document.getElementById('prog-summary').innerHTML = `
+    <div class="stat gr" style="padding:10px 14px;min-width:110px;cursor:pointer;transition:transform .1s;" onclick="setProgFilter('')" title="Show all">
+      <div class="stat-lbl">Completed</div>
+      <div class="stat-val" style="font-size:22px;">${done}</div>
+      <div class="stat-sub" style="font-size:9px;">${activeFilter===''?'● showing all':''}</div>
+    </div>
+    <div class="stat re" style="padding:10px 14px;min-width:110px;cursor:pointer;transition:transform .1s;" onclick="setProgFilter('overdue')" title="Filter overdue">
+      <div class="stat-lbl">Overdue</div>
+      <div class="stat-val" style="font-size:22px;">${overdue}</div>
+      <div class="stat-sub" style="font-size:9px;color:var(--red);">${activeFilter==='overdue'?'● filtered':''}</div>
+    </div>
+    <div class="stat ac" style="padding:10px 14px;min-width:110px;cursor:pointer;transition:transform .1s;" onclick="setProgFilter('due')" title="Filter due this month">
+      <div class="stat-lbl">Due This Month</div>
+      <div class="stat-val" style="font-size:22px;">${dueThisMonth}</div>
+      <div class="stat-sub" style="font-size:9px;color:var(--accent);">${activeFilter==='due'?'● filtered':''}</div>
+    </div>
+    <div class="stat ye" style="padding:10px 14px;min-width:110px;cursor:pointer;transition:transform .1s;" onclick="setProgFilter('')" title="Show all">
+      <div class="stat-lbl">Remaining (year)</div>
+      <div class="stat-val" style="font-size:22px;">${sched}</div>
+    </div>
+    <div class="stat" style="padding:10px 14px;min-width:130px;border-top:2px solid var(--border2);">
+      <div class="stat-lbl">% Complete</div>
+      <div class="stat-val" style="font-size:22px;">${pct}%</div>
+      <div class="prog-bar" style="margin-top:4px;"><div class="prog-fill" style="width:${pct}%;background:var(--green);"></div></div>
+    </div>`;
+}
+
+function setProgFilter(val){
+  const el = document.getElementById('prog-f-status');
+  if(el){ el.value = val; }
+  renderProgrammeTable();
+  renderProgrammeSummary();
+}
+
+function clearProgFilters(){
+  const s = document.getElementById('prog-srch'); if(s) s.value='';
+  const b = document.getElementById('prog-f-by'); if(b) b.value='';
+  const f = document.getElementById('prog-f-status'); if(f) f.value='';
+  renderProgrammeTable();
+  renderProgrammeSummary();
+}
+
+function openAddProgItem(){
+  document.getElementById('m-prog-item-title').textContent = '📅 Add Programme Item';
+  document.getElementById('pi-tab').value = activeProgTab;
+  document.getElementById('pi-idx').value = '';
+  document.getElementById('pi-name').value = '';
+  document.getElementById('pi-freq').value = '';
+  document.getElementById('pi-by').value = '';
+  document.getElementById('pi-remarks').value = '';
+  MONTHS.forEach(m=>{ const el=document.getElementById(`pi-${m}`); if(el) el.value=''; });
+  openM('m-prog-item');
+}
+
+function saveProgItem(){
+  initProgrammeData();
+  const name = document.getElementById('pi-name').value.trim();
+  if(!name){ toast('Please enter an activity name','error'); return; }
+  const tab = document.getElementById('pi-tab').value || activeProgTab;
+  const months = {};
+  MONTHS.forEach(m=>{ const v=document.getElementById(`pi-${m}`)?.value.trim(); if(v) months[m]=v; });
+  const item = {
+    name, freq: document.getElementById('pi-freq').value.trim(),
+    by: document.getElementById('pi-by').value.trim(),
+    remarks: document.getElementById('pi-remarks').value.trim(),
+    months
+  };
+  const idxVal = document.getElementById('pi-idx').value;
+  if(idxVal !== ''){
+    ST.programme[tab][parseInt(idxVal)] = item;
+  } else {
+    ST.programme[tab].push(item);
+  }
+  closeM('m-prog-item'); autosave(); renderProgramme();
+  toast('Programme item saved','success');
+}
+
+// ═══════════════════════════════════════════════════
 //  DASHBOARD
 // ═══════════════════════════════════════════════════
 function renderDashboard(){
@@ -3614,7 +4235,81 @@ function loadDemoData(){
 }
 
 // ═══════════════════════════════════════════════════
-//  INIT
+//  COLUMN RESIZER
+// ═══════════════════════════════════════════════════
+const COL_WIDTHS_KEY = 'aerosafe_col_widths';
+
+function saveColWidths(tableId){
+  const table = document.getElementById(tableId); if(!table) return;
+  const stored = JSON.parse(localStorage.getItem(COL_WIDTHS_KEY)||'{}');
+  const cols = table.querySelectorAll('col[data-col]');
+  cols.forEach(col=>{
+    stored[col.dataset.col] = col.style.width;
+  });
+  localStorage.setItem(COL_WIDTHS_KEY, JSON.stringify(stored));
+}
+
+function loadColWidths(){
+  const stored = JSON.parse(localStorage.getItem(COL_WIDTHS_KEY)||'{}');
+  Object.entries(stored).forEach(([key, width])=>{
+    const col = document.querySelector(`col[data-col="${key}"]`);
+    if(col && width) col.style.width = width;
+  });
+}
+
+function initColResizers(){
+  document.querySelectorAll('.resizable-table').forEach(table=>{
+    const ths = table.querySelectorAll('thead th');
+    ths.forEach((th, i)=>{
+      if(i === ths.length - 1) return; // skip last (Actions)
+      if(th.querySelector('.col-resizer')) return; // already has one
+      const handle = document.createElement('div');
+      handle.className = 'col-resizer';
+      handle.addEventListener('mousedown', e=>startColResize(e, table, i));
+      handle.addEventListener('touchstart', e=>startColResize(e, table, i), {passive:true});
+      th.appendChild(handle);
+    });
+  });
+  loadColWidths(); // reapply saved widths after re-render
+}
+
+function startColResize(e, table, colIdx){
+  e.preventDefault?.();
+  const startX = e.touches ? e.touches[0].clientX : e.clientX;
+  const cols = table.querySelectorAll('col[data-col]');
+  const col = cols[colIdx];
+  if(!col) return;
+  const startWidth = parseInt(col.style.width)||col.offsetWidth||80;
+  const tableId = table.id;
+
+  const handle = e.currentTarget;
+  handle.classList.add('dragging');
+
+  // Prevent text selection during drag
+  document.body.style.userSelect = 'none';
+  document.body.style.cursor = 'col-resize';
+
+  const onMove = ev=>{
+    const x = ev.touches ? ev.touches[0].clientX : ev.clientX;
+    const newWidth = Math.max(40, startWidth + (x - startX));
+    col.style.width = newWidth + 'px';
+  };
+  const onUp = ()=>{
+    handle.classList.remove('dragging');
+    document.body.style.userSelect = '';
+    document.body.style.cursor = '';
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onUp);
+    saveColWidths(tableId);
+  };
+
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+  document.addEventListener('touchmove', onMove);
+  document.addEventListener('touchend', onUp);
+}
 // ═══════════════════════════════════════════════════
 async function init(){
   // ── URL hash auto-setup ──────────────────────────────
@@ -3663,6 +4358,10 @@ async function init(){
   } else {
     updateGhStatus('off','GitHub not configured — data stored locally');
   }
+
+  // Column resizers — load saved widths then attach drag handles
+  loadColWidths();
+  setTimeout(initColResizers, 100); // after DOM fully painted
 
   const last=localStorage.getItem('aerosafe_last_backup');
   if(last&&(Date.now()-parseInt(last))/86400000>=1){
