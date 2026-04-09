@@ -600,7 +600,7 @@ table.resizable{table-layout:fixed;}
         <div class="stat re" style="cursor:pointer;" onclick="navTo('hazards',{})" title="View all hazards"><div class="stat-icon">⚠</div><div class="stat-lbl">Active Hazards</div><div class="stat-val" id="d-hz">0</div><div class="stat-sub">Click to view →</div></div>
         <div class="stat ye" style="cursor:pointer;" onclick="navTo('risks',{status:'Open'})" title="View open risks"><div class="stat-icon">◈</div><div class="stat-lbl">Open Risks</div><div class="stat-val" id="d-rk">0</div><div class="stat-sub">Click to view →</div></div>
         <div class="stat ac" style="cursor:pointer;" onclick="navTo('controls',{})" title="View all controls"><div class="stat-icon">◼</div><div class="stat-lbl">Controls</div><div class="stat-val" id="d-ct">0</div><div class="stat-sub">Click to view →</div></div>
-        <div class="stat gr" style="cursor:pointer;" onclick="navTo('events',{})" title="View events"><div class="stat-icon">▶</div><div class="stat-lbl">Events (month)</div><div class="stat-val" id="d-ev">0</div><div class="stat-sub">Click to view →</div></div>
+        <div class="stat gr" style="cursor:pointer;" onclick="navTo('events',{month:'this'})" title="View this month's events"><div class="stat-icon">▶</div><div class="stat-lbl">Events (month)</div><div class="stat-val" id="d-ev">0</div><div class="stat-sub">Click to view →</div></div>
       </div>
 
       <div class="g2" style="margin-bottom:14px;">
@@ -644,21 +644,21 @@ table.resizable{table-layout:fixed;}
           <table id="tbl-hz" class="resizable-table" style="table-layout:fixed;width:100%;">
             <colgroup>
               <col data-col="hz-0" style="width:110px;">  <!-- Hazard ID -->
-              <col data-col="hz-1" style="width:220px;">  <!-- Description -->
-              <col data-col="hz-2" style="width:110px;">  <!-- Sources -->
-              <col data-col="hz-3" style="width:130px;">  <!-- Department -->
-              <col data-col="hz-4" style="width:85px;">   <!-- Location -->
-              <col data-col="hz-5" style="width:88px;">   <!-- Date -->
-              <col data-col="hz-6" style="width:100px;">  <!-- Owner -->
-              <col data-col="hz-7" style="width:80px;">   <!-- Status -->
-              <col data-col="hz-8" style="width:75px;">   <!-- Residual Risk -->
+              <col data-col="hz-1" style="width:200px;">  <!-- Title -->
+              <col data-col="hz-2" style="width:120px;">  <!-- Sources -->
+              <col data-col="hz-3" style="width:140px;">  <!-- Department -->
+              <col data-col="hz-4" style="width:90px;">   <!-- Location -->
+              <col data-col="hz-5" style="width:90px;">   <!-- Date -->
+              <col data-col="hz-6" style="width:110px;">  <!-- Owner -->
+              <col data-col="hz-7" style="width:90px;">   <!-- Status -->
+              <col data-col="hz-8" style="width:80px;">   <!-- Residual Risk -->
               <col data-col="hz-9" style="width:120px;">  <!-- Remarks -->
-              <col data-col="hz-10" style="width:130px;"> <!-- Actions -->
+              <col data-col="hz-10" style="width:110px;"> <!-- Actions -->
             </colgroup>
             <thead><tr>
-              <th>Hazard ID</th><th>Hazard Description</th><th>Source(s)</th><th>Department</th>
+              <th>Hazard ID</th><th>Title</th><th>Source(s)</th><th>Department</th>
               <th>Location</th><th>Date</th><th>Owner</th>
-              <th>Status</th><th>Residual Risk</th><th>Remarks</th><th>Actions</th>
+              <th>Status</th><th>Residual Risk</th><th>Remarks</th><th>Risks</th>
             </tr></thead>
             <tbody id="hz-tbody"></tbody>
           </table>
@@ -683,7 +683,7 @@ table.resizable{table-layout:fixed;}
           <option value="">All Levels</option><option>LOW</option><option>MEDIUM</option><option>HIGH</option>
         </select>
         <select class="fs" style="width:130px;" id="rk-f-status" onchange="renderRisks()">
-          <option value="">All Status</option><option>Open</option><option>Monitoring</option><option>Closed</option><option>Review</option>
+          <option value="">All Status</option><option>Open</option><option>Monitoring</option><option>Closed</option><option>Continue Assessment</option>
         </select>
         <button class="obs-toggle" id="rk-obs-toggle" onclick="toggleObsolete('rk')" title="Show/hide obsolete risks">⊘ Show Obsolete</button>
       </div>
@@ -977,6 +977,22 @@ table.resizable{table-layout:fixed;}
       <div style="background:rgba(255,63,87,.07);border:1px solid rgba(255,63,87,.18);border-radius:9px;padding:10px 14px;font-size:12px;color:var(--text2);margin-bottom:14px;">
         ⚡ Events are linked to hazards → risks → controls. Logging an event auto-marks failed controls as <strong>Not Effective</strong>, flags linked risks for review, and updates hazard sources.
       </div>
+      <div class="search-row">
+        <div class="search-box"><span style="color:var(--text3);">🔍</span><input type="text" placeholder="Search events…" id="ev-srch" oninput="renderEvents()"></div>
+        <select class="fs" style="width:140px;" id="ev-f-conseq" onchange="renderEvents()">
+          <option value="">All Consequences</option>
+          <option>Near Miss</option><option>Minor Incident</option><option>Significant Incident</option><option>Serious Incident</option><option>Accident</option>
+        </select>
+        <select class="fs" style="width:130px;" id="ev-f-status" onchange="renderEvents()">
+          <option value="">All Status</option><option value="open">Open</option><option value="closed">Closed</option>
+        </select>
+        <select class="fs" style="width:140px;" id="ev-f-month" onchange="renderEvents()">
+          <option value="">All Months</option>
+          <option value="this">This Month</option>
+          <option value="last">Last Month</option>
+          <option value="q">This Quarter</option>
+        </select>
+      </div>
       <div class="card">
         <div class="card-head">
           <span class="card-title">Safety Event Log</span>
@@ -1187,7 +1203,16 @@ table.resizable{table-layout:fixed;}
         <div class="fg"><label class="fl">Hazard ID</label><input class="fi" id="h-id" readonly></div>
         <div class="fg"><label class="fl">Date Identified</label><input type="date" class="fi" id="h-date"></div>
       </div>
-      <div class="fg"><label class="fl">Hazard Description</label><textarea class="fta" id="h-desc" style="min-height:60px;"></textarea></div>
+      <div class="fg">
+        <label class="fl">Hazard Title <span style="color:var(--text3);font-weight:400;">(short, 5-8 words)</span></label>
+        <div style="display:flex;gap:7px;align-items:center;">
+          <input class="fi" id="h-title" placeholder="e.g. GSE Proximity to Aircraft" style="flex:1;">
+          <button class="ai-btn" id="ai-hz-title-btn" onclick="aiSuggestHazardTitle()" title="AI suggests a short title from your description">✦ Suggest Title</button>
+        </div>
+        <div id="ai-hz-title-result" style="display:none;margin-top:6px;"></div>
+      </div>
+      <div class="fg"><label class="fl">Hazard Description <span style="color:var(--text3);font-weight:400;">(what is the hazard source / condition)</span></label><textarea class="fta" id="h-desc" style="min-height:55px;" placeholder="e.g. Use of cleaning machine in close proximity to aircraft"></textarea></div>
+      <div class="fg"><label class="fl">Top Event <span style="color:var(--text3);font-weight:400;">(the undesired event when the hazard is realised)</span></label><input class="fi" id="h-top-event" placeholder="e.g. Collision between cleaning machine and aircraft"></div>
       <div class="g2">
         <div class="fg"><label class="fl">Department</label><select class="fs" id="h-dept"></select></div>
         <div class="fg"><label class="fl">Location</label><select class="fs" id="h-loc"></select></div>
@@ -1854,7 +1879,7 @@ function calcHazardStatus(hzId){
 function calcRiskStatus(rkId){
   const rk = ST.risks.find(r=>r.id===rkId);
   if(!rk) return 'Open';
-  if(rk.flaggedNew) return 'Review';
+  if(rk.flaggedNew) return 'Continue Assessment';
   if(!(rk.ctrlIds||[]).length) return 'Open';
   const ctrls = (rk.ctrlIds||[]).map(id=>ST.controls.find(c=>c.id===id)).filter(Boolean);
   if(!ctrls.length) return 'Open';
@@ -1875,6 +1900,8 @@ function sanitiseData(){
     if(h.obsoleteInfo===undefined) h.obsoleteInfo=null;
     if(!Array.isArray(h.sources)) h.sources=[];
     if(!h.desc) h.desc='';
+    if(h.title===undefined) h.title='';
+    if(h.topEvent===undefined) h.topEvent='';
   });
   ST.risks.forEach(r=>{
     if(!r.status) r.status='active';
@@ -2072,7 +2099,7 @@ function navTo(page, filters={}){
   setTimeout(()=>{
     if(filters.status){
       const el=document.getElementById('rk-f-status')||document.getElementById('hz-f-status');
-      if(el){ el.value=filters.status; }
+      if(el) el.value=filters.status;
     }
     if(filters.eff){
       const el=document.getElementById('ct-f-eff');
@@ -2081,9 +2108,25 @@ function navTo(page, filters={}){
     if(filters.dept){
       const el=document.getElementById('hz-f-dept');
       if(el){ el.value=filters.dept; renderHazards(); }
+      // Also filter risks by dept via hazard filter
+      if(page==='risks'){
+        // Find hazards in this dept and filter
+        const deptHzIds=ST.hazards.filter(h=>h.dept===filters.dept).map(h=>h.id);
+        if(deptHzIds.length===1){ setSdValue('sd-rk-f-hz',deptHzIds[0]); document.getElementById('rk-f-hz').value=deptHzIds[0]; }
+        renderRisks();
+      }
     }
-    if(filters.status && page==='risks'){ renderRisks(); }
-    if(filters.status && page==='hazards'){ renderHazards(); }
+    if(filters.month){
+      const el=document.getElementById('ev-f-month');
+      if(el){ el.value=filters.month; renderEvents(); }
+    }
+    if(filters.hz){
+      setSdValue('sd-rk-f-hz',filters.hz);
+      const el=document.getElementById('rk-f-hz');
+      if(el){ el.value=filters.hz; renderRisks(); }
+    }
+    if(filters.status && page==='risks') renderRisks();
+    if(filters.status && page==='hazards') renderHazards();
   },50);
 }
 function renderTopbar(pg){
@@ -2143,7 +2186,9 @@ function openAddHazard(id=null){
     if(!h)return;
     document.getElementById('h-id').value=h.id;
     document.getElementById('h-date').value=h.date;
+    document.getElementById('h-title').value=h.title||'';
     document.getElementById('h-desc').value=h.desc;
+    document.getElementById('h-top-event').value=h.topEvent||'';
     document.getElementById('h-dept').value=h.dept;
     document.getElementById('h-loc').value=h.loc;
     document.getElementById('h-src').value=(h.sources||[]).join(', ');
@@ -2153,7 +2198,9 @@ function openAddHazard(id=null){
   } else {
     document.getElementById('h-id').value='HAZ-'+String(ST._hzN).padStart(3,'0');
     document.getElementById('h-date').value=new Date().toISOString().split('T')[0];
+    document.getElementById('h-title').value='';
     document.getElementById('h-desc').value='';
+    document.getElementById('h-top-event').value='';
     document.getElementById('h-src').value='';
     document.getElementById('h-owner').value='';
     document.getElementById('h-remarks').value='';
@@ -2169,7 +2216,9 @@ function saveHazard(){
   const hz={
     id: document.getElementById('h-id').value,
     date: document.getElementById('h-date').value,
+    title: document.getElementById('h-title').value.trim(),
     desc, sources,
+    topEvent: document.getElementById('h-top-event').value.trim(),
     dept: document.getElementById('h-dept').value,
     loc: document.getElementById('h-loc').value,
     owner: document.getElementById('h-owner').value,
@@ -2202,7 +2251,7 @@ function renderHazards(){
     if(h.status==='obsolete' && !showObs) return false;
     if(h.status!=='obsolete' && showObs) return false;
     const status=calcHazardStatus(h.id);
-    return(!srch||h.id.toLowerCase().includes(srch)||h.desc.toLowerCase().includes(srch))
+    return(!srch||h.id.toLowerCase().includes(srch)||(h.title||'').toLowerCase().includes(srch)||h.desc.toLowerCase().includes(srch))
       &&(!fDept||h.dept===fDept)
       &&(!fSt||status===fSt);
   });
@@ -2220,12 +2269,12 @@ function renderHazards(){
       const linkedRisks=ST.risks.filter(r=>r.hzId===h.id);
       const resSc=linkedRisks.length?Math.max(...linkedRisks.map(r=>rScore(r.resProb||r.prob,r.resSev||r.sev))):0;
       const esc=s=>(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-      return `<tr class="${isObs?'obs-row':''}">
-        <td style="white-space:nowrap;" title="${esc(h.id)}">
-          <span class="id-chip" style="white-space:nowrap;cursor:pointer;" onclick="viewHazardDetail('${h.id}')">${h.id}</span>
+      return `<tr class="${isObs?'obs-row':''}" style="cursor:pointer;" onclick="viewHazardDetail('${h.id}')">
+        <td style="white-space:nowrap;" title="${esc(h.id)}" onclick="event.stopPropagation();viewHazardDetail('${h.id}')">
+          <span class="id-chip" style="white-space:nowrap;cursor:pointer;">${h.id}</span>
           ${isObs?'<span class="obs-badge" style="margin-left:4px;">OBS</span>':''}
         </td>
-        <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);max-width:0;" title="${esc(h.desc)}">${h.desc}</td>
+        <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;font-weight:600;color:var(--text);cursor:pointer;" title="${esc(h.desc)}">${h.title||h.desc.substring(0,40)}</td>
         <td style="font-size:10.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${esc((h.sources||[]).join(', '))}">${(h.sources||[]).join(', ')}</td>
         <td style="overflow:hidden;white-space:nowrap;max-width:0;" title="${esc(h.dept)}"><span class="dept-pill">${h.dept||'—'}</span></td>
         <td style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0;" title="${esc(h.loc)}">${h.loc||'—'}</td>
@@ -2234,12 +2283,11 @@ function renderHazards(){
         <td style="white-space:nowrap;">${isObs?'<span class="obs-badge">Obsolete</span>':`<span class="sbadge ${stCls}">${status}</span>`}</td>
         <td style="white-space:nowrap;text-align:center;">${resSc?`<span class="rbadge ${rClass(rLevel(resSc))}">${resSc}</span>`:'—'}</td>
         <td style="font-size:10.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;" title="${esc(h.remarks)}">${h.remarks||'—'}</td>
-        <td style="white-space:nowrap;">
+        <td style="white-space:nowrap;" onclick="event.stopPropagation()">
           ${isObs
             ? `<button class="btn btn-primary btn-xs" onclick="openRestore('hz','${h.id}')">↺ Restore</button>`
-            : `<button class="btn btn-ghost btn-xs" onclick="openAddHazard('${h.id}')">Edit</button>
-               <button class="btn btn-ghost btn-xs" onclick="viewHazardDetail('${h.id}')">Risks(${linked})</button>
-               <button class="btn btn-danger btn-xs" onclick="openObsolete('hz','${h.id}')">⊘</button>`}
+            : `<span style="font-size:11px;color:var(--text3);">Risks: <strong style="color:var(--text);">${linked}</strong></span>
+               <button class="btn btn-danger btn-xs" style="margin-left:8px;" onclick="openObsolete('hz','${h.id}')">⊘</button>`}
         </td>
       </tr>`;
     }).join('')
@@ -2259,32 +2307,93 @@ function deleteHazard(id){
 
 function viewHazardDetail(id){
   const h=ST.hazards.find(x=>x.id===id)||{};
-  const risks=ST.risks.filter(r=>r.hzId===id);
-  document.getElementById('m-detail-title').textContent=`${id} — Linked Risks`;
+  const risks=ST.risks.filter(r=>r.hzId===id&&r.status!=='obsolete');
+  const status=calcHazardStatus(id);
+  const stCls={'Open':'sb-open','Monitoring':'sb-monitoring','Closed':'sb-closed'}[status]||'sb-open';
+
+  document.getElementById('m-detail-title').innerHTML=`
+    <span class="id-chip">${h.id}</span>
+    <span style="margin-left:8px;font-size:14px;">${h.title||'Hazard Detail'}</span>
+    <span class="sbadge ${stCls}" style="margin-left:10px;">${status}</span>
+    ${h.status==='obsolete'?'<span class="obs-badge" style="margin-left:6px;">OBSOLETE</span>':''}`;
+
   document.getElementById('m-detail-body').innerHTML=`
-    <div style="margin-bottom:14px;">
-      <div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.7px;">Hazard Description</div>
-      <div style="font-size:13px;color:var(--text);margin-bottom:12px;">${h.desc}</div>
-      <button class="btn btn-primary btn-sm" onclick="closeM('m-detail');openAddRisk(null,'${id}')">+ New Risk Assessment for ${id}</button>
+    <!-- Full hazard info -->
+    <div style="background:rgba(0,112,204,.04);border:1px solid rgba(0,112,204,.15);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin-bottom:10px;">
+        <div>
+          <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:3px;">Department</div>
+          <span class="dept-pill">${h.dept||'—'}</span>
+        </div>
+        <div>
+          <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:3px;">Location</div>
+          <div style="font-size:12px;color:var(--text2);">${h.loc||'—'}</div>
+        </div>
+        <div>
+          <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:3px;">Owner</div>
+          <div style="font-size:12px;color:var(--text2);">${h.owner||'—'}</div>
+        </div>
+        <div>
+          <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:3px;">Date Identified</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2);">${h.date||'—'}</div>
+        </div>
+      </div>
+      <div style="margin-bottom:8px;">
+        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:4px;">Hazard Description</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.5;background:var(--bg3);border-radius:6px;padding:8px 11px;">${h.desc||'—'}</div>
+      </div>
+      ${h.topEvent?`<div style="margin-bottom:8px;">
+        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:4px;">Top Event</div>
+        <div style="font-size:12px;color:var(--text);background:rgba(204,34,54,.05);border:1px solid rgba(204,34,54,.15);border-radius:6px;padding:8px 11px;">${h.topEvent}</div>
+      </div>`:''}
+      ${h.sources&&h.sources.length?`<div>
+        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:4px;">Sources</div>
+        <div style="font-size:11.5px;color:var(--text2);">${h.sources.join(', ')}</div>
+      </div>`:''}
+      ${h.remarks?`<div style="margin-top:8px;">
+        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:3px;">Remarks</div>
+        <div style="font-size:11.5px;color:var(--text3);font-style:italic;">${h.remarks}</div>
+      </div>`:''}
     </div>
+
+    <!-- Actions -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+      ${h.status!=='obsolete'
+        ? `<button class="btn btn-primary btn-sm" onclick="closeM('m-detail');openAddHazard('${h.id}')">✏ Edit Hazard</button>
+           <button class="btn btn-ghost btn-sm" onclick="closeM('m-detail');openAddRisk(null,'${h.id}')">+ New Risk</button>
+           <button class="btn btn-danger btn-sm" onclick="openObsolete('hz','${h.id}')">⊘ Obsolete</button>`
+        : `<button class="btn btn-primary btn-sm" onclick="closeM('m-detail');openRestore('hz','${h.id}')">↺ Restore</button>`}
+    </div>
+
     <div class="sep"></div>
-    ${risks.length?risks.map(r=>`
-      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:11px;margin-bottom:8px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+
+    <!-- Linked risks -->
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:10px;">
+      Risk Assessments (${risks.length})
+    </div>
+    ${risks.length?risks.map(r=>{
+      const sc=rScore(r.prob,r.sev),lv=rLevel(sc);
+      const rsc=rScore(r.resProb,r.resSev),rlv=rLevel(rsc);
+      const rst=calcRiskStatus(r.id);
+      const rstCls={'Open':'sb-open','Monitoring':'sb-monitoring','Closed':'sb-closed','Continue Assessment':'sb-review'}[rst]||'sb-open';
+      return`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:11px;margin-bottom:8px;cursor:pointer;" onclick="closeM('m-detail');openRiskDetailPanel('${r.id}')">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
           <span class="id-chip risk">${r.id}</span>
-          <span style="flex:1;font-size:12px;color:var(--text);">${r.desc}</span>
-          <span class="rbadge ${rClass(rLevel(rScore(r.prob,r.sev)))}">${rScore(r.prob,r.sev)} ${rLevel(rScore(r.prob,r.sev))}</span>
-          ${r.signedOff?`<span style="color:var(--green);font-size:10px;">✅ ${r.signedOff.name}</span>`:'<span style="color:var(--text3);font-size:10px;">⬜ Pending</span>'}
-          <button class="btn btn-ghost btn-xs" onclick="closeM('m-detail');openAddRisk('${r.id}')">Edit</button>
+          <span style="flex:1;font-size:12px;color:var(--text);font-weight:500;">${r.desc}</span>
+          <span class="rbadge ${rClass(lv)}" title="Initial">${sc}</span>
+          <span class="rbadge ${rClass(rlv)}" title="Residual" style="opacity:.7;">${rsc}</span>
+          <span class="sbadge ${rstCls}">${rst}</span>
+          ${r.pendingRevision?'<span style="font-size:9px;background:rgba(245,196,0,.15);color:var(--yellow);border-radius:4px;padding:1px 6px;font-weight:700;">⏳ Pending</span>':''}
         </div>
         <div style="font-size:10.5px;color:var(--text3);">
-          Initial: P${r.prob}×S${r.sev}=${rScore(r.prob,r.sev)} &nbsp;|&nbsp; Residual: P${r.resProb}×S${r.resSev}=${rScore(r.resProb,r.resSev)} &nbsp;|&nbsp; Owner: ${r.owner||'—'} &nbsp;|&nbsp; Target: ${r.target||'—'}
-          &nbsp;|&nbsp; Controls: ${r.ctrlIds.length}
-          &nbsp;|&nbsp; <span class="sbadge ${'sb-'+calcRiskStatus(r.id).toLowerCase()}">${calcRiskStatus(r.id)}</span>
+          Owner: ${r.owner||'—'} &nbsp;·&nbsp; Controls: ${(r.ctrlIds||[]).length} &nbsp;·&nbsp;
+          ${r.signedOff?`<span style="color:var(--green);">✅ Signed off</span>`:'<span style="color:var(--yellow);">⚠ Not signed off</span>'}
+          &nbsp;·&nbsp; <span style="color:var(--text3);font-size:10px;">Click to view →</span>
         </div>
-      </div>`).join(''):`
+      </div>`;
+    }).join(''):`
       <div style="color:var(--text3);text-align:center;padding:24px;font-size:12px;">
-        No risk assessments yet for this hazard.<br>
+        No risk assessments yet.<br>
         <button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="closeM('m-detail');openAddRisk(null,'${id}')">+ Add First Risk Assessment</button>
       </div>`}
   `;
@@ -2351,6 +2460,7 @@ function openAddRisk(id=null, preHzId=null){
   // Clear any previous AI results
   const aiRkRes = document.getElementById('ai-rk-result');
   if(aiRkRes) aiRkRes.style.display='none';
+  _lastCtrlSuggestions = null;
   openM('m-risk');
   updateAiUsageDisplays();
 }
@@ -2522,6 +2632,27 @@ function renderAddlCtrls(){
 }
 
 function saveRisk(){
+  // Revision mode — save into pendingRevision instead of main record
+  if(window._revisionMode){
+    window._revisionMode = false;
+    const hzId=document.getElementById('r-hz').value;
+    const desc=document.getElementById('r-desc').value.trim();
+    if(!hzId||!desc||!rProb||!rSev){toast('Please fill all required fields','error'); window._revisionMode=true; return;}
+    const r=ST.risks.find(x=>x.id===editRkId); if(!r) return;
+    r.pendingRevision.desc=desc;
+    r.pendingRevision.prob=rProb; r.pendingRevision.sev=rSev;
+    r.pendingRevision.resProb=rResProb||rProb; r.pendingRevision.resSev=rResSev||rSev;
+    r.pendingRevision.ctrlIds=[...rLinkedCtrls];
+    r.pendingRevision.addlCtrls=[...rAddlCtrls];
+    r.pendingRevision.owner=document.getElementById('r-owner').value;
+    r.pendingRevision.target=document.getElementById('r-target').value;
+    closeM('m-risk'); autosave(); renderRisks(); updateBadges();
+    toast(`Revision v${r.pendingRevision.version} saved — pending sign-off`,'success');
+    openRiskDetailPanel(editRkId);
+    return;
+  }
+
+  // Normal save
   const hzId=document.getElementById('r-hz').value;
   const desc=document.getElementById('r-desc').value.trim();
   if(!hzId||!desc||!rProb||!rSev){toast('Please fill hazard, description, probability & severity','error');return;}
@@ -2530,21 +2661,27 @@ function saveRisk(){
     hzId, desc,
     prob:rProb, sev:rSev,
     resProb:rResProb||rProb, resSev:rResSev||rSev,
-    existingTxt: '', // controls now added directly to register via rLinkedCtrls
+    existingTxt:'',
     ctrlIds:[...rLinkedCtrls],
-    addlCtrls:[...rAddlCtrls], // stores CTRL-xxx ids of controls added this session
+    addlCtrls:[...rAddlCtrls],
     owner: document.getElementById('r-owner').value,
     target: document.getElementById('r-target').value,
     signedOff: null,
-    events:[], flaggedNew:false
+    events:[], flaggedNew:false,
+    status:'active', obsoleteInfo:null,
+    currentVersion:1, pendingRevision:null, revisions:[]
   };
   if(editRkId){
     const i=ST.risks.findIndex(x=>x.id===editRkId);
     if(i>=0){
       rk.signedOff=ST.risks[i].signedOff;
-      rk.events=ST.risks[i].events;
-      rk.flaggedNew=false;
-      // Merge addlCtrls — keep previously tracked ones plus new ones
+      rk.events=ST.risks[i].events||[];
+      rk.flaggedNew=ST.risks[i].flaggedNew||false;
+      rk.status=ST.risks[i].status||'active';
+      rk.obsoleteInfo=ST.risks[i].obsoleteInfo||null;
+      rk.currentVersion=ST.risks[i].currentVersion||1;
+      rk.pendingRevision=ST.risks[i].pendingRevision||null;
+      rk.revisions=ST.risks[i].revisions||[];
       const prev=ST.risks[i].addlCtrls||[];
       rk.addlCtrls=[...new Set([...prev,...rAddlCtrls])];
       ST.risks[i]=rk;
@@ -2588,7 +2725,7 @@ function renderRisks(){
       const sc=rScore(r.prob,r.sev), lv=rLevel(sc);
       const rsc=rScore(r.resProb,r.resSev), rlv=rLevel(rsc);
       const st=calcRiskStatus(r.id);
-      const stCls={'Open':'sb-open','Monitoring':'sb-monitoring','Closed':'sb-closed','Review':'sb-review'}[st]||'sb-open';
+      const stCls={'Open':'sb-open','Monitoring':'sb-monitoring','Closed':'sb-closed','Review':'sb-review','Continue Assessment':'sb-review'}[st]||'sb-open';
       const ctrls=(r.ctrlIds||[]).map(id=>ST.controls.find(c=>c.id===id)).filter(Boolean);
       const addlCtrls=(r.addlCtrls||[]).map(id=>ST.controls.find(c=>c.id===id)).filter(Boolean);
       const addlHtml=addlCtrls.length
@@ -2639,7 +2776,7 @@ function openRiskDetailPanel(id){
   const sc = rScore(r.prob,r.sev), lv = rLevel(sc);
   const rsc = rScore(r.resProb,r.resSev), rlv = rLevel(rsc);
   const st = calcRiskStatus(r.id);
-  const stCls = {'Open':'sb-open','Monitoring':'sb-monitoring','Closed':'sb-closed','Review':'sb-review'}[st]||'sb-open';
+  const stCls = {'Open':'sb-open','Monitoring':'sb-monitoring','Closed':'sb-closed','Review':'sb-review','Continue Assessment':'sb-review'}[st]||'sb-open';
   const effCls = e=>({'Effective':'eff-effective','Partially Effective':'eff-partially','Not Effective':'eff-not-effective','Not Checked':'eff-not-checked'})[e]||'eff-not-checked';
   const ver = r.currentVersion||1;
   const revisions = r.revisions||[];
@@ -2889,33 +3026,6 @@ function openRevisionEditForm(riskId){
   updateAiUsageDisplays();
 }
 
-// Override saveRisk to handle revision mode
-const _origSaveRisk = saveRisk;
-function saveRisk(){
-  if(!window._revisionMode){ _origSaveRisk(); return; }
-  window._revisionMode = false;
-
-  const hzId=document.getElementById('r-hz').value;
-  const desc=document.getElementById('r-desc').value.trim();
-  if(!hzId||!desc||!rProb||!rSev){toast('Please fill all required fields','error'); window._revisionMode=true; return;}
-
-  const r = ST.risks.find(x=>x.id===editRkId); if(!r) return;
-
-  // Update pendingRevision with edited values
-  r.pendingRevision.desc=desc;
-  r.pendingRevision.prob=rProb; r.pendingRevision.sev=rSev;
-  r.pendingRevision.resProb=rResProb||rProb; r.pendingRevision.resSev=rResSev||rSev;
-  r.pendingRevision.ctrlIds=[...rLinkedCtrls];
-  r.pendingRevision.addlCtrls=[...rAddlCtrls];
-  r.pendingRevision.owner=document.getElementById('r-owner').value;
-  r.pendingRevision.target=document.getElementById('r-target').value;
-
-  closeM('m-risk');
-  autosave(); renderRisks(); updateBadges();
-  toast(`Revision v${r.pendingRevision.version} saved — awaiting sign-off`,'success');
-  openRiskDetailPanel(editRkId);
-}
-
 // ── Sign-off Revision ───────────────────────────────
 function openSignOffRevision(riskId){
   soRiskId = riskId;
@@ -3057,16 +3167,6 @@ function openSignOff(rkId){
   document.getElementById('so-name').value='';
   document.getElementById('so-role').value='';
   openM('m-signoff');
-}
-function confirmSignOff(){
-  const name=document.getElementById('so-name').value.trim();
-  const role=document.getElementById('so-role').value.trim();
-  const date=document.getElementById('so-date').value;
-  if(!name||!role){toast('Enter name and role','error');return;}
-  const r=ST.risks.find(x=>x.id===soRiskId);
-  if(r) r.signedOff={name,role,date};
-  closeM('m-signoff'); autosave(); renderRisks();
-  toast(`${soRiskId} signed off by ${name}`,'success');
 }
 
 // ═══════════════════════════════════════════════════
@@ -3539,7 +3639,24 @@ function saveEvent(){
 }
 
 function renderEvents(){
-  const rows=ST.events;
+  const srch=(document.getElementById('ev-srch')?.value||'').toLowerCase();
+  const fConseq=document.getElementById('ev-f-conseq')?.value||'';
+  const fStatus=document.getElementById('ev-f-status')?.value||'';
+  const fMonth=document.getElementById('ev-f-month')?.value||'';
+  const now=new Date(); const mo=now.getMonth(); const yr=now.getFullYear();
+
+  const rows=ST.events.filter(ev=>{
+    if(srch && !ev.id.toLowerCase().includes(srch) && !ev.desc.toLowerCase().includes(srch) && !(ev.hzId||'').toLowerCase().includes(srch)) return false;
+    if(fConseq && ev.conseq!==fConseq) return false;
+    if(fStatus && ev.status!==fStatus) return false;
+    if(fMonth){
+      const d=new Date(ev.date);
+      if(fMonth==='this' && !(d.getMonth()===mo && d.getFullYear()===yr)) return false;
+      if(fMonth==='last'){const lm=mo===0?11:mo-1,ly=mo===0?yr-1:yr; if(!(d.getMonth()===lm&&d.getFullYear()===ly)) return false;}
+      if(fMonth==='q'){const qStart=Math.floor(mo/3)*3; if(!(d.getFullYear()===yr&&d.getMonth()>=qStart&&d.getMonth()<qStart+3)) return false;}
+    }
+    return true;
+  });
   document.getElementById('ev-tbody').innerHTML=rows.length
     ?rows.map(ev=>{
       const fc=(ev.failedCtrls||[]).map(id=>{const c=ST.controls.find(x=>x.id===id);return c?`<span class="id-chip ctrl" style="margin:1px;">${c.id}</span>`:id;}).join('');
@@ -3594,8 +3711,13 @@ function viewEventDetail(id){
     ${fCtrls.map(c=>`<div style="display:flex;align-items:center;gap:7px;background:rgba(204,34,54,.05);border:1px solid rgba(204,34,54,.18);border-radius:6px;padding:7px 10px;margin-bottom:4px;">
       <span class="id-chip ctrl">${c.id}</span><span style="flex:1;font-size:11px;color:var(--text2);">${c.desc}</span>
       <span class="eff-badge eff-not-effective">Not Effective</span></div>`).join('')}`:''}
-    ${ev.newRiskFlagged?`<div style="font-size:10px;color:var(--text3);margin:10px 0 6px;text-transform:uppercase;letter-spacing:.7px;">New Risk Flagged</div>
-    <div style="background:rgba(107,63,212,.05);border:1px solid rgba(107,63,212,.2);border-radius:7px;padding:9px;font-size:12px;color:var(--text2);">◈ ${ev.newRiskFlagged}</div>`:''}
+    ${ev.newRiskFlagged?`
+    <div class="sep"></div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.7px;">New Risk Identified</div>
+    <div style="background:rgba(107,63,212,.05);border:1px solid rgba(107,63,212,.2);border-radius:7px;padding:9px 12px;display:flex;align-items:center;gap:10px;">
+      <span style="flex:1;font-size:12px;color:var(--text2);">◈ ${ev.newRiskFlagged}</span>
+      ${(()=>{const linked=ST.risks.find(r=>(r.events||[]).includes(ev.id)&&r.flaggedNew);return linked?`<button class="btn btn-primary btn-sm" onclick="closeM('m-detail');openRiskDetailPanel('${linked.id}')">Open Risk ↗</button>`:`<button class="btn btn-primary btn-sm" onclick="closeM('m-detail');openAddRisk(null,'${ev.hzId}')">+ Create Risk</button>`;})()}
+    </div>`:''}
   `;
   openM('m-detail');
 }
@@ -3916,13 +4038,18 @@ function buildBowtieSVG(hz, threats, consequences){
     <text x="${CX}" y="${teY + 30}" text-anchor="middle" font-size="9.5" font-weight="700"
       fill="#1a2033" font-family="'JetBrains Mono',sans-serif">${hz.id}</text>
 
-    <foreignObject x="${teX + 6}" y="${teY + 38}" width="${teW - 12}" height="${teH - 46}">
+    <foreignObject x="${teX + 6}" y="${teY + 38}" width="${teW - 12}" height="${teH - 54}">
       <div xmlns="http://www.w3.org/1999/xhtml"
-        style="font-size:8px;color:#4a5570;font-family:'DM Sans',sans-serif;text-align:center;line-height:1.3;overflow:hidden;">
-        ${hz.desc.substring(0,60)}${hz.desc.length>60?'…':''}
+        style="font-size:8.5px;color:#1a2033;font-family:'DM Sans',sans-serif;text-align:center;line-height:1.3;overflow:hidden;font-weight:600;">
+        ${(hz.topEvent||hz.desc).substring(0,70)}${(hz.topEvent||hz.desc).length>70?'…':''}
       </div>
     </foreignObject>
-
+    ${hz.topEvent?`<foreignObject x="${teX + 4}" y="${teY + teH - 34}" width="${teW - 8}" height="24">
+      <div xmlns="http://www.w3.org/1999/xhtml"
+        style="font-size:7.5px;color:#8a94aa;font-family:'DM Sans',sans-serif;text-align:center;line-height:1.3;overflow:hidden;font-style:italic;">
+        ${hz.desc.substring(0,55)}
+      </div>
+    </foreignObject>`:''}
     <text x="${CX}" y="${teY + teH - 6}" text-anchor="middle" font-size="8" font-weight="700"
       fill="${hzStatusColor}" font-family="'Rajdhani',sans-serif">${hzStatus.toUpperCase()}</text>
   `);
@@ -4150,42 +4277,6 @@ function renderProgramme(){
   document.getElementById('prog-tab-title').textContent = titles[activeProgTab];
   renderProgrammeSummary();
   renderProgrammeTable();
-}
-
-function renderProgrammeSummary(){
-  const items = ST.programme[activeProgTab].filter(i=>i.name);
-  const curMonth = new Date().getMonth(); // 0=Jan
-  let sched=0, done=0, overdue=0;
-  items.forEach(item=>{
-    MONTHS.forEach((m,mi)=>{
-      const v = (item.months||{})[m];
-      if(!v) return;
-      const st = item.status?.[m] || 'sched';
-      if(st==='done') done++;
-      else if(st==='overdue') overdue++;
-      else if(mi <= curMonth) { if(v && v!=='—') sched++; }
-    });
-  });
-  const total = sched+done+overdue;
-  const pct = total ? Math.round(done/(done+overdue+sched)*100) : 0;
-  document.getElementById('prog-summary').innerHTML = `
-    <div class="stat gr" style="padding:10px 14px;min-width:120px;">
-      <div class="stat-lbl">Completed</div>
-      <div class="stat-val" style="font-size:22px;">${done}</div>
-    </div>
-    <div class="stat re" style="padding:10px 14px;min-width:120px;">
-      <div class="stat-lbl">Overdue</div>
-      <div class="stat-val" style="font-size:22px;">${overdue}</div>
-    </div>
-    <div class="stat ye" style="padding:10px 14px;min-width:120px;">
-      <div class="stat-lbl">Pending (this year)</div>
-      <div class="stat-val" style="font-size:22px;">${sched}</div>
-    </div>
-    <div class="stat ac" style="padding:10px 14px;min-width:140px;">
-      <div class="stat-lbl">% Complete</div>
-      <div class="stat-val" style="font-size:22px;">${pct}%</div>
-      <div class="prog-bar" style="margin-top:4px;"><div class="prog-fill" style="width:${pct}%;background:var(--green);"></div></div>
-    </div>`;
 }
 
 function renderProgrammeTable(){
@@ -4450,52 +4541,56 @@ function saveProgItem(){
 // ═══════════════════════════════════════════════════
 function renderDashboard(){
   document.getElementById('dash-date').textContent=new Date().toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
-  document.getElementById('d-hz').textContent=ST.hazards.length;
-  document.getElementById('d-rk').textContent=ST.risks.filter(r=>calcRiskStatus(r.id)!=='Closed').length;
-  document.getElementById('d-ct').textContent=ST.controls.length;
+  document.getElementById('d-hz').textContent=ST.hazards.filter(h=>h.status!=='obsolete').length;
+  document.getElementById('d-rk').textContent=ST.risks.filter(r=>r.status!=='obsolete'&&calcRiskStatus(r.id)!=='Closed').length;
+  document.getElementById('d-ct').textContent=ST.controls.filter(c=>c.status!=='obsolete').length;
   const mo=new Date().getMonth();
   document.getElementById('d-ev').textContent=ST.events.filter(e=>new Date(e.date).getMonth()===mo).length;
 
-  // Top hazards
-  const topHz=[...ST.hazards].map(h=>{
-    const risks=ST.risks.filter(r=>r.hzId===h.id);
+  // Top hazards — clickable to open detail
+  const topHz=[...ST.hazards].filter(h=>h.status!=='obsolete').map(h=>{
+    const risks=ST.risks.filter(r=>r.hzId===h.id&&r.status!=='obsolete');
     const maxSc=risks.length?Math.max(...risks.map(r=>rScore(r.prob,r.sev))):0;
     return{...h,maxSc,lv:rLevel(maxSc)};
   }).sort((a,b)=>b.maxSc-a.maxSc).slice(0,10);
 
   const thEl=document.getElementById('d-top-hz');
   thEl.innerHTML=topHz.length?topHz.map(h=>`
-    <div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--border);">
-      <span class="id-chip">${h.id}</span>
-      <span style="flex:1;font-size:11.5px;color:var(--text2);">${h.desc.substring(0,55)}</span>
+    <div style="display:flex;align-items:center;gap:7px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="viewHazardDetail('${h.id}')" title="Click to view ${h.id}">
+      <span class="id-chip" style="white-space:nowrap;">${h.id}</span>
+      <span style="flex:1;font-size:11.5px;color:var(--text2);">${(h.title||h.desc).substring(0,50)}</span>
       <span class="rbadge ${rClass(h.lv)}">${h.maxSc}</span>
-      <span class="sbadge ${'sb-'+calcHazardStatus(h.id).toLowerCase()}">${calcHazardStatus(h.id)}</span>
+      <span style="font-size:10px;color:var(--text3);">›</span>
     </div>`).join(''):'<div style="color:var(--text3);font-size:12px;text-align:center;padding:18px;">No data</div>';
 
-  // Top risks by initial score
-  const topRk=[...ST.risks].sort((a,b)=>rScore(b.prob,b.sev)-rScore(a.prob,a.sev)).slice(0,10);
+  // Top risks — clickable to open detail panel
+  const topRk=[...ST.risks].filter(r=>r.status!=='obsolete').sort((a,b)=>rScore(b.prob,b.sev)-rScore(a.prob,a.sev)).slice(0,10);
   const trEl=document.getElementById('d-top-rk');
   trEl.innerHTML=topRk.length?topRk.map(r=>{
     const sc=rScore(r.prob,r.sev),lv=rLevel(sc);
-    return`<div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--border);">
-      <span class="id-chip risk">${r.id}</span>
+    return`<div style="display:flex;align-items:center;gap:7px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="openRiskDetailPanel('${r.id}')" title="Click to view ${r.id}">
+      <span class="id-chip risk" style="white-space:nowrap;">${r.id}</span>
       <span style="flex:1;font-size:11.5px;color:var(--text2);">${r.desc.substring(0,50)}</span>
       <span class="rbadge ${rClass(lv)}">${sc}</span>
+      <span style="font-size:10px;color:var(--text3);">›</span>
     </div>`;
   }).join(''):'<div style="color:var(--text3);font-size:12px;text-align:center;padding:18px;">No data</div>';
 
-  // Dept overview
+  // Dept overview — clickable to filter risk register by dept
   const deptEl=document.getElementById('d-depts');
   const deptData=ST.lists.departments.map(d=>{
-    const dRisks=ST.risks.filter(r=>{ const h=ST.hazards.find(x=>x.id===r.hzId); return h&&h.dept===d; });
+    const dRisks=ST.risks.filter(r=>r.status!=='obsolete'&&(()=>{const h=ST.hazards.find(x=>x.id===r.hzId);return h&&h.dept===d;})());
     const maxSc=dRisks.length?Math.max(...dRisks.map(r=>rScore(r.prob,r.sev))):0;
     return{dept:d,count:dRisks.length,maxSc,lv:rLevel(maxSc)};
   }).filter(d=>d.count>0);
   deptEl.innerHTML=deptData.length?deptData.map(d=>`
-    <div style="margin-bottom:10px;">
+    <div style="margin-bottom:10px;cursor:pointer;" onclick="navTo('hazards',{dept:'${d.dept}'})" title="Click to filter Hazard Register by ${d.dept}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
         <span class="dept-pill">${d.dept}</span>
-        <span class="rbadge ${rClass(d.lv)}">${d.count} risks</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="rbadge ${rClass(d.lv)}">${d.count} risks</span>
+          <span style="font-size:10px;color:var(--text3);">›</span>
+        </div>
       </div>
       <div class="prog-bar"><div class="prog-fill" style="width:${Math.min(100,d.maxSc*4)}%;background:${rColor(d.maxSc)};"></div></div>
     </div>`).join(''):'<div style="color:var(--text3);font-size:12px;text-align:center;padding:18px;">No data</div>';
@@ -5589,34 +5684,46 @@ Maximum 5 items. Only suggest controls that genuinely apply. Return [] if none f
 
   if(!suggestions){
     el.innerHTML=`<div class="ai-result"><div class="ai-result-body" style="color:var(--red);font-size:12px;">AI response error. Try again.</div></div>`;
+    el.style.display='block';
   } else if(!suggestions.length){
+    _lastCtrlSuggestions = null;
     el.innerHTML=`<div class="ai-result"><div class="ai-result-head">✦ AI Assist</div><div class="ai-result-body" style="color:var(--text3);font-size:12px;">No matching controls found. Add new controls in the Additional Controls section.</div></div>`;
+    el.style.display='block';
   } else {
-    el.innerHTML=`<div class="ai-result">
-      <div class="ai-result-head">✦ Suggested Controls <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;">— click to link</span></div>
-      <div class="ai-result-body">${suggestions.map(s=>{
-        const ctrl=ST.controls.find(c=>c.id===s.id);
-        const linked=rLinkedCtrls.includes(s.id);
-        return `<div class="ai-suggestion" onclick="${linked?'':'aiLinkControl(\''+s.id+'\')'}" style="${linked?'opacity:.5;cursor:default;':''}">
-          <span class="ai-sug-id">${s.id}</span>
-          <div class="ai-sug-body">
-            <div class="ai-sug-desc">${ctrl?ctrl.desc:s.desc}</div>
-            <div class="ai-sug-reason">${s.reason}</div>
-            <div class="ai-sug-action">${linked?'✓ Already linked':'+ Click to link'}</div>
-          </div></div>`;
-      }).join('')}</div></div>`;
+    _lastCtrlSuggestions = suggestions;
+    renderCtrlSuggestions(suggestions);
   }
-  el.style.display='block';
 }
+
+// Cache last control suggestions to avoid re-calling API on link
+let _lastCtrlSuggestions = null;
 
 function aiLinkControl(ctrlId){
   if(!rLinkedCtrls.includes(ctrlId)){
     rLinkedCtrls.push(ctrlId);
     renderLinkedCtrls();
     toast(`${ctrlId} linked`,'success');
-    // Refresh to show new linked state
-    setTimeout(aiSuggestControls, 300);
+    // Re-render cached suggestions panel without a new API call
+    if(_lastCtrlSuggestions) renderCtrlSuggestions(_lastCtrlSuggestions);
   }
+}
+
+function renderCtrlSuggestions(suggestions){
+  const el = document.getElementById('ai-rk-result'); if(!el) return;
+  el.innerHTML=`<div class="ai-result">
+    <div class="ai-result-head">✦ Suggested Controls <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;">— click to link</span></div>
+    <div class="ai-result-body">${suggestions.map(s=>{
+      const ctrl=ST.controls.find(c=>c.id===s.id);
+      const linked=rLinkedCtrls.includes(s.id);
+      return `<div class="ai-suggestion" onclick="${linked?'':'aiLinkControl(\''+s.id+'\')'}" style="${linked?'opacity:.5;cursor:default;':''}">
+        <span class="ai-sug-id">${s.id}</span>
+        <div class="ai-sug-body">
+          <div class="ai-sug-desc">${ctrl?ctrl.desc:s.desc}</div>
+          <div class="ai-sug-reason">${s.reason}</div>
+          <div class="ai-sug-action">${linked?'✓ Already linked':'+ Click to link'}</div>
+        </div></div>`;
+    }).join('')}</div></div>`;
+  el.style.display='block';
 }
 
 // ── Feature 2b: Risk Description Improver ──────────
@@ -5721,6 +5828,41 @@ Return ONLY valid JSON, nothing else:
 function aiOpenExistingControl(ctrlId){
   closeM('m-ctrl');
   setTimeout(()=>openAddCtrl(ctrlId),100);
+}
+
+// ── Feature: Hazard Title Suggestion ────────────────
+async function aiSuggestHazardTitle(){
+  const desc = document.getElementById('h-desc').value.trim();
+  const topEvent = document.getElementById('h-top-event').value.trim();
+  if(!desc && !topEvent){ toast('Enter a hazard description first','error'); return; }
+  aiSetLoading('ai-hz-title-btn','ai-hz-title-result', true);
+
+  const result = await aiCall(
+    `Hazard description: "${desc||topEvent}"${topEvent?`\nTop event: "${topEvent}"`:''}`,
+    `You are an aviation SMS analyst for a GCAA Part 145 MRO.
+Generate 3 short hazard title options (5-8 words each) that:
+- Are specific and descriptive
+- Follow aviation SMS naming conventions
+- Can be used as a short reference title in a register
+Return ONLY valid JSON, nothing else:
+[{"title":"<option 1>"},{"title":"<option 2>"},{"title":"<option 3>"}]`
+  );
+
+  aiSetLoading('ai-hz-title-btn','ai-hz-title-result', false);
+  const el = document.getElementById('ai-hz-title-result'); if(!el) return;
+  const suggestions = result ? aiParseJSON(result) : null;
+
+  if(!suggestions || !suggestions.length){
+    el.innerHTML=`<div style="color:var(--red);font-size:11px;">Could not generate titles. Try again.</div>`;
+  } else {
+    el.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:6px;">
+      ${suggestions.map(s=>`
+        <button class="btn btn-ghost btn-sm" style="border-color:rgba(107,63,212,.3);color:var(--purple);font-size:11px;" onclick="document.getElementById('h-title').value='${s.title.replace(/'/g,"\\'")}';document.getElementById('ai-hz-title-result').style.display='none';">
+          ${s.title}
+        </button>`).join('')}
+    </div>`;
+  }
+  el.style.display='block';
 }
 
 // ═══════════════════════════════════════════════════
