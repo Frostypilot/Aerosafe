@@ -546,6 +546,7 @@ table.resizable{table-layout:fixed;}
     <div class="nav-section">
       <div class="nav-label">Planning</div>
       <div class="nav-item" data-page="programme" onclick="nav(this)"><span class="ni">📅</span><span class="nav-item-text">Safety Programme</span></div>
+      <div class="nav-item" data-page="manpower" onclick="nav(this)"><span class="ni">👥</span><span class="nav-item-text">Manpower Plan</span></div>
     </div>
     <div class="nav-section">
       <div class="nav-label">Analysis</div>
@@ -918,10 +919,129 @@ table.resizable{table-layout:fixed;}
       </div>
     </div>
 
+    <!-- ══════════════ MANPOWER PLAN ══════════════ -->
+    <div class="page" id="page-manpower">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);">Safety Department Manpower Plan</div>
+          <div style="font-size:11px;color:var(--text3);">ICAO Annex 19 · GCAA resource adequacy justification</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div class="tabs" style="margin-bottom:0;">
+            <div class="tab active" id="mp-tab-setup" onclick="switchMpView('setup')">⚙ Setup</div>
+            <div class="tab"        id="mp-tab-plan"  onclick="switchMpView('plan')">📊 Capacity Plan</div>
+          </div>
+          <select class="fs" id="mp-year-sel" style="width:90px;" onchange="renderManpowerSetup()">
+            <option>2025</option><option selected>2026</option><option>2027</option><option>2028</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ── SETUP VIEW ── -->
+      <div id="mp-view-setup">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+          <div class="card">
+            <div class="card-head"><span class="card-title">🗓 Working Week</span></div>
+            <div class="card-body">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:8px;">Working Days</div>
+              <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+                <label style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" class="mp-day-chk" data-day="Mon" checked onchange="saveMpSetup()" style="accent-color:var(--accent);width:16px;height:16px;"><span style="font-size:10.5px;font-weight:600;">Mon</span></label>
+                <label style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" class="mp-day-chk" data-day="Tue" checked onchange="saveMpSetup()" style="accent-color:var(--accent);width:16px;height:16px;"><span style="font-size:10.5px;font-weight:600;">Tue</span></label>
+                <label style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" class="mp-day-chk" data-day="Wed" checked onchange="saveMpSetup()" style="accent-color:var(--accent);width:16px;height:16px;"><span style="font-size:10.5px;font-weight:600;">Wed</span></label>
+                <label style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" class="mp-day-chk" data-day="Thu" checked onchange="saveMpSetup()" style="accent-color:var(--accent);width:16px;height:16px;"><span style="font-size:10.5px;font-weight:600;">Thu</span></label>
+                <label style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" class="mp-day-chk" data-day="Fri" checked onchange="saveMpSetup()" style="accent-color:var(--accent);width:16px;height:16px;"><span style="font-size:10.5px;font-weight:600;">Fri</span></label>
+                <label style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" class="mp-day-chk" data-day="Sat" onchange="saveMpSetup()" style="accent-color:var(--accent);width:16px;height:16px;"><span style="font-size:10.5px;font-weight:600;">Sat</span></label>
+                <label style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" class="mp-day-chk" data-day="Sun" onchange="saveMpSetup()" style="accent-color:var(--accent);width:16px;height:16px;"><span style="font-size:10.5px;font-weight:600;">Sun</span></label>
+              </div>
+              <div class="g2">
+                <div class="fg"><label class="fl">Work Start</label><input type="time" class="fi" id="mp-start" value="08:00" onchange="saveMpSetup()"></div>
+                <div class="fg"><label class="fl">Work End</label><input type="time" class="fi" id="mp-end" value="17:00" onchange="saveMpSetup()"></div>
+              </div>
+              <div class="fg"><label class="fl">Lunch Break (minutes)</label><input type="number" class="fi" id="mp-lunch" value="60" min="0" max="120" onchange="saveMpSetup()"></div>
+              <div style="background:rgba(0,112,204,.06);border:1px solid rgba(0,112,204,.15);border-radius:6px;padding:9px 12px;">
+                <div style="font-size:10px;color:var(--text3);margin-bottom:2px;">Productive hours per day</div>
+                <div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:var(--accent);" id="mp-hrs-day-display">8.0 hrs</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><span class="card-title">📋 Leave & Absence Defaults</span><span style="font-size:10px;color:var(--text3);">Applied to all staff unless overridden</span></div>
+            <div class="card-body">
+              <div class="fg"><label class="fl">Annual Leave Entitlement (days)</label><input type="number" class="fi" id="mp-def-leave" value="30" min="0" max="60" onchange="saveMpSetup()"></div>
+              <div class="fg"><label class="fl">Training Allocation (days)</label><input type="number" class="fi" id="mp-def-training" value="5" min="0" max="30" onchange="saveMpSetup()"></div>
+              <div class="fg"><label class="fl">Sick Leave Provision (days)</label><input type="number" class="fi" id="mp-def-sick" value="5" min="0" max="30" onchange="saveMpSetup()"><div style="font-size:10px;color:var(--text3);margin-top:3px;">Fixed average planning buffer.</div></div>
+              <div class="fg"><label class="fl">Other Planned Absence (days)</label><input type="number" class="fi" id="mp-def-other" value="0" min="0" max="30" onchange="saveMpSetup()"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><span class="card-title">🏖 Public Holidays <span id="mp-ph-year-lbl" style="font-weight:400;font-size:11px;color:var(--text3);"></span></span><button class="btn btn-ghost btn-xs" onclick="addMpHoliday()">+ Add</button></div>
+            <div class="card-body">
+              <div style="font-size:10.5px;color:var(--text3);margin-bottom:10px;">Only holidays on working days reduce capacity. Enter company-observed holidays only.</div>
+              <div id="mp-holidays-list"></div>
+              <div id="mp-ph-count" style="font-size:11px;color:var(--text3);margin-top:8px;"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><span class="card-title">👤 Safety Staff</span><button class="btn btn-ghost btn-xs" onclick="addMpStaff()">+ Add</button></div>
+            <div class="card-body">
+              <div style="font-size:10.5px;color:var(--text3);margin-bottom:10px;">Leave blank to use org defaults above. Override per person where entitlements differ.</div>
+              <div id="mp-staff-list-setup"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── PLAN VIEW ── -->
+      <div id="mp-view-plan" style="display:none;">
+        <div class="stats-row s4" style="margin-bottom:16px;" id="mp-plan-stats"></div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-head"><span class="card-title">📊 Staff Capacity Calculation</span></div>
+          <div class="tbl-wrap">
+            <table style="table-layout:fixed;width:100%;min-width:700px;">
+              <colgroup><col style="width:150px;"><col style="width:130px;"><col style="width:90px;"><col style="width:80px;"><col style="width:80px;"><col style="width:80px;"><col style="width:100px;"><col style="width:80px;"><col style="width:110px;"></colgroup>
+              <thead><tr><th>Name</th><th>Role</th><th>Working Days</th><th>Less Leave</th><th>Less Training</th><th>Less Sick</th><th>Available Days</th><th>Daily Hrs</th><th>Available Hours</th></tr></thead>
+              <tbody id="mp-capacity-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-head"><span class="card-title">📋 SMS Workload Estimate</span><button class="btn btn-ghost btn-xs" onclick="addMpWorkload()">+ Add Activity</button></div>
+          <div class="card-body">
+            <div id="mp-workload-rows"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border);margin-top:6px;">
+              <span style="font-size:12px;font-weight:700;">Total SMS Workload</span>
+              <span style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:var(--accent);" id="mp-workload-total">0 hrs</span>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-head"><span class="card-title">✅ Staffing Sufficiency</span></div>
+          <div class="card-body" id="mp-verdict-body"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">✍ Accountable Manager Sign-Off</span></div>
+          <div class="card-body">
+            <div class="g2">
+              <div class="fg"><label class="fl">Reviewed & Approved By</label><input class="fi" id="mp-so-name" placeholder="Full name" onchange="saveMpSignoff()"></div>
+              <div class="fg"><label class="fl">Date</label><input type="date" class="fi" id="mp-so-date" onchange="saveMpSignoff()"></div>
+            </div>
+            <div class="fg"><label class="fl">Comments (optional)</label><textarea class="fta" id="mp-so-comments" style="min-height:55px;" placeholder="e.g. Reviewed at SRB Jan 2026 — staffing confirmed adequate" onchange="saveMpSignoff()"></textarea></div>
+            <button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="exportMpReport()">⬇ Export Report</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
     <!-- ══════════════ BOW-TIE ══════════════ -->
     <div class="page" id="page-bowtie">
-
-      <!-- Hazard selector + legend row -->
+        <!-- ══════════════ BOW-TIE ══════════════ -->
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:8px;">
           <label style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);white-space:nowrap;">Select Hazard</label>
@@ -970,6 +1090,7 @@ table.resizable{table-layout:fixed;}
         </div>
       </div>
 
+    </div>
     </div>
 
     <!-- ══════════════ EVENT LOG ══════════════ -->
@@ -1454,9 +1575,9 @@ table.resizable{table-layout:fixed;}
 
 <!-- PROGRAMME CELL COMPLETION -->
 <div class="modal-overlay" id="m-prog-cell">
-  <div class="modal" style="max-width:480px;">
+  <div class="modal" style="max-width:500px;">
     <div class="modal-head">
-      <div class="modal-title">📅 Record Completion</div>
+      <div class="modal-title" id="pc-modal-title">📅 Programme Activity</div>
       <button class="modal-x" onclick="closeM('m-prog-cell')">✕</button>
     </div>
     <div class="modal-body">
@@ -1470,32 +1591,64 @@ table.resizable{table-layout:fixed;}
         </div>
       </div>
 
-      <!-- Existing completions -->
+      <!-- Existing completions and deferrals -->
       <div id="pc-existing"></div>
 
-      <!-- New completion entry -->
-      <div style="font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">Record New Completion</div>
-      <div class="g2">
-        <div class="fg">
-          <label class="fl">Day of Month <span style="color:var(--red);">*</span></label>
-          <input class="fi" id="pc-date" type="number" min="1" max="31" placeholder="e.g. 15" style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;text-align:center;">
-          <div style="font-size:10px;color:var(--text3);margin-top:3px;">Enter just the day number — e.g. 15 for the 15th</div>
+      <!-- Tab strip -->
+      <div class="tabs" style="margin-bottom:14px;">
+        <div class="tab active" id="pc-tab-done" onclick="switchPcTab('done')">✅ Record Completion</div>
+        <div class="tab" id="pc-tab-missed" onclick="switchPcTab('missed')">📝 Record Missed / Deferred</div>
+      </div>
+
+      <!-- TAB: Completion -->
+      <div id="pc-pane-done">
+        <div class="g2">
+          <div class="fg">
+            <label class="fl">Day of Month <span style="color:var(--red);">*</span></label>
+            <input class="fi" id="pc-date" type="number" min="1" max="31" placeholder="e.g. 15" style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;text-align:center;">
+            <div style="font-size:10px;color:var(--text3);margin-top:3px;">Enter just the day number — e.g. 15 for the 15th</div>
+          </div>
+          <div class="fg">
+            <label class="fl">Responsible Person</label>
+            <input class="fi" id="pc-by-person" placeholder="e.g. SM, SO">
+          </div>
         </div>
         <div class="fg">
-          <label class="fl">Responsible Person</label>
-          <input class="fi" id="pc-by-person" placeholder="e.g. SM, SO">
+          <label class="fl">Remarks <span style="color:var(--text3);font-weight:400;">(what was done, any observations)</span></label>
+          <textarea class="fta" id="pc-remarks" style="min-height:70px;" placeholder="e.g. SAG meeting held, 8 attendees. Minutes circulated same day."></textarea>
         </div>
       </div>
-      <div class="fg">
-        <label class="fl">Remarks <span style="color:var(--text3);font-weight:400;">(what was done, any observations)</span></label>
-        <textarea class="fta" id="pc-remarks" style="min-height:70px;" placeholder="e.g. SAG meeting held, 8 attendees. Minutes circulated same day. Action items logged in Q-Pulse."></textarea>
+
+      <!-- TAB: Missed / Deferred -->
+      <div id="pc-pane-missed" style="display:none;">
+        <div style="background:rgba(245,196,0,.07);border:1px solid rgba(245,196,0,.25);border-radius:7px;padding:9px 12px;font-size:11.5px;color:var(--text2);margin-bottom:12px;">
+          Use this to document why the activity was not completed and optionally reschedule it to another month. This creates an auditable record.
+        </div>
+        <div class="fg">
+          <label class="fl">Reason Not Completed <span style="color:var(--red);">*</span></label>
+          <textarea class="fta" id="pc-missed-reason" style="min-height:70px;" placeholder="e.g. SRB not held in January — Accountable Manager unavailable due to travel. Rescheduled to February."></textarea>
+        </div>
+        <div class="g2">
+          <div class="fg">
+            <label class="fl">Recorded By</label>
+            <input class="fi" id="pc-missed-by" placeholder="e.g. SM">
+          </div>
+          <div class="fg">
+            <label class="fl">Reschedule to Month <span style="color:var(--text3);font-weight:400;">(optional)</span></label>
+            <select class="fs" id="pc-reschedule-month">
+              <option value="">— No reschedule —</option>
+            </select>
+          </div>
+        </div>
       </div>
+
       <input type="hidden" id="pc-idx">
       <input type="hidden" id="pc-month">
+      <input type="hidden" id="pc-active-tab" value="done">
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeM('m-prog-cell')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveProgCompletion()">✅ Record Completion</button>
+      <button class="btn btn-primary" id="pc-save-btn" onclick="saveProgEntry()">✅ Record Completion</button>
     </div>
   </div>
 </div>
@@ -1930,6 +2083,8 @@ function sanitiseData(){
     if(!Array.isArray(e.failedCtrls)) e.failedCtrls=[];
     if(!e.desc) e.desc='';
   });
+  // Manpower plan — lazy-inited by initMpData on first use
+  if(!ST.mpSetup) ST.mpSetup = null;
 }
 
 // ═══════════════════════════════════════════════════
@@ -2085,6 +2240,7 @@ function nav(el){
   if(pg==='risks')     renderRisks();
   if(pg==='controls')  renderControls();
   if(pg==='programme') renderProgramme();
+  if(pg==='manpower')  renderManpowerSetup();
   if(pg==='bowtie')    renderBowtie();
   if(pg==='events')    renderEvents();
   if(pg==='settings')  renderSettings();
@@ -4268,13 +4424,16 @@ function switchProgTab(tab){
   ['prog','audit','dept'].forEach(t=>{
     document.getElementById(`pt-${t}`)?.classList.toggle('active', t===tab);
   });
+  const titles = {prog:'Safety Programme 2026', audit:'SMS Audit Schedule 2026', dept:'Safety Department Schedule 2026'};
+  document.getElementById('prog-tab-title').textContent = titles[tab]||'Safety Programme 2026';
+  renderProgrammeSummary();
   renderProgrammeTable();
 }
 
 function renderProgramme(){
   initProgrammeData();
   const titles = {prog:'Safety Programme 2026', audit:'SMS Audit Schedule 2026', dept:'Safety Department Schedule 2026'};
-  document.getElementById('prog-tab-title').textContent = titles[activeProgTab];
+  document.getElementById('prog-tab-title').textContent = titles[activeProgTab]||'Safety Programme 2026';
   renderProgrammeSummary();
   renderProgrammeTable();
 }
@@ -4293,12 +4452,15 @@ function renderProgrammeTable(){
     if(!fStatus) return true;
     const months = item.months||{};
     const completions = item.completions||{};
+    const deferrals = item.deferrals||{};
     return MONTHS.some((m,mi)=>{
       const v = months[m]; if(!v||v==='-') return false;
       const done = (completions[m]||[]).length > 0;
+      const def = (deferrals[m]||[]).length > 0;
       if(fStatus==='done') return done;
-      if(fStatus==='overdue') return !done && mi < curMonth;
+      if(fStatus==='overdue') return !done && !def && mi < curMonth;
       if(fStatus==='due') return !done && mi === curMonth;
+      if(fStatus==='deferred') return def && !done;
       return false;
     });
   }
@@ -4323,15 +4485,23 @@ function renderProgrammeTable(){
     const monthCells = MONTHS.map((m,mi)=>{
       const scheduled = months[m] && months[m] !== '-';
       const done = completions[m] && completions[m].length > 0;
-      const isOverdue = !done && scheduled && mi < curMonth;
+      const deferred = (item.deferrals||{})[m] && item.deferrals[m].length > 0;
+      const rescheduled = deferred && item.deferrals[m].some(d=>d.rescheduledTo);
+      const isOverdue = !done && !deferred && scheduled && mi < curMonth;
       const isThisMonth = mi === curMonth;
       let cellHtml;
       if(done){
         cellHtml = `<div class="prog-cell done" onclick="openProgCell(${idx},'${m}')" title="Completed — click to view" style="flex-direction:column;height:auto;min-height:28px;padding:2px 0;gap:1px;">${completions[m].map(c=>`<span style="font-size:9.5px;font-weight:700;line-height:1.3;">${c.date}</span>`).join('')}</div>`;
+      } else if(deferred){
+        const icon = rescheduled ? '↗' : '📝';
+        const tip = rescheduled
+          ? `Missed — rescheduled to ${MONTH_LABELS[MONTHS.indexOf(item.deferrals[m].find(d=>d.rescheduledTo).rescheduledTo)]}`
+          : 'Missed with substantiation — click to view';
+        cellHtml = `<div class="prog-cell" onclick="openProgCell(${idx},'${m}')" title="${tip}" style="background:rgba(245,196,0,.12);border:1px solid rgba(245,196,0,.4);color:var(--yellow);font-size:13px;cursor:pointer;">${icon}</div>`;
       } else if(scheduled){
         const cls = isOverdue ? 'overdue' : 'sched';
         const extra = isThisMonth&&!isOverdue ? 'border-color:var(--accent);border-width:2px;' : '';
-        cellHtml = `<div class="prog-cell ${cls}" onclick="openProgCell(${idx},'${m}')" title="${isOverdue?'OVERDUE':'Scheduled'} — click to record" style="${extra}">${isOverdue?'!':'✓'}</div>`;
+        cellHtml = `<div class="prog-cell ${cls}" onclick="openProgCell(${idx},'${m}')" title="${isOverdue?'OVERDUE — click to record or substantiate':'Scheduled — click to record'}" style="${extra}">${isOverdue?'!':'✓'}</div>`;
       } else {
         cellHtml = `<div class="prog-cell empty" onclick="openProgCell(${idx},'${m}')" title="Not scheduled — click for ad-hoc">—</div>`;
       }
@@ -4356,22 +4526,39 @@ function openProgCell(idx, month){
   if(!item || item.section !== undefined) return;
 
   const completions = (item.completions || {})[month] || [];
+  const deferrals = (item.deferrals || {})[month] || [];
   const monthLabel = MONTH_LABELS[MONTHS.indexOf(month)];
   const scheduled = (item.months||{})[month];
 
-  // Build existing completions list
-  const existingHtml = completions.length ? `
+  // Build existing completions + deferrals
+  const existingHtml = (completions.length || deferrals.length) ? `
     <div style="margin-bottom:12px;">
-      <div style="font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;">Recorded Completions (${completions.length})</div>
-      ${completions.map((c,ci)=>`
-        <div style="display:flex;align-items:center;gap:8px;background:rgba(0,147,79,.07);border:1px solid rgba(0,147,79,.2);border-radius:6px;padding:6px 10px;margin-bottom:4px;">
-          <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--green);font-size:14px;min-width:26px;">${c.date}</span>
-          ${c.by?`<span style="font-size:10px;background:rgba(0,112,204,.08);color:var(--accent);border-radius:3px;padding:1px 6px;">${c.by}</span>`:''}
-          <span style="flex:1;font-size:11px;color:var(--text2);">${c.remarks||'—'}</span>
-          <button class="btn btn-danger btn-xs" onclick="removeProgCompletion(${idx},'${month}',${ci})">✕</button>
-        </div>`).join('')}
+      ${completions.length ? `
+        <div style="font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;">Completions (${completions.length})</div>
+        ${completions.map((c,ci)=>`
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(0,147,79,.07);border:1px solid rgba(0,147,79,.2);border-radius:6px;padding:6px 10px;margin-bottom:4px;">
+            <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--green);font-size:14px;min-width:26px;">${c.date}</span>
+            ${c.by?`<span style="font-size:10px;background:rgba(0,112,204,.08);color:var(--accent);border-radius:3px;padding:1px 6px;">${c.by}</span>`:''}
+            <span style="flex:1;font-size:11px;color:var(--text2);">${c.remarks||'—'}</span>
+            <button class="btn btn-danger btn-xs" onclick="removeProgCompletion(${idx},'${month}',${ci})">✕</button>
+          </div>`).join('')}` : ''}
+      ${deferrals.length ? `
+        <div style="font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;margin-top:${completions.length?'10px':'0'};">Missed / Deferred (${deferrals.length})</div>
+        ${deferrals.map((d,di)=>`
+          <div style="display:flex;align-items:flex-start;gap:8px;background:rgba(245,196,0,.07);border:1px solid rgba(245,196,0,.25);border-radius:6px;padding:7px 10px;margin-bottom:4px;">
+            <span style="font-size:16px;flex-shrink:0;">📝</span>
+            <div style="flex:1;">
+              <div style="font-size:11.5px;color:var(--text);margin-bottom:2px;">${d.reason}</div>
+              <div style="font-size:10px;color:var(--text3);">
+                ${d.by?`By ${d.by} · `:''}${d.date}
+                ${d.rescheduledTo?`<span style="color:var(--accent);font-weight:600;"> → Rescheduled to ${MONTH_LABELS[MONTHS.indexOf(d.rescheduledTo)]}</span>`:''}
+              </div>
+            </div>
+            <button class="btn btn-danger btn-xs" onclick="removeProgDeferral(${idx},'${month}',${di})">✕</button>
+          </div>`).join('')}` : ''}
     </div>` : '';
 
+  document.getElementById('pc-modal-title').textContent = `📅 ${monthLabel} — ${item.name.substring(0,35)}`;
   document.getElementById('pc-item-name').textContent = item.name;
   document.getElementById('pc-month-label').textContent = monthLabel;
   document.getElementById('pc-idx').value = idx;
@@ -4379,16 +4566,43 @@ function openProgCell(idx, month){
   document.getElementById('pc-existing').innerHTML = existingHtml;
   document.getElementById('pc-date').value = new Date().getDate();
   document.getElementById('pc-remarks').value = '';
+  document.getElementById('pc-missed-reason').value = '';
+  document.getElementById('pc-missed-by').value = '';
+
+  // Populate reschedule dropdown — only future months in the year
+  const currentMonthIdx = MONTHS.indexOf(month);
+  const reschedSel = document.getElementById('pc-reschedule-month');
+  reschedSel.innerHTML = '<option value="">— No reschedule —</option>' +
+    MONTHS.map((m,mi)=>mi > currentMonthIdx
+      ? `<option value="${m}">${MONTH_LABELS[mi]}</option>` : '').join('');
 
   // Show scheduled status
   const infoEl = document.getElementById('pc-sched-info');
   if(scheduled && scheduled !== '-'){
-    infoEl.innerHTML = `<span style="color:var(--green);font-size:11px;">✓ Scheduled this month</span>`;
+    infoEl.innerHTML = `<span style="color:var(--green);font-size:11px;">✓ Scheduled</span>`;
   } else {
-    infoEl.innerHTML = `<span style="color:var(--text3);font-size:11px;">Not originally scheduled — recording as ad-hoc</span>`;
+    infoEl.innerHTML = `<span style="color:var(--text3);font-size:11px;">Ad-hoc / not originally scheduled</span>`;
   }
 
+  // Default to completion tab
+  switchPcTab('done');
   openM('m-prog-cell');
+}
+
+function switchPcTab(tab){
+  document.getElementById('pc-active-tab').value = tab;
+  ['done','missed'].forEach(t=>{
+    document.getElementById(`pc-tab-${t}`)?.classList.toggle('active', t===tab);
+    document.getElementById(`pc-pane-${t}`).style.display = t===tab ? '' : 'none';
+  });
+  const saveBtn = document.getElementById('pc-save-btn');
+  if(saveBtn) saveBtn.textContent = tab==='done' ? '✅ Record Completion' : '📝 Record Missed / Deferred';
+}
+
+function saveProgEntry(){
+  const tab = document.getElementById('pc-active-tab').value;
+  if(tab === 'done') saveProgCompletion();
+  else saveProgDeferral();
 }
 
 function saveProgCompletion(){
@@ -4407,14 +4621,59 @@ function saveProgCompletion(){
   if(!item) return;
   if(!item.completions) item.completions = {};
   if(!item.completions[month]) item.completions[month] = [];
-
   item.completions[month].push({ date: String(dayNum), remarks, by: byPerson });
 
   closeM('m-prog-cell');
-  autosave();
-  renderProgrammeTable();
-  renderProgrammeSummary();
+  autosave(); renderProgrammeTable(); renderProgrammeSummary();
   toast(`Completion recorded — ${MONTH_LABELS[MONTHS.indexOf(month)]} ${dayNum}`,'success');
+}
+
+function saveProgDeferral(){
+  const idx = parseInt(document.getElementById('pc-idx').value);
+  const month = document.getElementById('pc-month').value;
+  const reason = document.getElementById('pc-missed-reason').value.trim();
+  const byPerson = document.getElementById('pc-missed-by').value.trim();
+  const rescheduledTo = document.getElementById('pc-reschedule-month').value;
+
+  if(!reason){ toast('Please enter the reason this activity was not completed','error'); return; }
+
+  initProgrammeData();
+  const item = ST.programme[activeProgTab][idx];
+  if(!item) return;
+  if(!item.deferrals) item.deferrals = {};
+  if(!item.deferrals[month]) item.deferrals[month] = [];
+
+  item.deferrals[month].push({
+    reason,
+    by: byPerson,
+    date: new Date().toISOString().split('T')[0],
+    rescheduledTo: rescheduledTo || null
+  });
+
+  // If rescheduled — mark the target month as scheduled
+  if(rescheduledTo){
+    if(!item.months) item.months = {};
+    if(!item.months[rescheduledTo] || item.months[rescheduledTo]==='-'){
+      item.months[rescheduledTo] = 'x'; // mark as scheduled
+    }
+    toast(`Recorded as missed — rescheduled to ${MONTH_LABELS[MONTHS.indexOf(rescheduledTo)]}`,'success');
+  } else {
+    toast(`Missed activity recorded with substantiation`,'success');
+  }
+
+  closeM('m-prog-cell');
+  autosave(); renderProgrammeTable(); renderProgrammeSummary();
+}
+
+function removeProgDeferral(idx, month, di){
+  initProgrammeData();
+  const item = ST.programme[activeProgTab][idx];
+  if(!item?.deferrals?.[month]) return;
+  item.deferrals[month].splice(di,1);
+  if(!item.deferrals[month].length) delete item.deferrals[month];
+  autosave();
+  openProgCell(idx, month);
+  renderProgrammeTable(); renderProgrammeSummary();
 }
 
 function removeProgCompletion(idx, month, ci){
@@ -4434,18 +4693,20 @@ function removeProgCompletion(idx, month, ci){
 function renderProgrammeSummary(){
   const items = ST.programme[activeProgTab].filter(i=>i.name);
   const curMonth = new Date().getMonth();
-  let sched=0, done=0, overdue=0, dueThisMonth=0;
+  let sched=0, done=0, overdue=0, deferred=0, dueThisMonth=0;
   items.forEach(item=>{
     MONTHS.forEach((m,mi)=>{
       const v = (item.months||{})[m];
       if(!v || v==='-') return;
       const completions = (item.completions||{})[m]||[];
+      const deferrals = (item.deferrals||{})[m]||[];
       if(completions.length > 0) done++;
+      else if(deferrals.length > 0) deferred++;
       else if(mi < curMonth) overdue++;
       else { sched++; if(mi===curMonth) dueThisMonth++; }
     });
   });
-  const total = sched+done+overdue;
+  const total = sched+done+overdue+deferred;
   const pct = total ? Math.round(done/total*100) : 0;
 
   // Populate By filter dropdown
@@ -4460,24 +4721,25 @@ function renderProgrammeSummary(){
   const activeFilter = document.getElementById('prog-f-status')?.value || '';
 
   document.getElementById('prog-summary').innerHTML = `
-    <div class="stat gr" style="padding:10px 14px;min-width:110px;cursor:pointer;transition:transform .1s;" onclick="setProgFilter('')" title="Show all">
+    <div class="stat gr" style="padding:10px 14px;min-width:110px;cursor:pointer;" onclick="setProgFilter('')" title="Show all">
       <div class="stat-lbl">Completed</div>
       <div class="stat-val" style="font-size:22px;">${done}</div>
       <div class="stat-sub" style="font-size:9px;">${activeFilter===''?'● showing all':''}</div>
     </div>
-    <div class="stat re" style="padding:10px 14px;min-width:110px;cursor:pointer;transition:transform .1s;" onclick="setProgFilter('overdue')" title="Filter overdue">
+    <div class="stat re" style="padding:10px 14px;min-width:110px;cursor:pointer;" onclick="setProgFilter('overdue')" title="Filter overdue">
       <div class="stat-lbl">Overdue</div>
       <div class="stat-val" style="font-size:22px;">${overdue}</div>
       <div class="stat-sub" style="font-size:9px;color:var(--red);">${activeFilter==='overdue'?'● filtered':''}</div>
     </div>
-    <div class="stat ac" style="padding:10px 14px;min-width:110px;cursor:pointer;transition:transform .1s;" onclick="setProgFilter('due')" title="Filter due this month">
+    <div class="stat" style="padding:10px 14px;min-width:110px;cursor:pointer;border-top:2px solid rgba(245,196,0,.5);background:rgba(245,196,0,.05);" onclick="setProgFilter('deferred')" title="Filter missed/deferred">
+      <div class="stat-lbl" style="color:var(--yellow);">Missed/Deferred</div>
+      <div class="stat-val" style="font-size:22px;color:var(--yellow);">${deferred}</div>
+      <div class="stat-sub" style="font-size:9px;color:var(--yellow);">${activeFilter==='deferred'?'● filtered':'Substantiated'}</div>
+    </div>
+    <div class="stat ac" style="padding:10px 14px;min-width:110px;cursor:pointer;" onclick="setProgFilter('due')" title="Filter due this month">
       <div class="stat-lbl">Due This Month</div>
       <div class="stat-val" style="font-size:22px;">${dueThisMonth}</div>
       <div class="stat-sub" style="font-size:9px;color:var(--accent);">${activeFilter==='due'?'● filtered':''}</div>
-    </div>
-    <div class="stat ye" style="padding:10px 14px;min-width:110px;cursor:pointer;transition:transform .1s;" onclick="setProgFilter('')" title="Show all">
-      <div class="stat-lbl">Remaining (year)</div>
-      <div class="stat-val" style="font-size:22px;">${sched}</div>
     </div>
     <div class="stat" style="padding:10px 14px;min-width:130px;border-top:2px solid var(--border2);">
       <div class="stat-lbl">% Complete</div>
@@ -4534,6 +4796,439 @@ function saveProgItem(){
   }
   closeM('m-prog-item'); autosave(); renderProgramme();
   toast('Programme item saved','success');
+}
+
+// ═══════════════════════════════════════════════════
+//  MANPOWER PLAN
+// ═══════════════════════════════════════════════════
+
+// Default staff roster and workload — stored in ST.manpower
+// ═══════════════════════════════════════════════════
+//  MANPOWER PLAN
+// ═══════════════════════════════════════════════════
+
+const MP_DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const MP_DEFAULT = {
+  workDays: ['Mon','Tue','Wed','Thu','Fri'],
+  startTime: '08:00', endTime: '17:00', lunchMins: 60,
+  defLeave: 30, defTraining: 5, defSick: 5, defOther: 0,
+  staff: [
+    { name:'', role:'Safety Manager', leave:null, training:null, sick:null, other:null },
+    { name:'', role:'Safety Officer',  leave:null, training:null, sick:null, other:null }
+  ],
+  holidays: {},   // keyed by year: { '2026': [{date:'2026-01-01',name:'New Year'},...] }
+  workload: [
+    { activity:'Hazard & Risk Management', hours:200 },
+    { activity:'Safety Events & Investigations', hours:180 },
+    { activity:'Regulatory & Audit Activities', hours:120 },
+    { activity:'Safety Promotion & Training', hours:80 },
+    { activity:'Administration & Reporting', hours:100 }
+  ],
+  signoff: { name:'', date:'', comments:'' }
+};
+
+function initMpData(){
+  if(!ST.mpSetup) ST.mpSetup = JSON.parse(JSON.stringify(MP_DEFAULT));
+  const d = ST.mpSetup;
+  if(!d.workDays) d.workDays = ['Mon','Tue','Wed','Thu','Fri'];
+  if(!d.startTime) d.startTime = '08:00';
+  if(!d.endTime)   d.endTime   = '17:00';
+  if(d.lunchMins===undefined) d.lunchMins = 60;
+  if(!d.staff)     d.staff     = JSON.parse(JSON.stringify(MP_DEFAULT.staff));
+  if(!d.holidays)  d.holidays  = {};
+  if(!d.workload)  d.workload  = JSON.parse(JSON.stringify(MP_DEFAULT.workload));
+  if(!d.signoff)   d.signoff   = {name:'',date:'',comments:''};
+}
+
+function getMpYear(){
+  return parseInt(document.getElementById('mp-year-sel')?.value)||new Date().getFullYear();
+}
+
+function mpDailyHrs(){
+  initMpData(); const d = ST.mpSetup;
+  const [sh,sm] = (d.startTime||'08:00').split(':').map(Number);
+  const [eh,em] = (d.endTime||'17:00').split(':').map(Number);
+  const totalMins = (eh*60+em) - (sh*60+sm) - (d.lunchMins||60);
+  return Math.max(0, totalMins/60);
+}
+
+function mpWorkingDaysInYear(year){
+  initMpData(); const d = ST.mpSetup;
+  const workDayNums = d.workDays.map(day=>MP_DAYS.indexOf(day)); // 0=Mon
+  let count = 0;
+  const dt = new Date(year, 0, 1);
+  while(dt.getFullYear() === year){
+    const dow = (dt.getDay()+6)%7; // 0=Mon
+    if(workDayNums.includes(dow)) count++;
+    dt.setDate(dt.getDate()+1);
+  }
+  // Subtract public holidays that fall on working days
+  const holidays = (d.holidays[year]||[]);
+  holidays.forEach(h=>{
+    const hd = new Date(h.date);
+    if(hd.getFullYear()===year){
+      const dow = (hd.getDay()+6)%7;
+      if(workDayNums.includes(dow)) count--;
+    }
+  });
+  return count;
+}
+
+function switchMpView(view){
+  document.getElementById('mp-view-setup').style.display = view==='setup' ? '' : 'none';
+  document.getElementById('mp-view-plan').style.display  = view==='plan'  ? '' : 'none';
+  document.getElementById('mp-tab-setup').classList.toggle('active', view==='setup');
+  document.getElementById('mp-tab-plan').classList.toggle('active',  view==='plan');
+  if(view==='plan') renderManpowerPlan();
+}
+
+function renderManpowerSetup(){
+  initMpData(); const d = ST.mpSetup;
+  const year = getMpYear();
+
+  // Populate working day checkboxes from saved state
+  document.querySelectorAll('.mp-day-chk').forEach(chk=>{
+    chk.checked = d.workDays.includes(chk.dataset.day);
+  });
+  document.getElementById('mp-start').value  = d.startTime||'08:00';
+  document.getElementById('mp-end').value    = d.endTime||'17:00';
+  document.getElementById('mp-lunch').value  = d.lunchMins??60;
+  document.getElementById('mp-def-leave').value    = d.defLeave??30;
+  document.getElementById('mp-def-training').value = d.defTraining??5;
+  document.getElementById('mp-def-sick').value     = d.defSick??5;
+  document.getElementById('mp-def-other').value    = d.defOther??0;
+
+  updateMpHrsDisplay();
+  renderMpHolidays(year);
+  renderMpStaffSetup();
+
+  const lbl = document.getElementById('mp-ph-year-lbl');
+  if(lbl) lbl.textContent = `(${year})`;
+}
+
+function updateMpHrsDisplay(){
+  const el = document.getElementById('mp-hrs-day-display');
+  if(el) el.textContent = mpDailyHrs().toFixed(1) + ' hrs';
+}
+
+function saveMpSetup(){
+  initMpData(); const d = ST.mpSetup;
+  d.workDays = [...document.querySelectorAll('.mp-day-chk:checked')].map(c=>c.dataset.day);
+  d.startTime  = document.getElementById('mp-start')?.value||'08:00';
+  d.endTime    = document.getElementById('mp-end')?.value||'17:00';
+  d.lunchMins  = parseInt(document.getElementById('mp-lunch')?.value)||60;
+  d.defLeave   = parseInt(document.getElementById('mp-def-leave')?.value)||30;
+  d.defTraining= parseInt(document.getElementById('mp-def-training')?.value)||5;
+  d.defSick    = parseInt(document.getElementById('mp-def-sick')?.value)||5;
+  d.defOther   = parseInt(document.getElementById('mp-def-other')?.value)||0;
+  updateMpHrsDisplay();
+  autosave();
+}
+
+function renderMpHolidays(year){
+  initMpData(); const d = ST.mpSetup;
+  const holidays = d.holidays[year]||[];
+  const el = document.getElementById('mp-holidays-list'); if(!el) return;
+
+  const workDayNums = d.workDays.map(day=>MP_DAYS.indexOf(day));
+  let workingHolidays = 0;
+  el.innerHTML = holidays.length
+    ? holidays.map((h,i)=>{
+        const hd = new Date(h.date);
+        const dow = (hd.getDay()+6)%7;
+        const isWorkDay = workDayNums.includes(dow);
+        if(isWorkDay) workingHolidays++;
+        return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);">
+          <input type="date" class="fi" value="${h.date}" style="width:140px;font-size:11px;"
+            onchange="ST.mpSetup.holidays[${year}][${i}].date=this.value;autosave();renderMpHolidays(${year});">
+          <input class="fi" value="${h.name}" placeholder="Holiday name" style="flex:1;font-size:11px;"
+            onchange="ST.mpSetup.holidays[${year}][${i}].name=this.value;autosave();">
+          <span style="font-size:9.5px;padding:2px 6px;border-radius:4px;${isWorkDay?'background:rgba(204,34,54,.1);color:var(--red);':'background:var(--bg3);color:var(--text3);'}">
+            ${isWorkDay?'counts':'weekend'}
+          </span>
+          <button class="btn btn-danger btn-xs" onclick="removeMpHoliday(${year},${i})">✕</button>
+        </div>`;
+      }).join('')
+    : '<div style="color:var(--text3);font-size:11px;padding:8px 0;">No holidays configured for '+year+'</div>';
+
+  const cnt = document.getElementById('mp-ph-count');
+  if(cnt) cnt.textContent = `${holidays.length} holiday${holidays.length!==1?'s':''} entered · ${workingHolidays} fall on working days`;
+}
+
+function addMpHoliday(){
+  initMpData(); const year = getMpYear();
+  if(!ST.mpSetup.holidays[year]) ST.mpSetup.holidays[year]=[];
+  ST.mpSetup.holidays[year].push({date:`${year}-01-01`, name:'New Holiday'});
+  autosave(); renderMpHolidays(year);
+}
+
+function removeMpHoliday(year, i){
+  ST.mpSetup.holidays[year].splice(i,1);
+  autosave(); renderMpHolidays(year);
+}
+
+function renderMpStaffSetup(){
+  initMpData(); const d = ST.mpSetup;
+  const el = document.getElementById('mp-staff-list-setup'); if(!el) return;
+  el.innerHTML = d.staff.map((s,i)=>`
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:11px 13px;margin-bottom:8px;">
+      <div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;">
+        <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="fg" style="margin-bottom:0;"><label class="fl">Name</label>
+            <input class="fi" value="${s.name||''}" placeholder="Full name"
+              onchange="ST.mpSetup.staff[${i}].name=this.value;autosave();">
+          </div>
+          <div class="fg" style="margin-bottom:0;"><label class="fl">Role</label>
+            <input class="fi" value="${s.role||''}" placeholder="e.g. Safety Officer"
+              onchange="ST.mpSetup.staff[${i}].role=this.value;autosave();">
+          </div>
+        </div>
+        <button class="btn btn-danger btn-xs" style="margin-top:18px;" onclick="removeMpStaff(${i})">✕</button>
+      </div>
+      <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:6px;">Leave Override (blank = use org default)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
+        <div class="fg" style="margin-bottom:0;"><label class="fl" style="font-size:10px;">Annual Leave</label>
+          <input type="number" class="fi" value="${s.leave??''}" placeholder="${d.defLeave}" min="0" max="60"
+            onchange="ST.mpSetup.staff[${i}].leave=this.value===''?null:parseInt(this.value);autosave();">
+        </div>
+        <div class="fg" style="margin-bottom:0;"><label class="fl" style="font-size:10px;">Training</label>
+          <input type="number" class="fi" value="${s.training??''}" placeholder="${d.defTraining}" min="0" max="30"
+            onchange="ST.mpSetup.staff[${i}].training=this.value===''?null:parseInt(this.value);autosave();">
+        </div>
+        <div class="fg" style="margin-bottom:0;"><label class="fl" style="font-size:10px;">Sick (avg)</label>
+          <input type="number" class="fi" value="${s.sick??''}" placeholder="${d.defSick}" min="0" max="30"
+            onchange="ST.mpSetup.staff[${i}].sick=this.value===''?null:parseInt(this.value);autosave();">
+        </div>
+        <div class="fg" style="margin-bottom:0;"><label class="fl" style="font-size:10px;">Other</label>
+          <input type="number" class="fi" value="${s.other??''}" placeholder="${d.defOther}" min="0" max="30"
+            onchange="ST.mpSetup.staff[${i}].other=this.value===''?null:parseInt(this.value);autosave();">
+        </div>
+      </div>
+    </div>`).join('') ||
+    '<div style="color:var(--text3);font-size:11px;padding:8px 0;">No staff added yet</div>';
+}
+
+function addMpStaff(){
+  initMpData();
+  ST.mpSetup.staff.push({name:'',role:'',leave:null,training:null,sick:null,other:null});
+  autosave(); renderMpStaffSetup();
+}
+
+function removeMpStaff(i){
+  ST.mpSetup.staff.splice(i,1);
+  autosave(); renderMpStaffSetup();
+}
+
+function renderManpowerPlan(){
+  initMpData(); const d = ST.mpSetup;
+  const year = getMpYear();
+  const workingDays = mpWorkingDaysInYear(year);
+  const hrsDay = mpDailyHrs();
+  const holidays = (d.holidays[year]||[]).filter(h=>{
+    const hd=new Date(h.date); const dow=(hd.getDay()+6)%7;
+    return d.workDays.map(day=>MP_DAYS.indexOf(day)).includes(dow);
+  }).length;
+
+  // Summary stats
+  const statsEl = document.getElementById('mp-plan-stats');
+  if(statsEl) statsEl.innerHTML = `
+    <div class="stat ac"><div class="stat-lbl">Working Days ${year}</div><div class="stat-val">${workingDays}</div><div class="stat-sub">After ${holidays} holiday${holidays!==1?'s':''}</div></div>
+    <div class="stat gr"><div class="stat-lbl">Productive Hrs/Day</div><div class="stat-val">${hrsDay.toFixed(1)}</div><div class="stat-sub">${d.startTime}–${d.endTime} less ${d.lunchMins}min</div></div>
+    <div class="stat re"><div class="stat-lbl">Safety Staff</div><div class="stat-val">${d.staff.length}</div><div class="stat-sub">configured</div></div>
+    <div class="stat ye"><div class="stat-lbl">Deductions</div><div class="stat-val">${d.defLeave+d.defTraining+d.defSick+d.defOther}</div><div class="stat-sub">days default</div></div>`;
+
+  // Capacity table
+  const tbody = document.getElementById('mp-capacity-tbody'); if(!tbody) return;
+  let totalCapacity = 0;
+  tbody.innerHTML = d.staff.map(s=>{
+    const leave    = s.leave    ?? d.defLeave;
+    const training = s.training ?? d.defTraining;
+    const sick     = s.sick     ?? d.defSick;
+    const other    = s.other    ?? d.defOther;
+    const totalDeduct = leave + training + sick + other;
+    const availDays = Math.max(0, workingDays - totalDeduct);
+    const availHrs  = Math.round(availDays * hrsDay);
+    totalCapacity += availHrs;
+    return `<tr>
+      <td style="font-weight:600;">${s.name||'—'}</td>
+      <td style="font-size:11px;color:var(--text2);">${s.role||'—'}</td>
+      <td style="text-align:center;font-weight:600;">${workingDays}</td>
+      <td style="text-align:center;color:var(--red);">−${leave}</td>
+      <td style="text-align:center;color:var(--orange);">−${training}</td>
+      <td style="text-align:center;color:var(--yellow);">−${sick}</td>
+      <td style="text-align:center;font-weight:700;color:var(--accent);">${availDays}</td>
+      <td style="text-align:center;">${hrsDay.toFixed(1)}</td>
+      <td style="text-align:center;font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:var(--green);">${availHrs.toLocaleString()} hrs</td>
+    </tr>`;
+  }).join('') + (d.staff.length ? `
+    <tr style="background:rgba(0,147,79,.05);border-top:2px solid rgba(0,147,79,.25);">
+      <td colspan="8" style="font-weight:700;text-align:right;padding-right:12px;">Total Safety Capacity</td>
+      <td style="text-align:center;font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--green);">${totalCapacity.toLocaleString()} hrs</td>
+    </tr>` : '<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:20px;">No staff configured — go to Setup tab</td></tr>');
+
+  // Workload rows
+  renderMpWorkloadRows(totalCapacity);
+
+  // Sign-off
+  const so = d.signoff||{};
+  const nameEl = document.getElementById('mp-so-name'); if(nameEl) nameEl.value = so.name||'';
+  const dateEl = document.getElementById('mp-so-date'); if(dateEl) dateEl.value = so.date||'';
+  const commEl = document.getElementById('mp-so-comments'); if(commEl) commEl.value = so.comments||'';
+}
+
+function renderMpWorkloadRows(totalCapacity){
+  initMpData(); const d = ST.mpSetup;
+  const el = document.getElementById('mp-workload-rows'); if(!el) return;
+  let total = 0;
+  el.innerHTML = d.workload.map((w,i)=>{
+    total += w.hours||0;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <input class="fi" value="${w.activity}" placeholder="Activity" style="flex:1;font-size:11.5px;"
+        onchange="ST.mpSetup.workload[${i}].activity=this.value;autosave();">
+      <input type="number" class="fi" value="${w.hours}" min="0" max="2000" style="width:80px;text-align:right;font-weight:700;"
+        onchange="ST.mpSetup.workload[${i}].hours=parseInt(this.value)||0;autosave();renderMpWorkloadRows(null);">
+      <span style="font-size:10px;color:var(--text3);min-width:26px;">hrs</span>
+      <button class="btn btn-ghost btn-xs" onclick="removeMpWorkload(${i})">✕</button>
+    </div>`;
+  }).join('');
+  const totEl = document.getElementById('mp-workload-total');
+  if(totEl) totEl.textContent = total.toLocaleString() + ' hrs';
+  if(totalCapacity !== null) renderMpVerdict(totalCapacity, total);
+}
+
+function renderMpVerdict(capacity, workload){
+  const el = document.getElementById('mp-verdict-body'); if(!el) return;
+  if(!capacity){ el.innerHTML='<div style="color:var(--text3);font-size:12px;">Add staff in Setup to calculate</div>'; return; }
+  const gap = capacity - workload;
+  const pct = workload ? Math.round(workload/capacity*100) : 0;
+  const ok = gap >= 0;
+  const col = !ok?'var(--red)': gap<200?'var(--yellow)':'var(--green)';
+  const icon = !ok?'⚠':gap<200?'⚠':'✅';
+  const msg = !ok
+    ? `Safety staffing is <strong>insufficient</strong> by ${Math.abs(gap).toLocaleString()} hours. Consider additional resource, workload redistribution, or scope reduction.`
+    : gap<200
+    ? `Safety staffing is <strong>marginal</strong>. Only ${gap.toLocaleString()} hours of buffer remain — any significant increase in events or workload will create a deficit.`
+    : `Safety staffing is <strong>adequate</strong>. ${gap.toLocaleString()} hours of buffer available for unplanned activities and regulatory requirements.`;
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">
+      <div style="background:rgba(0,147,79,.07);border:1px solid rgba(0,147,79,.2);border-radius:8px;padding:12px;text-align:center;">
+        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:4px;">Total Capacity</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:var(--green);">${capacity.toLocaleString()}</div>
+        <div style="font-size:10px;color:var(--text3);">hrs / year</div>
+      </div>
+      <div style="background:rgba(0,112,204,.06);border:1px solid rgba(0,112,204,.15);border-radius:8px;padding:12px;text-align:center;">
+        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:4px;">SMS Workload</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:var(--accent);">${workload.toLocaleString()}</div>
+        <div style="font-size:10px;color:var(--text3);">hrs / year</div>
+      </div>
+      <div style="background:${ok?'rgba(0,147,79,.06)':'rgba(204,34,54,.06)'};border:1px solid ${ok?'rgba(0,147,79,.2)':'rgba(204,34,54,.2)'};border-radius:8px;padding:12px;text-align:center;">
+        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:4px;">${ok?'Buffer':'Shortfall'}</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:${col};">${Math.abs(gap).toLocaleString()}</div>
+        <div style="font-size:10px;color:var(--text3);">hrs / year</div>
+      </div>
+    </div>
+    <div class="prog-bar" style="height:10px;margin-bottom:6px;">
+      <div class="prog-fill" style="width:${Math.min(pct,100)}%;background:${!ok?'var(--red)':pct>80?'var(--yellow)':'var(--green)'};"></div>
+    </div>
+    <div style="font-size:10.5px;color:var(--text3);margin-bottom:12px;">Capacity utilisation: <strong>${pct}%</strong></div>
+    <div style="background:${ok?'rgba(0,147,79,.06)':'rgba(204,34,54,.06)'};border:1px solid ${ok?'rgba(0,147,79,.2)':'rgba(204,34,54,.2)'};border-radius:8px;padding:12px 14px;">
+      <div style="font-size:14px;font-weight:700;color:${col};margin-bottom:6px;">${icon} ${ok?'Adequately Staffed':'Understaffed'}</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6;">${msg}</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:8px;font-style:italic;">Prepared under ICAO Annex 19 SMS Framework — resource adequacy justification for regulatory audit.</div>
+    </div>`;
+}
+
+function addMpWorkload(){
+  initMpData();
+  ST.mpSetup.workload.push({activity:'New Activity', hours:40});
+  autosave(); renderMpWorkloadRows(null);
+}
+
+function removeMpWorkload(i){
+  ST.mpSetup.workload.splice(i,1);
+  autosave(); renderManpowerPlan();
+}
+
+function saveMpSignoff(){
+  initMpData();
+  ST.mpSetup.signoff = {
+    name: document.getElementById('mp-so-name')?.value||'',
+    date: document.getElementById('mp-so-date')?.value||'',
+    comments: document.getElementById('mp-so-comments')?.value||''
+  };
+  autosave();
+}
+
+function exportMpReport(){
+  initMpData(); const d = ST.mpSetup;
+  const year = getMpYear();
+  const workingDays = mpWorkingDaysInYear(year);
+  const hrsDay = mpDailyHrs();
+  const holidays = (d.holidays[year]||[]);
+  const date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  let totalCapacity=0, totalWorkload=0;
+  const staffRows = d.staff.map(s=>{
+    const leave=s.leave??d.defLeave, training=s.training??d.defTraining, sick=s.sick??d.defSick, other=s.other??d.defOther;
+    const avail=Math.max(0,workingDays-leave-training-sick-other);
+    const hrs=Math.round(avail*hrsDay); totalCapacity+=hrs;
+    return `<tr><td>${s.name||'—'}</td><td>${s.role||'—'}</td><td style="text-align:center">${workingDays}</td><td style="text-align:center;color:#cc2236">−${leave}</td><td style="text-align:center;color:#d45c00">−${training}</td><td style="text-align:center;color:#c08a00">−${sick}</td><td style="text-align:center;font-weight:700;color:#0070cc">${avail}</td><td style="text-align:center">${hrsDay.toFixed(1)}</td><td style="text-align:center;font-weight:700;color:#00934f">${hrs.toLocaleString()}</td></tr>`;
+  }).join('');
+  d.workload.forEach(w=>totalWorkload+=w.hours||0);
+  const gap=totalCapacity-totalWorkload; const ok=gap>=0;
+  const so=d.signoff||{};
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Safety Manpower Plan ${year}</title>
+<style>body{font-family:'Segoe UI',Arial,sans-serif;color:#1a2033;margin:40px;font-size:12px;line-height:1.6;}
+h1{font-size:20px;font-weight:700;border-bottom:2px solid #0070cc;padding-bottom:8px;}
+h2{font-size:13px;font-weight:700;color:#0070cc;margin-top:24px;margin-bottom:8px;border-left:3px solid #0070cc;padding-left:8px;}
+table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11.5px;}
+th{background:#f0f2f7;font-weight:700;padding:6px 10px;text-align:left;border:1px solid #dce1ec;}
+td{padding:5px 10px;border:1px solid #dce1ec;}
+.verdict{padding:14px;border-radius:6px;margin-top:12px;font-size:12px;}
+.ok{background:#e8f7ef;border:1px solid #00934f;color:#006635;}
+.nok{background:#fdf0f0;border:1px solid #cc2236;color:#991a29;}
+.signoff{margin-top:40px;border-top:2px solid #1a2033;padding-top:16px;}
+.footer{margin-top:30px;font-size:10px;color:#8a94aa;border-top:1px solid #dce1ec;padding-top:8px;}</style></head><body>
+<h1>Safety Department Manpower Plan ${year}</h1>
+<p><strong>Organisation:</strong> ${ST.org.name||'—'} &nbsp;|&nbsp; <strong>Approval #:</strong> ${ST.org.cert||'—'} &nbsp;|&nbsp; <strong>Prepared:</strong> ${date}</p>
+<p><strong>Safety Manager:</strong> ${ST.org.sfMgr||'—'} &nbsp;|&nbsp; <strong>Accountable Manager:</strong> ${ST.org.accMgr||'—'}</p>
+<h2>1. Working Week Configuration</h2>
+<table><tr><th>Working Days</th><td>${d.workDays.join(', ')}</td></tr>
+<tr><th>Working Hours</th><td>${d.startTime} – ${d.endTime} (less ${d.lunchMins} min lunch)</td></tr>
+<tr><th>Productive Hours/Day</th><td><strong>${hrsDay.toFixed(1)} hrs</strong></td></tr>
+<tr><th>Total Working Days (${year})</th><td><strong>${workingDays} days</strong> (after ${holidays.length} public holiday${holidays.length!==1?'s':''})</td></tr></table>
+${holidays.length?`<h2>2. Public Holidays ${year}</h2><table><tr><th>Date</th><th>Holiday</th></tr>${holidays.map(h=>`<tr><td>${h.date}</td><td>${h.name}</td></tr>`).join('')}</table>`:''}
+<h2>3. Leave & Absence Defaults</h2>
+<table><tr><th>Annual Leave</th><td>${d.defLeave} days</td></tr><tr><th>Training</th><td>${d.defTraining} days</td></tr>
+<tr><th>Sick Leave (avg provision)</th><td>${d.defSick} days</td></tr><tr><th>Other Planned Absence</th><td>${d.defOther} days</td></tr></table>
+<h2>4. Staff Capacity Calculation</h2>
+<table><tr><th>Name</th><th>Role</th><th>Working Days</th><th>Less Leave</th><th>Less Training</th><th>Less Sick</th><th>Available Days</th><th>Hrs/Day</th><th>Available Hours</th></tr>
+${staffRows}<tr style="background:#f0f2f7;font-weight:700;"><td colspan="8">Total Safety Capacity</td><td style="text-align:center;color:#00934f">${totalCapacity.toLocaleString()} hrs</td></tr></table>
+<h2>5. SMS Workload Estimate</h2>
+<table><tr><th>Activity</th><th>Hours/Year</th></tr>
+${d.workload.map(w=>`<tr><td>${w.activity}</td><td>${w.hours}</td></tr>`).join('')}
+<tr style="background:#f0f2f7;font-weight:700;"><td>Total SMS Workload</td><td>${totalWorkload.toLocaleString()} hrs</td></tr></table>
+<h2>6. Staffing Sufficiency Conclusion</h2>
+<div class="verdict ${ok?'ok':'nok'}">
+<strong>${ok?'✅ Safety staffing is ADEQUATE':'⚠ Safety staffing requires management attention'}</strong><br>
+Total Capacity: <strong>${totalCapacity.toLocaleString()} hrs</strong> &nbsp;|&nbsp; SMS Workload: <strong>${totalWorkload.toLocaleString()} hrs</strong> &nbsp;|&nbsp; ${ok?'Buffer':'Shortfall'}: <strong>${Math.abs(gap).toLocaleString()} hrs</strong><br><br>
+${ok?`The Safety Department has sufficient manpower to fulfil SMS obligations for ${year}. The ${gap.toLocaleString()} hour buffer provides capacity for unplanned safety events and regulatory requirements.`:`A resource shortfall of ${Math.abs(gap).toLocaleString()} hours requires management action. Options include additional staffing, workload prioritisation, or redistribution of SMS activities.`}
+</div>
+${so.name?`<div class="signoff"><h2>Accountable Manager Sign-Off</h2>
+<p><strong>Reviewed & Approved by:</strong> ${so.name}</p>
+<p><strong>Date:</strong> ${so.date||'—'}</p>
+${so.comments?`<p><strong>Comments:</strong> ${so.comments}</p>`:''}
+<br><div style="margin-top:30px;border-top:1px solid #1a2033;padding-top:6px;width:250px;">Signature &amp; Date</div></div>`:''}
+<div class="footer">Generated by AeroSafe SMS · ${ST.org.name||''} · ${date} · ICAO Annex 19 SMS Resource Adequacy Justification</div>
+</body></html>`;
+
+  const blob=new Blob([html],{type:'text/html'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`Safety_Manpower_Plan_${year}.html`;
+  a.click();
+  toast('Manpower report exported','success');
 }
 
 // ═══════════════════════════════════════════════════
