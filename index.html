@@ -598,6 +598,7 @@ table.resizable{table-layout:fixed;}
       <div class="nav-label">Analysis</div>
       <div class="nav-item" data-page="bowtie" onclick="nav(this)"><span class="ni">⧖</span><span class="nav-item-text">Bow-Tie</span></div>
       <div class="nav-item" data-page="audit" onclick="nav(this)"><span class="ni">✓</span><span class="nav-item-text">Audits</span><span class="nbadge" id="nb-audit" style="display:none;"></span></div>
+      <div class="nav-item" data-page="spi" onclick="nav(this)"><span class="ni">📈</span><span class="nav-item-text">SPI Monitor</span></div>
     </div>
     <div class="nav-section">
       <div class="nav-label">Safety Events</div>
@@ -1631,7 +1632,207 @@ table.resizable{table-layout:fixed;}
       </div>
     </div>
 
-        <!-- ══════════════ HELP ══════════════ -->
+        <!-- ══════════════ SPI MONITOR ══════════════ -->
+    <div class="page" id="page-spi">
+      <!-- Header row -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:11px;color:var(--text3);">Safety Performance Indicators — ICAO Annex 19 / GCAA CAR-OPS compliance monitoring</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <select class="fs" style="width:110px;" id="spi-year" onchange="renderSpiPage()">
+            <option>2026</option><option>2025</option><option>2024</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="openSpiSettings()">⚙ Targets</button>
+          <button class="btn btn-ghost btn-sm" onclick="renderSpiPage()">↺ Refresh</button>
+        </div>
+      </div>
+
+      <!-- Safety Objectives banner — rendered dynamically from ST.spiAgreement -->
+      <div id="spi-objectives-banner" style="background:rgba(0,112,204,.04);border:1px solid rgba(0,112,204,.15);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:11px;color:var(--text2);line-height:1.6;"></div>
+
+      <!-- SPI Cards grid -->
+      <div id="spi-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:20px;"></div>
+
+      <!-- Year-to-date data table -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">📋 YTD Performance Table — click any row to enter data</span>
+        </div>
+        <div class="card-body" id="spi-data-table"></div>
+      </div>
+    </div>
+
+    <!-- SPI DETAIL / DATA ENTRY MODAL -->
+    <div class="modal-overlay" id="m-spi-detail">
+      <div class="modal" style="max-width:700px;">
+        <div class="modal-head">
+          <div class="modal-title" id="spi-detail-title">SPI Detail</div>
+          <button class="modal-x" onclick="closeM('m-spi-detail')">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="background:var(--bg3);border-radius:7px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:var(--text2);line-height:1.6;">
+            <div id="spi-detail-desc"></div>
+            <div style="margin-top:5px;display:flex;gap:16px;flex-wrap:wrap;">
+              <span><strong>Target:</strong> <span id="spi-detail-target" style="color:var(--green);"></span></span>
+              <span><strong>Alert:</strong> <span id="spi-detail-alert" style="color:var(--red);"></span></span>
+            </div>
+          </div>
+          <div id="spi-detail-body"></div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn btn-ghost" onclick="closeM('m-spi-detail')">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPI MANAGEMENT MODAL -->
+    <div class="modal-overlay" id="m-spi-settings">
+      <div class="modal" style="max-width:760px;max-height:90vh;display:flex;flex-direction:column;">
+        <div class="modal-head">
+          <div class="modal-title">⚙ Manage Safety Performance Indicators</div>
+          <button class="modal-x" onclick="closeM('m-spi-settings')">✕</button>
+        </div>
+        <div class="modal-body" style="overflow-y:auto;flex:1;">
+
+          <!-- Tabs -->
+          <div class="tabs" style="margin-bottom:16px;">
+            <div class="tab active" id="spi-mgmt-tab-list"  onclick="switchSpiMgmtTab('list')">📋 SPI List</div>
+            <div class="tab"        id="spi-mgmt-tab-add"   onclick="switchSpiMgmtTab('add')">➕ Add / Edit SPI</div>
+            <div class="tab"        id="spi-mgmt-tab-year"  onclick="switchSpiMgmtTab('year')">📅 Annual Agreement</div>
+          </div>
+
+          <!-- TAB: SPI List -->
+          <div id="spi-mgmt-pane-list">
+            <div style="font-size:11.5px;color:var(--text2);margin-bottom:12px;">
+              These are your active SPIs. Drag to reorder. Click ✏ to edit, 🗑 to delete. Changes save to Supabase immediately.
+            </div>
+            <div id="spi-mgmt-list"></div>
+            <div style="margin-top:12px;">
+              <button class="btn btn-ghost btn-sm" onclick="switchSpiMgmtTab('add');clearSpiForm()">➕ Add New SPI</button>
+              <button class="btn btn-ghost btn-sm" onclick="resetSpiToDefaults()">↺ Reset to EJME defaults</button>
+            </div>
+          </div>
+
+          <!-- TAB: Add / Edit SPI -->
+          <div id="spi-mgmt-pane-add" style="display:none;">
+            <input type="hidden" id="spi-edit-idx" value="">
+
+            <div class="g2">
+              <div class="fg"><label class="fl">SPI Number / Reference <span style="color:var(--red);">*</span></label>
+                <input class="fi" id="spi-f-num" placeholder="e.g. 1 or SPI/AMO/01">
+              </div>
+              <div class="fg"><label class="fl">Type</label>
+                <select class="fs" id="spi-f-type">
+                  <option value="HCSPI">HCSPI — High Consequence</option>
+                  <option value="LCSPI">LCSPI — Low Consequence</option>
+                </select>
+              </div>
+            </div>
+            <div class="fg"><label class="fl">Label / Name <span style="color:var(--red);">*</span></label>
+              <input class="fi" id="spi-f-label" placeholder="e.g. Maintenance Incident Rate (MIR)">
+            </div>
+            <div class="fg"><label class="fl">Description</label>
+              <input class="fi" id="spi-f-desc" placeholder="Brief description of what this SPI measures">
+            </div>
+            <div class="fg"><label class="fl">Category / Department</label>
+              <input class="fi" id="spi-f-cat" placeholder="e.g. Base Maintenance, Safety, Training">
+            </div>
+
+            <div class="sep" style="margin:14px 0;"></div>
+            <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);margin-bottom:10px;">Data Source</div>
+            <div class="fg"><label class="fl">How is this SPI calculated?</label>
+              <select class="fs" id="spi-f-source" onchange="onSpiSourceChange()">
+                <option value="manual_count">Manual — count (enter a number each month)</option>
+                <option value="manual_pct">Manual — percentage (enter % each month)</option>
+                <option value="manual_rate">Manual — rate (e.g. per 10,000 hrs — enter numerator + denominator)</option>
+                <option value="event_flag">Auto — event flag (spi1, spi23, meda checkboxes on occurrences)</option>
+                <option value="event_class">Auto — event classification (count occurrences matching a classification)</option>
+                <option value="event_proactive">Auto — proactive reporting count (events with proactive flag)</option>
+                <option value="event_closure">Auto — on-time closure % (closed on/before target date)</option>
+                <option value="risk_high_90">Auto — high risks mitigated within 90 days (from Risk Register)</option>
+                <option value="custom_breakdown">Manual — breakdown table (multiple sub-categories per month)</option>
+              </select>
+            </div>
+
+            <!-- Source-specific options -->
+            <div id="spi-f-source-opts" style="margin-top:8px;"></div>
+
+            <div class="sep" style="margin:14px 0;"></div>
+            <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);margin-bottom:10px;">Target &amp; Alert Levels</div>
+            <div class="g2">
+              <div class="fg"><label class="fl">Unit</label>
+                <select class="fs" id="spi-f-unit">
+                  <option value="count">Count (number)</option>
+                  <option value="%">Percentage (%)</option>
+                  <option value="rate">Rate (per 10,000 hrs)</option>
+                  <option value="ratio">Ratio (e.g. 0.21)</option>
+                </select>
+              </div>
+              <div class="fg"><label class="fl">Direction</label>
+                <select class="fs" id="spi-f-direction">
+                  <option value="lower">Lower is better (≤ target)</option>
+                  <option value="higher">Higher is better (≥ target)</option>
+                  <option value="monitor">Monitor only (no RAG)</option>
+                </select>
+              </div>
+            </div>
+            <div class="g2">
+              <div class="fg"><label class="fl">Target value</label>
+                <input type="number" class="fi" id="spi-f-target" placeholder="e.g. 95" step="any" min="0">
+              </div>
+              <div class="fg"><label class="fl">Alert level</label>
+                <input type="number" class="fi" id="spi-f-alert" placeholder="e.g. 90" step="any" min="0">
+              </div>
+            </div>
+            <div class="fg"><label class="fl">Annual target description (shown on card)</label>
+              <input class="fi" id="spi-f-annual" placeholder="e.g. ≤0.91 avg/yr (5% reduction)">
+            </div>
+            <div class="fg"><label class="fl">Alert description (shown on card)</label>
+              <input class="fi" id="spi-f-alertdesc" placeholder="e.g. >10% of staff exceeding threshold">
+            </div>
+            <div id="spi-f-err" style="display:none;font-size:11px;color:var(--red);margin-bottom:8px;padding:6px 10px;background:rgba(204,34,54,.07);border-radius:5px;"></div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <button class="btn btn-primary btn-sm" onclick="saveSpiForm()">💾 Save SPI</button>
+              <button class="btn btn-ghost btn-sm" onclick="clearSpiForm()">✕ Clear</button>
+            </div>
+          </div>
+
+          <!-- TAB: Annual Agreement -->
+          <div id="spi-mgmt-pane-year" style="display:none;">
+            <div style="background:rgba(0,112,204,.05);border:1px solid rgba(0,112,204,.15);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:11.5px;color:var(--text2);">
+              Record your annual SPM agreement details. These are shown on the SPI Monitor page and used for GCAA reporting reference.
+            </div>
+            <div class="g2">
+              <div class="fg"><label class="fl">Agreement Year</label>
+                <input type="number" class="fi" id="spi-agr-year" placeholder="e.g. 2026" min="2020" max="2099">
+              </div>
+              <div class="fg"><label class="fl">Document Reference</label>
+                <input class="fi" id="spi-agr-ref" placeholder="e.g. ME-MRO-SPM">
+              </div>
+            </div>
+            <div class="g2">
+              <div class="fg"><label class="fl">Approved Date</label>
+                <input type="date" class="fi" id="spi-agr-date">
+              </div>
+              <div class="fg"><label class="fl">Accountable Manager</label>
+                <input class="fi" id="spi-agr-am" placeholder="e.g. Nicholas Weber">
+              </div>
+            </div>
+            <div class="fg"><label class="fl">Regulatory Body</label>
+              <input class="fi" id="spi-agr-reg" placeholder="e.g. GCAA">
+            </div>
+            <div class="fg"><label class="fl">Safety Objectives (one per line)</label>
+              <textarea class="fi" id="spi-agr-objectives" rows="6" style="resize:vertical;" placeholder="1. Reduce the Maintenance Incident Rate by 5%&#10;2. Sustain proactive safety reporting..."></textarea>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveSpiAgreement()">💾 Save Agreement</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ HELP ══════════════ -->
     <div class="page" id="page-help">
       <div class="help-search-box">
         <span style="color:var(--text3);font-size:16px;">🔍</span>
@@ -1879,7 +2080,26 @@ table.resizable{table-layout:fixed;}
           <div class="card">
             <div class="card-head"><span class="card-title">⬆ Migrate from JSON Backup</span><span style="font-size:10px;background:rgba(245,196,0,.15);color:var(--yellow);border-radius:4px;padding:2px 7px;font-weight:700;">Admin Only</span></div>
             <div class="card-body">
-              <div style="font-size:11.5px;color:var(--text2);margin-bottom:12px;line-height:1.6;">Upload your existing <code style="background:var(--bg3);padding:1px 5px;border-radius:3px;">aerosafe_data.json</code> backup file to migrate all data into Supabase. Existing records with matching IDs will be skipped.</div>
+              <div style="font-size:11.5px;color:var(--text2);margin-bottom:10px;line-height:1.6;">
+                Upload a JSON file to migrate data into Supabase. Accepts two formats:
+              </div>
+              <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.9;">
+                <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;background:var(--bg3);border-radius:6px;padding:7px 10px;">
+                  <span style="flex-shrink:0;font-size:13px;">📦</span>
+                  <div><strong>AeroSafe backup</strong> — <code style="background:var(--bg);padding:1px 5px;border-radius:3px;font-size:10px;">aerosafe_data.json</code><br>
+                  <span style="color:var(--text3);">Migrates hazards, risks, controls, events, manpower plan, org settings and data lists.</span></div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:8px;background:var(--bg3);border-radius:6px;padding:7px 10px;">
+                  <span style="flex-shrink:0;font-size:13px;">👥</span>
+                  <div><strong>Manpower Plan JSON</strong> — <code style="background:var(--bg);padding:1px 5px;border-radius:3px;font-size:10px;">ejme_manpower_plan.json</code><br>
+                  <span style="color:var(--text3);">Imports staff, workload activities, schedule and allocation from the exported manpower plan. Existing records with matching IDs will be skipped.</span></div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:8px;margin-top:6px;background:var(--bg3);border-radius:6px;padding:7px 10px;">
+                  <span style="flex-shrink:0;font-size:13px;">📅</span>
+                  <div><strong>Safety Programme JSON</strong> — <code style="background:var(--bg);padding:1px 5px;border-radius:3px;font-size:10px;">ejme_safety_programme.json</code><br>
+                  <span style="color:var(--text3);">Imports the annual safety programme, audit schedule and departmental tasks.</span></div>
+                </div>
+              </div>
               <input type="file" id="migrate-file-input" accept=".json" style="display:none;" onchange="handleMigrateFile(this)">
               <button class="btn btn-primary" onclick="document.getElementById('migrate-file-input').click()">📂 Choose JSON File</button>
               <div id="migrate-status" style="margin-top:12px;"></div>
@@ -2480,15 +2700,19 @@ table.resizable{table-layout:fixed;}
       <!-- Risk info banner -->
       <div style="background:var(--bg3);border-radius:7px;padding:9px 12px;margin-bottom:14px;font-size:11.5px;color:var(--text2);" id="so-risk-info"></div>
 
-      <!-- Signing as — auto-filled, read-only by default -->
+      <!-- Signing as — auto-filled from profile, locked -->
       <div style="background:rgba(0,147,79,.05);border:1px solid rgba(0,147,79,.2);border-radius:8px;padding:11px 13px;margin-bottom:12px;">
-        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--green);margin-bottom:7px;">Signing as</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
+          <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--green);">Signing as</div>
+          <div style="font-size:9.5px;color:var(--text3);">🔒 Auto-filled from your profile</div>
+        </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <div id="so-user-avatar" style="width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;">?</div>
           <div>
             <div style="font-size:13px;font-weight:600;color:var(--text);" id="so-user-name">—</div>
             <div style="font-size:11px;color:var(--text3);" id="so-user-title">—</div>
           </div>
+          <button class="btn btn-ghost btn-xs" style="margin-left:auto;" onclick="closeM('m-signoff');openProfileModal()" title="Edit your profile">✏ Edit profile</button>
         </div>
       </div>
 
@@ -3299,6 +3523,10 @@ function sanitiseData(){
   // Ensure aiUsage is always initialised
   if(!ST.aiUsage || typeof ST.aiUsage !== 'object') ST.aiUsage = {count:0, limit:500, resetMonth:''};
   if(!ST.aiUsage.limit) ST.aiUsage.limit = 500;
+  if(!ST.spiConfig) ST.spiConfig = {};
+  if(!ST.spiData)      ST.spiData      = {};
+  if(!ST.spiCustom)    ST.spiCustom    = [];
+  if(!ST.spiAgreement) ST.spiAgreement = {};
   // Add status + obsoleteInfo to all records (migration for existing data)
   ST.hazards.forEach(h=>{
     if(!h.status) h.status='active';
@@ -3541,6 +3769,7 @@ function nav(el){
     switchEvTab('log');
     renderEvents();
   }
+  if(pg==='spi')       renderSpiPage();
   if(pg==='settings')  renderSettings();
   if(pg==='help')      renderHelp();
   // Scroll to top AFTER render so position is correct
@@ -4580,7 +4809,6 @@ function openRevisionEditForm(riskId){
 // ── Sign-off Revision ───────────────────────────────
 function _openSignOffModal(riskId, riskLabel){
   soRiskId = riskId;
-  // Pre-fill with current user — always locked unless admin overrides
   const name  = CURRENT_USER?.full_name  || '';
   const title = CURRENT_USER?.job_title  || '';
   const today = new Date().toISOString().split('T')[0];
@@ -4589,27 +4817,35 @@ function _openSignOffModal(riskId, riskLabel){
   const infoEl = document.getElementById('so-risk-info');
   if(infoEl) infoEl.textContent = riskLabel || riskId;
 
-  // Avatar + name display
+  // Avatar + name display — locked, taken from profile
   document.getElementById('so-user-avatar').textContent = (name||'?')[0].toUpperCase();
-  document.getElementById('so-user-name').textContent   = name || '— Sign in to sign off';
-  document.getElementById('so-user-title').textContent  = title || 'No job title set in your profile';
+  document.getElementById('so-user-name').textContent   = name || '— Not signed in';
 
-  // Hidden inputs — default to current user
+  // Job title display — show warning if missing
+  const titleEl = document.getElementById('so-user-title');
+  if(titleEl){
+    if(title){
+      titleEl.innerHTML = `<span style="color:var(--green);">${title}</span>`;
+    } else {
+      titleEl.innerHTML = `<span style="color:var(--red);">⚠ No job title set — go to your profile (click your name) and add your Job Title first</span>`;
+    }
+  }
+
+  // Hidden inputs — locked to current user, no manual entry
   document.getElementById('so-name').value = name;
   document.getElementById('so-role').value = title;
   document.getElementById('so-date').value = today;
 
-  // Admin override section — only visible to admins
-  const overrideRow = document.getElementById('so-admin-toggle-row');
+  // Admin override section
+  const overrideRow   = document.getElementById('so-admin-toggle-row');
   const overridePanel = document.getElementById('so-admin-override');
-  if(overrideRow)  overrideRow.style.display  = canAdmin() ? '' : 'none';
-  if(overridePanel) overridePanel.style.display = 'none'; // collapsed by default
+  if(overrideRow)   overrideRow.style.display   = canAdmin() ? '' : 'none';
+  if(overridePanel) overridePanel.style.display = 'none';
 
-  // Populate override role dropdown from job titles
-  fillAssigneeSel('so-override-role','-- Select Title --');
+  // Populate override role dropdown from job titles list
+  fillAssigneeSel('so-override-role','-- Select Job Title --');
   document.getElementById('so-override-name').value = '';
 
-  // Reset toggle button text
   const toggleBtn = document.getElementById('so-admin-toggle-btn');
   if(toggleBtn) toggleBtn.textContent = '⚙ Sign on behalf of someone else (Admin only)';
 
@@ -4655,8 +4891,8 @@ function confirmSignOff(){
   const name=document.getElementById('so-name').value.trim();
   const role=document.getElementById('so-role').value.trim();
   const date=document.getElementById('so-date').value;
-  if(!name){ toast('No signer name — ensure your profile has a Full Name set','error'); return; }
-  if(!role){ toast('No job title — set your job title in your profile first','error'); return; }
+  if(!name){ toast('Cannot sign off — set your Full Name in your profile first (click your name in the top bar)','error'); return; }
+  if(!role){ toast('Cannot sign off — set your Job Title in your profile first (click your name in the top bar)','error'); return; }
   const r=ST.risks.find(x=>x.id===soRiskId); if(!r) return;
 
   const signOffInfo = {name,role,date};
@@ -8734,7 +8970,9 @@ async function callAi(prompt,sys){
       body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1000,system:sys||'You are an aviation safety expert.',messages:[{role:'user',content:prompt}]})
     });
     if(!r.ok){const e=await r.json();throw new Error(e.error?.message||'API error');}
-    const d=await r.json();ST.aiUsage.count++;autosave();return d.content?.[0]?.text||'';
+    const d=await r.json();ST.aiUsage.count++;autosave();
+    saveConfigKey('ai_usage', JSON.stringify({count:ST.aiUsage.count,resetMonth:ST.aiUsage.resetMonth}));
+    return d.content?.[0]?.text||'';
   }catch(e){toast('AI error: '+e.message,'error');return null;}
 }
 async function aiSuggestHazardTitle(){
@@ -8880,7 +9118,766 @@ function updateAiKeyStatus(){
 }
 
 // ═══════════════════════════════════════════════════
-//  SUPABASE
+//  SPI MONITOR
+// ═══════════════════════════════════════════════════
+
+// Default SPI definitions — targets configurable by admin
+// ═══════════════════════════════════════════════════
+//  SPI MONITOR — EJME 2026 SPM Agreement
+//  Ref: ME-MRO-SPM, Approved 23-Feb-2026
+// ═══════════════════════════════════════════════════
+
+// Official EJME SPIs from the GCAA-agreed SPM document
+// Targets/alerts stored in Supabase via app_config 'spi_config' and can be edited annually
+const SPI_DEFAULTS = [
+  {
+    id:'spi1', num:1, type:'HCSPI', category:'Base & Line Maintenance',
+    label:'Maintenance Incident Rate (MIR)',
+    desc:'Maintenance incidents per 10,000 productive labour hours',
+    unit:'rate', direction:'lower',
+    target:0.91,
+    alert1:1.64, alert2:2.33, alert3:3.02,  // Ave ±1SD, ±2SD, ±3SD from 2025
+    annualTarget:'≤0.91 avg/yr (5% reduction)',
+    alertDesc:'Ave+1SD=1.64  |  Ave+2SD=2.33  |  Ave+3SD=3.02',
+    inputType:'manhours',  // needs productive manhours + incident count
+    triAnnual:false
+  },
+  {
+    id:'spi2', num:2, type:'HCSPI', category:'Base Maintenance',
+    label:'Post Base Maintenance Errors (MEDA)',
+    desc:'MEDA-classified post-base maintenance errors following Release to Service',
+    unit:'count', direction:'lower',
+    target:7, alert:2,
+    annualTarget:'≤7 MEDAs per year',
+    alertDesc:'≥2 MEDAs in any tri-annual period',
+    inputType:'count', triAnnual:true
+  },
+  {
+    id:'spi3', num:3, type:'HCSPI', category:'Line Maintenance',
+    label:'Post Line Maintenance Errors (MEDA)',
+    desc:'MEDA-classified post-line maintenance errors following Release to Service',
+    unit:'count', direction:'lower',
+    target:3, alert:2,
+    annualTarget:'≤3 MEDAs per year',
+    alertDesc:'≥2 MEDAs in any tri-annual period',
+    inputType:'count', triAnnual:true
+  },
+  {
+    id:'spi4', num:4, type:'LCSPI', category:'Safety',
+    label:'Number of Proactive Reports',
+    desc:'Hazards and near-misses reported proactively from all sources',
+    unit:'count', direction:'higher',
+    target:52, alert:12,
+    annualTarget:'≥52 proactive reports/yr (5% increase)',
+    alertDesc:'<12 reports in any tri-annual period',
+    inputType:'count', triAnnual:true
+  },
+  {
+    id:'spi5', num:5, type:'LCSPI', category:'Safety',
+    label:'High Safety Risks Mitigated (90 days)',
+    desc:'% of High risks mitigated to Medium/Low within 90 days of identification',
+    unit:'%', direction:'higher',
+    target:100, alert:90,
+    annualTarget:'100% mitigated within 90 days',
+    alertDesc:'Any High risk open >90 days',
+    inputType:'auto', triAnnual:false  // auto-derived from risk register
+  },
+  {
+    id:'spi6', num:6, type:'LCSPI', category:'Safety & Quality',
+    label:'Corrective & Remedial Action Closure Rate',
+    desc:'% of safety, audit, SRB/SAG actions closed on time — Safety Actions, QA Audits, Safety Audits, MOCs, Meeting Actions',
+    unit:'%', direction:'higher',
+    target:95, alert:90,
+    annualTarget:'≥95% on-time closure rate',
+    alertDesc:'<90% closure rate in any month',
+    inputType:'breakdown',  // has sub-categories
+    triAnnual:false
+  },
+  {
+    id:'spi7', num:7, type:'LCSPI', category:'Safety',
+    label:'Staff Overtime Exceedance',
+    desc:'Overtime-to-normal-hours ratio; zero fatigue-related incidents',
+    unit:'%', direction:'lower',
+    target:25, alert:25,
+    annualTarget:'≤25% overtime ratio; zero fatigue incidents',
+    alertDesc:'>10% of staff exceeding 25% overtime threshold',
+    inputType:'manhours', triAnnual:false
+  },
+  {
+    id:'spi8', num:8, type:'LCSPI', category:'Training',
+    label:'Training Completion Rate',
+    desc:'% of planned mandatory training completed on time',
+    unit:'%', direction:'higher',
+    target:95, alert:90,
+    annualTarget:'≥95% on-time training completion',
+    alertDesc:'<90% completion in any tri-annual review',
+    inputType:'count', triAnnual:true
+  }
+];
+
+// getSpiConfig — returns the active SPI list.
+// Uses ST.spiCustom if defined (user-managed), otherwise seeds from SPI_DEFAULTS.
+// This is the single source used by all render/calc functions.
+function getSpiConfig(){
+  if(ST.spiCustom && ST.spiCustom.length) return ST.spiCustom;
+  // First run: seed from defaults and save
+  const seeded = SPI_DEFAULTS.map(s=>({ ...s, ...(ST.spiConfig?.[s.id]||{}) }));
+  ST.spiCustom = seeded;
+  return seeded;
+}
+
+// Persist the custom SPI list to Supabase
+async function saveSpiCustom(){
+  ST.spiCustom = getSpiConfig();
+  await saveConfigKey('spi_custom', JSON.stringify(ST.spiCustom));
+  toast('SPI list saved','success');
+}
+
+function getSpiMonths(){
+  return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+}
+
+// ── Auto-derived SPI values from event/risk data ─────────────────
+// Also used to compute values for any custom event-sourced SPIs
+function calcCustomSpiValue(cfg, year, monthIdx){
+  // Returns the computed value for a custom SPI for a given month, or null
+  const ym = year+'-'+String(monthIdx+1).padStart(2,'0');
+  const evs = ST.events.filter(e=>e.date&&e.date.startsWith(ym));
+  const src = cfg.inputType||cfg.source||'manual_count';
+
+  if(src==='event_flag'){
+    const flag = cfg.sourceFlag||'spi1';
+    return evs.filter(e=>e[flag]).length;
+  }
+  if(src==='event_class'){
+    const cls = cfg.sourceClass||'';
+    return evs.filter(e=>e.classification===cls||e.type===cls).length;
+  }
+  if(src==='event_proactive'){
+    return evs.filter(e=>(e.proactive||'').toLowerCase().startsWith('pro')).length;
+  }
+  if(src==='event_closure'){
+    const closed = evs.filter(e=>e.status==='closed'&&e.target&&e.closedDate);
+    const onTime = closed.filter(e=>e.closedDate<=e.target);
+    return closed.length>0 ? Math.round(onTime.length/closed.length*100) : null;
+  }
+  if(src==='risk_high_90'){
+    const today = new Date();
+    const highRisks = ST.risks.filter(r=>{
+      if(r.status==='obsolete') return false;
+      return (r.prob||0)*(r.sev||0)>=15;
+    });
+    const open90 = highRisks.filter(r=>r.date&&Math.ceil((today-new Date(r.date))/86400000)>90&&calcRiskStatus(r.id)!=='Closed');
+    return highRisks.length>0 ? Math.round((highRisks.length-open90.length)/highRisks.length*100) : null;
+  }
+  // Manual types — read from spiData
+  return getSpiMonthData(cfg.id, year, monthIdx);
+}
+
+function autoCalcSpi(year){
+  const mo = getSpiMonths();
+  const evs = ST.events.filter(e=>e.date&&e.date.startsWith(String(year)));
+
+  // SPI 5: High risks open >90 days (from risk register)
+  const today = new Date();
+  const highRisks = ST.risks.filter(r=>{
+    if(r.status==='obsolete') return false;
+    const sc = (r.prob||0)*(r.sev||0);
+    return sc >= 15; // High = 15+ on 5x5 matrix
+  });
+  const highOpen90 = highRisks.filter(r=>{
+    if(!r.date) return false;
+    const days = Math.ceil((today - new Date(r.date))/86400000);
+    return days > 90 && calcRiskStatus(r.id) !== 'Closed';
+  });
+  const spi5 = highRisks.length > 0
+    ? Math.round((highRisks.length - highOpen90.length)/highRisks.length*100)
+    : null;
+
+  // Proactive reports per month (from events with proactive flag)
+  const proByMonth = {};
+  mo.forEach((m,i)=>{
+    const ym = year+'-'+String(i+1).padStart(2,'0');
+    proByMonth[ym] = evs.filter(e=>e.date.startsWith(ym)&&(e.proactive||'').toLowerCase().startsWith('pro')).length;
+  });
+
+  return { spi5, proByMonth, highOpen90Count: highOpen90.length, highRisksTotal: highRisks.length };
+}
+
+// ── Get manual data entry from ST.spiData ────────────────────────
+function getSpiMonthData(spiId, year, monthIdx){
+  const key = spiId+'-'+year+'-'+String(monthIdx+1).padStart(2,'0');
+  return ST.spiData?.[key] ?? null;
+}
+function setSpiMonthData(spiId, year, monthIdx, val){
+  if(!ST.spiData) ST.spiData={};
+  const key = spiId+'-'+year+'-'+String(monthIdx+1).padStart(2,'0');
+  ST.spiData[key] = val;
+}
+function getSpiMiData(spiId, year, monthIdx){
+  // For MIR: returns {hrs, count} object
+  const key = spiId+'-mi-'+year+'-'+String(monthIdx+1).padStart(2,'0');
+  return ST.spiData?.[key] ?? null;
+}
+
+// ── RAG calculation ───────────────────────────────────────────────
+function spiRag(value, cfg){
+  if(value===null||value===undefined) return 'grey';
+  if(cfg.direction==='lower'){
+    if(cfg.alert3!==undefined){  // SPI 1 — three-level
+      if(value<=cfg.target)  return 'green';
+      if(value<=cfg.alert1)  return 'amber';
+      if(value<=cfg.alert2)  return 'orange';
+      return 'red';
+    }
+    if(value<=cfg.target) return 'green';
+    if(value<=cfg.alert)  return 'amber';
+    return 'red';
+  }
+  if(cfg.direction==='higher'){
+    if(value>=cfg.target) return 'green';
+    if(value>=cfg.alert)  return 'amber';
+    return 'red';
+  }
+  return 'amber';
+}
+function ragStyle(rag){
+  return {
+    green:  'background:rgba(0,147,79,.08);border:1px solid rgba(0,147,79,.3);',
+    amber:  'background:rgba(245,196,0,.08);border:1px solid rgba(245,196,0,.3);',
+    orange: 'background:rgba(245,123,0,.08);border:1px solid rgba(245,123,0,.3);',
+    red:    'background:rgba(204,34,54,.08);border:1px solid rgba(204,34,54,.3);',
+    grey:   'background:var(--bg3);border:1px solid var(--border);',
+  }[rag]||'';
+}
+function ragDot(rag){
+  const col={green:'var(--green)',amber:'var(--yellow)',orange:'var(--orange)',red:'var(--red)',grey:'var(--border)'}[rag];
+  return '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+col+';margin-right:5px;flex-shrink:0;"></span>';
+}
+
+// ── Main render ───────────────────────────────────────────────────
+function renderSpiPage(){
+  const yearEl = document.getElementById('spi-year');
+  const year   = parseInt(yearEl?.value)||new Date().getFullYear();
+
+  // Build year list from data
+  const years = [...new Set([
+    new Date().getFullYear(),
+    ...(ST.events.map(e=>new Date(e.date||'2025').getFullYear()).filter(y=>y>2000))
+  ])].sort((a,b)=>b-a);
+  if(yearEl && yearEl.options.length<years.length){
+    yearEl.innerHTML = years.map(y=>`<option value="${y}"${y===year?' selected':''}>${y}</option>`).join('');
+  }
+
+  const mo      = getSpiMonths();
+  const configs = getSpiConfig();
+  const auto    = autoCalcSpi(year);
+
+  // Render objectives banner from agreement
+  const bannerEl = document.getElementById('spi-objectives-banner');
+  if(bannerEl){
+    const agr = ST.spiAgreement||{};
+    const objs = agr.objectives||['Reduce the Maintenance Incident Rate (MIR) by 5%','Sustain proactive safety reporting','Ensure top safety risks remain controlled','Maintain regulatory compliance','Ensure fatigue risks remain controlled','Strengthen training and organisational learning'];
+    const ref  = agr.ref||'ME-MRO-SPM';
+    const date = agr.date ? new Date(agr.date).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '23 Feb 2026';
+    bannerEl.innerHTML = '<strong>'+(ST.org&&ST.org.name||'EJME')+' Safety Objectives '+(agr.year||year)+':</strong> '
+      +objs.map((o,i)=>(i+1)+'. '+o.replace(/^\d+\.\s*/,'')).join(' &nbsp;·&nbsp; ')
+      +'<span style="float:right;font-size:9.5px;color:var(--text3);">Ref: '+ref+' &nbsp;·&nbsp; Approved '+date+'</span>';
+  }
+
+  // ── Summary strip ──────────────────────────────────────────────
+  // Tri-annual periods
+  const period = (()=>{
+    const m = new Date().getMonth();
+    if(m<=2) return 1; if(m<=5) return 2; if(m<=8) return 3; return 4;
+  })();
+  const periodLabel = ['Q1 (Jan–Mar)','Q2 (Apr–Jun)','Q3 (Jul–Sep)','Q4 (Oct–Dec)'][period-1];
+
+  // ── Render SPI cards ───────────────────────────────────────────
+  const cardsEl = document.getElementById('spi-cards');
+  if(!cardsEl) return;
+
+  cardsEl.innerHTML = configs.map(cfg=>{
+    // Get current value
+    let val = null, subData = null;
+
+    const src = cfg.inputType||cfg.source||'manual_count';
+    if(src==='risk_high_90'){
+      val = auto.spi5;
+    } else if(cfg.inputType==='auto' && cfg.id==='spi5'){
+      val = auto.spi5;
+    } else if(cfg.inputType==='manhours' && cfg.id==='spi1'){
+      // Compute from stored manhour entries
+      const mthData = [];
+      mo.forEach((m,i)=>{ const d=getSpiMiData('spi1',year,i); if(d) mthData.push(d); });
+      if(mthData.length){
+        const totHrs  = mthData.reduce((s,d)=>s+(d.hrs||0),0);
+        const totInc  = mthData.reduce((s,d)=>s+(d.count||0),0);
+        val = totHrs>0 ? Math.round(totInc/totHrs*10000*100)/100 : 0;
+      }
+    } else if(cfg.inputType==='breakdown' && cfg.id==='spi6'){
+      // Average of monthly closure rates from stored data
+      const rates = mo.map((m,i)=>getSpiMonthData('spi6',year,i)).filter(v=>v!==null);
+      val = rates.length ? Math.round(rates.reduce((s,v)=>s+v,0)/rates.length) : null;
+    } else {
+      // Simple monthly count
+      const vals = mo.map((m,i)=>getSpiMonthData(cfg.id,year,i)).filter(v=>v!==null);
+      if(vals.length){
+        if(cfg.unit==='%') val = Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
+        else val = vals.reduce((s,v)=>s+v,0);  // running total for counts
+      }
+    }
+
+    const rag    = spiRag(val, cfg);
+    const dispVal= val!==null ? (cfg.unit==='%' ? val+'%' : cfg.unit==='rate' ? val.toFixed(2) : val) : '—';
+    const typeTag= cfg.type==='HCSPI'
+      ? '<span style="font-size:8.5px;background:rgba(204,34,54,.12);color:var(--red);border-radius:3px;padding:1px 5px;font-weight:700;">HIGH</span>'
+      : '<span style="font-size:8.5px;background:rgba(0,112,204,.1);color:var(--accent);border-radius:3px;padding:1px 5px;font-weight:700;">LOW</span>';
+
+    // Sparkline — last 6 months of data
+    const sparkData = mo.slice(0,6).map((m,i)=>{
+      if(cfg.id==='spi1'){
+        const d=getSpiMiData('spi1',year,i);
+        return d&&d.hrs>0 ? Math.round(d.count/d.hrs*10000*100)/100 : null;
+      }
+      return getSpiMonthData(cfg.id,year,i);
+    });
+    const maxSpark = Math.max(...sparkData.filter(v=>v!==null), cfg.target||1, 0.01);
+    const spark = sparkData.map((v,i)=>{
+      const h = v!==null ? Math.max(Math.round(v/maxSpark*30),2) : 2;
+      const r = v!==null ? spiRag(v,cfg) : 'grey';
+      const col={green:'var(--green)',amber:'var(--yellow)',orange:'var(--orange)',red:'var(--red)',grey:'var(--border)'}[r];
+      return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;">'
+        +'<div style="width:100%;height:'+h+'px;background:'+col+';border-radius:2px 2px 0 0;" title="'+mo[i]+': '+(v!==null?v:'—')+'"></div>'
+        +'<div style="font-size:8px;color:var(--text3);">'+mo[i].substring(0,1)+'</div></div>';
+    }).join('');
+
+    return '<div style="'+ragStyle(rag)+'border-radius:10px;padding:14px 16px;cursor:pointer;" onclick="openSpiDetail(\''+cfg.id+'\')">'
+      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;">'
+        +'<div style="display:flex;align-items:center;gap:6px;">'+typeTag+'<span style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);">SPI '+cfg.num+'</span></div>'
+        +'<span style="font-size:9.5px;background:var(--bg3);color:var(--text3);border-radius:4px;padding:2px 7px;">'+cfg.category+'</span>'
+      +'</div>'
+      +'<div style="font-size:11.5px;font-weight:600;color:var(--text);margin-bottom:8px;line-height:1.3;">'+cfg.label+'</div>'
+      +'<div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:10px;">'
+        +'<div>'
+          +'<div style="font-size:30px;font-weight:800;line-height:1;color:var(--text);">'+dispVal+'</div>'
+          +'<div style="font-size:10px;color:var(--text3);margin-top:2px;">'+cfg.annualTarget+'</div>'
+        +'</div>'
+        +'<div style="text-align:right;">'
+          +'<div style="font-size:9.5px;color:var(--text3);">Alert</div>'
+          +'<div style="font-size:11px;font-weight:600;color:var(--text);">'+cfg.alertDesc.split('|')[0].trim()+'</div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="display:flex;align-items:flex-end;gap:2px;height:38px;">'+spark+'</div>'
+    +'</div>';
+  }).join('');
+
+  // ── Data table ────────────────────────────────────────────────
+  renderSpiTable(year, mo, configs, auto);
+}
+
+function renderSpiTable(year, mo, configs, auto){
+  const el = document.getElementById('spi-data-table');
+  if(!el) return;
+
+  // Only show months up to current
+  const currMonth = year===new Date().getFullYear() ? new Date().getMonth() : 11;
+  const visibleMo = mo.slice(0, currMonth+1);
+
+  el.innerHTML = '<div style="overflow-x:auto;">'
+    +'<table style="width:100%;border-collapse:collapse;font-size:11px;">'
+    +'<thead>'
+    +'<tr style="background:var(--bg3);">'
+    +'<th style="padding:7px 10px;text-align:left;border-bottom:2px solid var(--border);min-width:200px;">SPI</th>'
+    +visibleMo.map(m=>'<th style="padding:7px 8px;text-align:center;border-bottom:2px solid var(--border);white-space:nowrap;">'+m+'</th>').join('')
+    +'<th style="padding:7px 8px;text-align:center;border-bottom:2px solid var(--border);">YTD</th>'
+    +'<th style="padding:7px 8px;text-align:center;border-bottom:2px solid var(--border);">Status</th>'
+    +'</tr></thead><tbody>'
+    +configs.map(cfg=>{
+      const vals = visibleMo.map((m,i)=>{
+        if(cfg.id==='spi1'){
+          const d=getSpiMiData('spi1',year,i);
+          return d&&d.hrs>0 ? Math.round(d.count/d.hrs*10000*100)/100 : null;
+        }
+        if(cfg.inputType==='auto'&&cfg.id==='spi5') return i===visibleMo.length-1?auto.spi5:null;
+        return getSpiMonthData(cfg.id,year,i);
+      });
+      const ytd = cfg.unit==='%'
+        ? (vals.filter(v=>v!==null).length ? Math.round(vals.filter(v=>v!==null).reduce((s,v)=>s+v,0)/vals.filter(v=>v!==null).length) : null)
+        : (vals.filter(v=>v!==null).length ? vals.filter(v=>v!==null).reduce((s,v)=>s+v,0) : null);
+      const rag = spiRag(ytd, cfg);
+      const ragCol = {green:'var(--green)',amber:'var(--yellow)',orange:'var(--orange)',red:'var(--red)',grey:'var(--text3)'}[rag];
+      const fmtVal = v => v===null ? '<span style="color:var(--text3);">—</span>'
+        : '<span style="color:'+{green:'var(--green)',amber:'var(--yellow)',orange:'var(--orange)',red:'var(--red)',grey:'var(--text2)'}[spiRag(v,cfg)]+';font-weight:600;">'+(cfg.unit==='rate'?v.toFixed(2):cfg.unit==='%'?v+'%':v)+'</span>';
+
+      return '<tr style="border-bottom:1px solid var(--border);">'
+        +'<td style="padding:7px 10px;color:var(--text);">'+ragDot(rag)+'<strong>SPI '+cfg.num+'</strong> '+cfg.label+'</td>'
+        +vals.map(v=>'<td style="padding:6px 8px;text-align:center;">'+fmtVal(v)+'</td>').join('')
+        +'<td style="padding:6px 8px;text-align:center;font-weight:700;color:'+ragCol+';">'+(ytd!==null?(cfg.unit==='rate'?ytd.toFixed(2):cfg.unit==='%'?ytd+'%':ytd):'—')+'</td>'
+        +'<td style="padding:6px 8px;text-align:center;">'+ragDot(rag)+'</td>'
+        +'</tr>';
+    }).join('')
+    +'</tbody></table></div>';
+}
+
+// ── SPI detail / data entry modal ────────────────────────────────
+let _spiDetailId = null;
+function openSpiDetail(spiId){
+  _spiDetailId = spiId;
+  const cfg  = getSpiConfig().find(c=>c.id===spiId); if(!cfg) return;
+  const year = parseInt(document.getElementById('spi-year')?.value)||new Date().getFullYear();
+  const mo   = getSpiMonths();
+
+  document.getElementById('spi-detail-title').textContent = 'SPI '+cfg.num+' — '+cfg.label;
+  document.getElementById('spi-detail-desc').textContent  = cfg.desc;
+  document.getElementById('spi-detail-target').textContent = cfg.annualTarget;
+  document.getElementById('spi-detail-alert').textContent  = cfg.alertDesc;
+
+  const bodyEl = document.getElementById('spi-detail-body');
+
+  if(cfg.inputType==='auto'){
+    const auto = autoCalcSpi(year);
+    bodyEl.innerHTML = '<div style="background:rgba(0,112,204,.05);border:1px solid rgba(0,112,204,.15);border-radius:8px;padding:14px;font-size:12px;color:var(--text2);line-height:1.7;">'
+      +'<strong>Auto-derived from Risk Register</strong><br>'
+      +'High risks identified: <strong>'+auto.highRisksTotal+'</strong><br>'
+      +'Still open >90 days: <strong style="color:'+(auto.highOpen90Count>0?'var(--red)':'var(--green)')+';">'+auto.highOpen90Count+'</strong><br>'
+      +'Current rate: <strong>'+(auto.spi5!==null?auto.spi5+'%':'—')+'</strong>'
+    +'</div>';
+  } else {
+    // Build monthly data entry rows
+    const isAdmin = canWrite();
+    bodyEl.innerHTML = '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:11.5px;">'
+      +'<thead><tr style="background:var(--bg3);">'
+      +'<th style="padding:7px 10px;text-align:left;">Month</th>'
+      +(cfg.inputType==='manhours'&&cfg.id==='spi1'
+        ? '<th style="padding:7px;text-align:center;">Productive Hrs</th><th style="padding:7px;text-align:center;">Incidents</th><th style="padding:7px;text-align:center;">Rate</th>'
+        : cfg.inputType==='breakdown'&&cfg.id==='spi6'
+        ? '<th style="padding:7px;text-align:center;">Safety Actions</th><th style="padding:7px;text-align:center;">QA Audits</th><th style="padding:7px;text-align:center;">Safety Audits</th><th style="padding:7px;text-align:center;">MOCs</th><th style="padding:7px;text-align:center;">SRB/SAG</th><th style="padding:7px;text-align:center;">Closure %</th>'
+        : '<th style="padding:7px;text-align:center;">Value</th>')
+      +'<th style="padding:7px;text-align:center;">Status</th>'
+      +(isAdmin?'<th style="padding:7px;"></th>':'')
+      +'</tr></thead><tbody>'
+      +mo.map((m,i)=>{
+        const ym = year+'-'+String(i+1).padStart(2,'0');
+        let val=null, cells='', savedData=null;
+
+        if(cfg.inputType==='manhours'&&cfg.id==='spi1'){
+          savedData = getSpiMiData('spi1',year,i)||{hrs:'',count:''};
+          const rate = savedData.hrs&&savedData.count ? (savedData.count/savedData.hrs*10000).toFixed(2) : '—';
+          val = savedData.hrs&&savedData.count ? parseFloat(rate) : null;
+          cells = isAdmin
+            ? '<td style="padding:5px;"><input type="number" class="fi" style="padding:4px 7px;font-size:11px;width:100px;" id="spi-mi-hrs-'+i+'" value="'+savedData.hrs+'" placeholder="Hrs" min="0"></td>'
+              +'<td style="padding:5px;"><input type="number" class="fi" style="padding:4px 7px;font-size:11px;width:70px;" id="spi-mi-cnt-'+i+'" value="'+savedData.count+'" placeholder="No." min="0"></td>'
+              +'<td style="padding:5px;text-align:center;font-weight:600;">'+rate+'</td>'
+            : '<td style="padding:7px;text-align:center;">'+(savedData.hrs||'—')+'</td>'
+              +'<td style="padding:7px;text-align:center;">'+(savedData.count||'—')+'</td>'
+              +'<td style="padding:7px;text-align:center;font-weight:600;">'+rate+'</td>';
+        } else if(cfg.inputType==='breakdown'&&cfg.id==='spi6'){
+          const cats=['sa','qa','safety','moc','srb'];
+          const catLabels=['Safety Actions','QA Audits','Safety Audits','MOCs','SRB/SAG'];
+          const key6 = 'spi6b-'+year+'-'+String(i+1).padStart(2,'0');
+          savedData = ST.spiData?.[key6]||{};
+          let due=0,closed=0;
+          cats.forEach(c=>{ due+=(savedData['d_'+c]||0); closed+=(savedData['c_'+c]||0); });
+          val = due>0 ? Math.round(closed/due*100) : null;
+          if(isAdmin){
+            cells = cats.map((c,ci)=>'<td style="padding:4px 3px;">'
+              +'<div style="display:flex;gap:2px;">'
+              +'<input type="number" min="0" class="fi" style="padding:3px;font-size:10px;width:40px;" id="spi6-d-'+c+'-'+i+'" placeholder="Due" value="'+(savedData['d_'+c]||'')+'" title="'+catLabels[ci]+' Due">'
+              +'<input type="number" min="0" class="fi" style="padding:3px;font-size:10px;width:40px;" id="spi6-c-'+c+'-'+i+'" placeholder="OK" value="'+(savedData['c_'+c]||'')+'" title="'+catLabels[ci]+' Closed on Time">'
+              +'</div></td>').join('')
+              +'<td style="padding:5px;text-align:center;font-weight:600;">'+(val!==null?val+'%':'—')+'</td>';
+          } else {
+            cells = cats.map(c=>'<td style="padding:7px;text-align:center;font-size:10px;">'+(savedData['d_'+c]||0)+' / '+(savedData['c_'+c]||0)+'</td>').join('')
+              +'<td style="padding:7px;text-align:center;font-weight:600;">'+(val!==null?val+'%':'—')+'</td>';
+          }
+        } else {
+          val = getSpiMonthData(cfg.id,year,i);
+          const disp = val!==null ? (cfg.unit==='%'?val+'%':val) : '—';
+          cells = isAdmin
+            ? '<td style="padding:5px;"><input type="number" class="fi" style="padding:4px 7px;font-size:11px;width:90px;" id="spi-val-'+i+'" value="'+(val!==null?val:'')+'" placeholder="—" min="0"'+(cfg.unit==='%'?' max="100"':'')+'></td>'
+            : '<td style="padding:7px;text-align:center;font-weight:600;">'+disp+'</td>';
+        }
+
+        const rag = spiRag(val,cfg);
+        const ragDotHtml = ragDot(rag);
+
+        return '<tr style="border-bottom:1px solid var(--border);">'
+          +'<td style="padding:7px 10px;font-weight:500;">'+m+' '+year+'</td>'
+          +cells
+          +'<td style="padding:7px;text-align:center;">'+ragDotHtml+'</td>'
+          +(isAdmin?'<td style="padding:5px;"><button class="btn btn-primary btn-xs" onclick="saveSpiRow(\''+cfg.id+'\','+i+','+year+')">Save</button></td>':'')
+          +'</tr>';
+      }).join('')
+      +'</tbody></table></div>';
+  }
+  openM('m-spi-detail');
+}
+
+async function saveSpiRow(spiId, monthIdx, year){
+  if(!ST.spiData) ST.spiData={};
+  const cfg = SPI_DEFAULTS.find(c=>c.id===spiId);
+
+  if(spiId==='spi1'){
+    const hrs   = parseFloat(document.getElementById('spi-mi-hrs-'+monthIdx)?.value)||0;
+    const count = parseInt(document.getElementById('spi-mi-cnt-'+monthIdx)?.value)||0;
+    const key   = 'spi1-mi-'+year+'-'+String(monthIdx+1).padStart(2,'0');
+    ST.spiData[key] = {hrs, count};
+  } else if(spiId==='spi6'){
+    const cats = ['sa','qa','safety','moc','srb'];
+    const key  = 'spi6b-'+year+'-'+String(monthIdx+1).padStart(2,'0');
+    const obj  = {};
+    cats.forEach(c=>{
+      obj['d_'+c] = parseInt(document.getElementById('spi6-d-'+c+'-'+monthIdx)?.value)||0;
+      obj['c_'+c] = parseInt(document.getElementById('spi6-c-'+c+'-'+monthIdx)?.value)||0;
+    });
+    ST.spiData[key] = obj;
+  } else {
+    const val = parseFloat(document.getElementById('spi-val-'+monthIdx)?.value);
+    setSpiMonthData(spiId, year, monthIdx, isNaN(val)?null:val);
+  }
+
+  await saveConfigKey('spi_data', JSON.stringify(ST.spiData));
+  toast('SPI data saved','success');
+  renderSpiPage();
+  openSpiDetail(spiId);  // refresh modal
+}
+
+// ── SPI MANAGEMENT ───────────────────────────────────────────────
+
+function openSpiSettings(){
+  // Load agreement fields if saved
+  const agr = ST.spiAgreement || {};
+  document.getElementById('spi-agr-year')?.value && null; // reset
+  if(document.getElementById('spi-agr-year')) document.getElementById('spi-agr-year').value = agr.year||new Date().getFullYear();
+  if(document.getElementById('spi-agr-ref'))  document.getElementById('spi-agr-ref').value  = agr.ref||'ME-MRO-SPM';
+  if(document.getElementById('spi-agr-date')) document.getElementById('spi-agr-date').value = agr.date||'';
+  if(document.getElementById('spi-agr-am'))   document.getElementById('spi-agr-am').value   = agr.am||'';
+  if(document.getElementById('spi-agr-reg'))  document.getElementById('spi-agr-reg').value  = agr.reg||'GCAA';
+  if(document.getElementById('spi-agr-objectives')) document.getElementById('spi-agr-objectives').value = (agr.objectives||[]).join('\n');
+
+  switchSpiMgmtTab('list');
+  renderSpiMgmtList();
+  openM('m-spi-settings');
+}
+
+function switchSpiMgmtTab(tab){
+  ['list','add','year'].forEach(t=>{
+    document.getElementById('spi-mgmt-tab-'+t)?.classList.toggle('active', t===tab);
+    const pane = document.getElementById('spi-mgmt-pane-'+t);
+    if(pane) pane.style.display = t===tab ? '' : 'none';
+  });
+}
+
+function renderSpiMgmtList(){
+  const el = document.getElementById('spi-mgmt-list'); if(!el) return;
+  const cfgs = getSpiConfig();
+  if(!cfgs.length){ el.innerHTML='<div style="color:var(--text3);font-size:12px;padding:16px;text-align:center;">No SPIs yet — click Add New SPI</div>'; return; }
+
+  const sourceLabels = {
+    manual_count:'✏ Manual count', manual_pct:'✏ Manual %', manual_rate:'✏ Manual rate',
+    event_flag:'⚡ Event flag', event_class:'⚡ Event classification',
+    event_proactive:'⚡ Proactive count', event_closure:'⚡ On-time closure',
+    risk_high_90:'◈ High risks 90d', custom_breakdown:'✏ Breakdown table',
+    auto:'◈ Auto-derived'
+  };
+
+  el.innerHTML = cfgs.map((cfg,i)=>{
+    const typeTag = cfg.type==='HCSPI'
+      ? '<span style="font-size:9px;background:rgba(204,34,54,.1);color:var(--red);border-radius:3px;padding:1px 5px;">HIGH</span>'
+      : '<span style="font-size:9px;background:rgba(0,112,204,.1);color:var(--accent);border-radius:3px;padding:1px 5px;">LOW</span>';
+    const srcLbl = sourceLabels[cfg.inputType||cfg.source]||cfg.inputType||'—';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg3);border-radius:7px;margin-bottom:6px;border:1px solid var(--border);">'
+      +'<span style="font-size:13px;color:var(--text3);cursor:grab;">⠿</span>'
+      +typeTag
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-size:12px;font-weight:600;color:var(--text);">SPI '+cfg.num+' — '+cfg.label+'</div>'
+        +'<div style="font-size:10px;color:var(--text3);margin-top:2px;">'+cfg.category+' &nbsp;·&nbsp; '+srcLbl+' &nbsp;·&nbsp; Target: '+cfg.target+(cfg.unit||'')+'</div>'
+      +'</div>'
+      +(canWrite()
+        ? '<button class="btn btn-ghost btn-xs" onclick="editSpi('+i+')">✏</button>'
+          +'<button class="btn btn-ghost btn-xs" style="color:var(--red);" onclick="deleteSpi('+i+')">🗑</button>'
+        : '')
+      +'</div>';
+  }).join('');
+}
+
+function clearSpiForm(){
+  document.getElementById('spi-edit-idx').value = '';
+  ['spi-f-num','spi-f-label','spi-f-desc','spi-f-cat','spi-f-annual','spi-f-alertdesc'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  ['spi-f-type','spi-f-source','spi-f-unit','spi-f-direction'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.selectedIndex=0;
+  });
+  ['spi-f-target','spi-f-alert'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('spi-f-source-opts').innerHTML='';
+  document.getElementById('spi-f-err').style.display='none';
+}
+
+function editSpi(idx){
+  const cfgs = getSpiConfig();
+  const cfg  = cfgs[idx]; if(!cfg) return;
+  document.getElementById('spi-edit-idx').value = idx;
+
+  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.value=v||''; };
+  set('spi-f-num',   cfg.num);
+  set('spi-f-label', cfg.label);
+  set('spi-f-desc',  cfg.desc);
+  set('spi-f-cat',   cfg.category);
+  set('spi-f-annual',cfg.annualTarget||'');
+  set('spi-f-alertdesc', cfg.alertDesc||'');
+  set('spi-f-target', cfg.target);
+  set('spi-f-alert',  cfg.alert||cfg.alert1||'');
+  const setSel = (id,v)=>{ const el=document.getElementById(id); if(el){ [...el.options].forEach((o,i)=>{if(o.value===String(v))el.selectedIndex=i;}); }};
+  setSel('spi-f-type',      cfg.type||'LCSPI');
+  setSel('spi-f-source',    cfg.inputType||cfg.source||'manual_count');
+  setSel('spi-f-unit',      cfg.unit||'count');
+  setSel('spi-f-direction', cfg.direction||'higher');
+  onSpiSourceChange();
+  switchSpiMgmtTab('add');
+}
+
+async function deleteSpi(idx){
+  if(!canWrite()){ toast('Write permission required','error'); return; }
+  if(!confirm('Delete this SPI? Its saved data remains in Supabase.')) return;
+  const cfgs = getSpiConfig();
+  cfgs.splice(idx,1);
+  ST.spiCustom = cfgs;
+  await saveConfigKey('spi_custom', JSON.stringify(ST.spiCustom));
+  renderSpiMgmtList();
+  renderSpiPage();
+  toast('SPI deleted','success');
+}
+
+async function saveSpiForm(){
+  if(!canWrite()){ toast('Write permission required','error'); return; }
+  const errEl = document.getElementById('spi-f-err');
+  errEl.style.display='none';
+
+  const num   = document.getElementById('spi-f-num')?.value.trim();
+  const label = document.getElementById('spi-f-label')?.value.trim();
+  if(!num||!label){ errEl.textContent='SPI Number and Label are required.'; errEl.style.display='block'; return; }
+
+  const g = id => document.getElementById(id)?.value;
+  const newCfg = {
+    id:          'spi_custom_'+Date.now(),
+    num:         num,
+    type:        g('spi-f-type')||'LCSPI',
+    label:       label,
+    desc:        g('spi-f-desc')||'',
+    category:    g('spi-f-cat')||'',
+    unit:        g('spi-f-unit')||'count',
+    direction:   g('spi-f-direction')||'higher',
+    target:      parseFloat(g('spi-f-target'))||0,
+    alert:       parseFloat(g('spi-f-alert'))||0,
+    annualTarget:g('spi-f-annual')||'',
+    alertDesc:   g('spi-f-alertdesc')||'',
+    inputType:   g('spi-f-source')||'manual_count',
+    source:      g('spi-f-source')||'manual_count',
+    // Store source sub-options
+    sourceFlag:  document.getElementById('spi-src-flag')?.value||'',
+    sourceClass: document.getElementById('spi-src-class')?.value||'',
+    breakdown:   [...(document.querySelectorAll('.spi-breakdown-item')||[])].map(el=>el.value).filter(Boolean),
+    triAnnual:   false,
+  };
+
+  const cfgs = getSpiConfig();
+  const editIdx = document.getElementById('spi-edit-idx')?.value;
+  if(editIdx!==''&&editIdx!==undefined&&editIdx!==null&&editIdx.length>0){
+    const i = parseInt(editIdx);
+    // Preserve the original id so data keys still match
+    newCfg.id = cfgs[i]?.id || newCfg.id;
+    cfgs[i] = newCfg;
+  } else {
+    cfgs.push(newCfg);
+  }
+
+  ST.spiCustom = cfgs;
+  await saveConfigKey('spi_custom', JSON.stringify(ST.spiCustom));
+  clearSpiForm();
+  renderSpiMgmtList();
+  switchSpiMgmtTab('list');
+  renderSpiPage();
+  toast('SPI saved','success');
+}
+
+function onSpiSourceChange(){
+  const src   = document.getElementById('spi-f-source')?.value||'';
+  const optsEl = document.getElementById('spi-f-source-opts'); if(!optsEl) return;
+
+  if(src==='event_flag'){
+    const flags = ['spi1','spi23','meda','mandatory','confidential'];
+    optsEl.innerHTML = '<div class="fg"><label class="fl">Event flag field to count</label>'
+      +'<select class="fs" id="spi-src-flag">'
+      +flags.map(f=>'<option value="'+f+'">'+f+'</option>').join('')
+      +'</select></div>';
+  } else if(src==='event_class'){
+    const classes = [...new Set((ST.lists.evClassifications||[]).concat(ST.lists.evTypes||[]))];
+    optsEl.innerHTML = '<div class="fg"><label class="fl">Count events where classification matches</label>'
+      +'<select class="fs" id="spi-src-class">'
+      +(classes.length
+        ? classes.map(c=>'<option value="'+c+'">'+c+'</option>').join('')
+        : '<option value="">— No classifications configured yet —</option>')
+      +'</select></div>';
+  } else if(src==='custom_breakdown'){
+    optsEl.innerHTML = '<div class="fg"><label class="fl">Sub-categories (one per line)</label>'
+      +'<div id="spi-breakdown-rows" style="margin-bottom:6px;"></div>'
+      +'<button class="btn btn-ghost btn-xs" onclick="addBreakdownRow()">+ Add row</button></div>';
+    addBreakdownRow(); addBreakdownRow(); // seed two rows
+  } else {
+    optsEl.innerHTML='';
+  }
+}
+
+function addBreakdownRow(){
+  const container = document.getElementById('spi-breakdown-rows'); if(!container) return;
+  const row = document.createElement('div');
+  row.style.cssText='display:flex;gap:6px;margin-bottom:4px;';
+  row.innerHTML='<input class="fi spi-breakdown-item" placeholder="e.g. Safety Actions" style="flex:1;">'
+    +'<button class="btn btn-ghost btn-xs" onclick="this.parentElement.remove()">✕</button>';
+  container.appendChild(row);
+}
+
+async function resetSpiToDefaults(){
+  if(!confirm('Reset to the 8 EJME default SPIs? This will overwrite your current list.')) return;
+  ST.spiCustom = JSON.parse(JSON.stringify(SPI_DEFAULTS));
+  await saveConfigKey('spi_custom', JSON.stringify(ST.spiCustom));
+  renderSpiMgmtList();
+  renderSpiPage();
+  toast('Reset to EJME defaults','success');
+}
+
+async function saveSpiAgreement(){
+  const objectives = (document.getElementById('spi-agr-objectives')?.value||'')
+    .split('\n').map(s=>s.trim()).filter(Boolean);
+  ST.spiAgreement = {
+    year:  document.getElementById('spi-agr-year')?.value||'',
+    ref:   document.getElementById('spi-agr-ref')?.value.trim()||'',
+    date:  document.getElementById('spi-agr-date')?.value||'',
+    am:    document.getElementById('spi-agr-am')?.value.trim()||'',
+    reg:   document.getElementById('spi-agr-reg')?.value.trim()||'',
+    objectives,
+  };
+  await saveConfigKey('spi_agreement', JSON.stringify(ST.spiAgreement));
+  renderSpiPage();
+  toast('Agreement details saved','success');
+}
+
+// Legacy stub — kept so any old references don't throw
+async function saveSpiTargets(){
+  await saveSpiForm();
+}
+
+function initSpiConfig(){
+  if(!ST.spiConfig)    ST.spiConfig={};
+  if(!ST.spiData)      ST.spiData={};
+  if(!ST.spiAgreement) ST.spiAgreement={};
+}
+
+
+
+
 // ═══════════════════════════════════════════════════
 const SUPABASE_URL = 'https://jmfvrgylgqhprbjvttdu.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_UtXQzg21cs0Qp0JsS9y8sg_ufMbhlDT';
@@ -8898,9 +9895,9 @@ function isViewer(){ return CURRENT_USER && CURRENT_USER.app_role === 'viewer'; 
 function isReviewerOnly(){ return CURRENT_USER && CURRENT_USER.app_role === 'reviewer'; }
 
 // Pages a viewer is allowed to access
-const VIEWER_ALLOWED_PAGES = ['dashboard','hazards','risks','controls','help'];
+const VIEWER_ALLOWED_PAGES = ['dashboard','hazards','risks','controls','help','spi'];
 // Pages a reviewer is allowed to access (everything except settings admin functions)
-const REVIEWER_ALLOWED_PAGES = ['dashboard','hazards','risks','controls','bowtie','events','audit','help'];
+const REVIEWER_ALLOWED_PAGES = ['dashboard','hazards','risks','controls','bowtie','events','audit','help','spi'];
 
 function showIncidentSummary(evId, hzId){
   const containerId = 'inc-summary-'+hzId;
@@ -9327,6 +10324,9 @@ async function loadAppConfig(){
     data.forEach(row=>{
       if(row.config_key==='anthropic_api_key'&&row.config_value) localStorage.setItem('ai_api_key',row.config_value);
       if(row.config_key==='ai_monthly_limit') ST.aiUsage.limit=parseInt(row.config_value)||500;
+      if(row.config_key==='ai_usage'&&row.config_value){
+        try{ const u=JSON.parse(row.config_value); ST.aiUsage.count=u.count||0; ST.aiUsage.resetMonth=u.resetMonth||''; }catch(e){}
+      }
       if(row.config_key==='audits_data'&&row.config_value){
         try{ ST.audits=JSON.parse(row.config_value); }catch(e){}
       }
@@ -9337,8 +10337,80 @@ async function loadAppConfig(){
       if(row.config_key==='data_lists'&&row.config_value){
         try{ const lists=JSON.parse(row.config_value); if(lists&&typeof lists==='object') Object.assign(ST.lists,lists); }catch(e){}
       }
+      if(row.config_key==='spi_config'&&row.config_value){
+        try{ ST.spiConfig=JSON.parse(row.config_value); }catch(e){}
+      }
+      if(row.config_key==='spi_data'&&row.config_value){
+        try{ ST.spiData=JSON.parse(row.config_value); }catch(e){}
+      }
+      if(row.config_key==='spi_custom'&&row.config_value){
+        try{ ST.spiCustom=JSON.parse(row.config_value); }catch(e){}
+      }
+      if(row.config_key==='spi_agreement'&&row.config_value){
+        try{ ST.spiAgreement=JSON.parse(row.config_value); }catch(e){}
+      }
     });
   }catch(e){console.warn('loadAppConfig:',e);}
+}
+
+async function saveProgrammeToSupabase(){
+  try{
+    if(!ST.programme) return;
+    const rows = [];
+    let sortOrder = 0;
+    ['prog','audit','dept'].forEach(tab=>{
+      (ST.programme[tab]||[]).forEach(item=>{
+        if(item.section !== undefined){
+          rows.push({
+            prog_tab:       tab,
+            sort_order:     sortOrder++,
+            section_header: item.section,
+            item_name:      null,
+            freq:           null,
+            done_by:        null,
+            remarks:        item.remarks||null,
+            months:         {},
+            completions:    {},
+            deferrals:      {}
+          });
+        } else {
+          const row = {
+            prog_tab:       tab,
+            sort_order:     sortOrder++,
+            section_header: null,
+            item_name:      item.name||'',
+            freq:           item.freq||'',
+            done_by:        item.by||'',
+            remarks:        item.remarks||'',
+            months:         item.months||{},
+            completions:    item.completions||{},
+            deferrals:      item.deferrals||{}
+          };
+          // Preserve existing DB id if we have one (for upsert)
+          if(item._db_id) row.id = item._db_id;
+          rows.push(row);
+        }
+      });
+    });
+    if(rows.length){
+      // Delete all existing rows then reinsert to avoid orphan rows on delete
+      await SB.from('programme').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      // Insert in chunks
+      const CHUNK = 50;
+      for(let i=0;i<rows.length;i+=CHUNK){
+        await SB.from('programme').insert(rows.slice(i,i+CHUNK));
+      }
+    }
+  }catch(e){ console.warn('saveProgramme:', e); }
+}
+
+async function saveBowtieToSupabase(){
+  try{
+    const rows = Object.entries(ST.bowtieRoles||{}).map(([risk_id, bowtie_role])=>({ risk_id, bowtie_role }));
+    if(rows.length){
+      await SB.from('bowtie_roles').upsert(rows);
+    }
+  }catch(e){ console.warn('saveBowtie:', e); }
 }
 
 async function saveOrgToSupabase(){
@@ -9450,6 +10522,9 @@ async function flushToSupabase(){
     ops.push(SB.from('counters').upsert([{counter_name:'hz_n',counter_value:ST._hzN},{counter_name:'rk_n',counter_value:ST._rkN},{counter_name:'ct_n',counter_value:ST._ctN},{counter_name:'ev_n',counter_value:ST._evN}],{onConflict:'counter_name'}));
     if(ST.mpSetup) ops.push(SB.from('manpower_config').upsert({config_json:ST.mpSetup,updated_by:uid,updated_at:now}));
     await Promise.all(ops);
+    // Save programme and bowtie (separate tables, not in main ops array)
+    await saveProgrammeToSupabase();
+    await saveBowtieToSupabase();
     updateGhStatus('saved','Saved '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}));
   }catch(e){console.warn('flushToSupabase:',e);updateGhStatus('error','Save failed');}
 }
@@ -10004,6 +11079,79 @@ async function handleMigrateFile(input){
       await saveConfigKey('data_lists', JSON.stringify(ST.lists));
     }
 
+    // ── Safety Programme ──────────────────────────────
+    // Handles:
+    //   1. AeroSafe backup: backup.programme (internal {prog,audit,dept} format)
+    //   2. Standalone JSON: ejme_safety_programme.json (same {prog,audit,dept} format + meta)
+    let progImported = false;
+    const progSource = backup.programme || (backup.prog ? backup : null);
+    if(progSource && (progSource.prog || progSource.audit || progSource.dept)){
+      ST.programme = {
+        prog:  progSource.prog  || [],
+        audit: progSource.audit || [],
+        dept:  progSource.dept  || []
+      };
+      await saveProgrammeToSupabase();
+      progImported = true;
+    }
+    // Handles both formats:
+    //   1. AeroSafe backup: backup.mpSetup (internal app format)
+    //   2. Standalone JSON: backup.workload + backup.staff + backup.schedule (our exported format)
+    let mpImported = false;
+    if(backup.mpSetup && typeof backup.mpSetup==='object'){
+      // Format 1: full app backup
+      ST.mpSetup = backup.mpSetup;
+      await SB.from('manpower_config').upsert({
+        id:'main', config_json: ST.mpSetup,
+        updated_by: uid, updated_at: new Date().toISOString()
+      });
+      mpImported = true;
+    } else if(backup.workload && typeof backup.workload==='object'){
+      // Format 2: standalone manpower JSON (ejme_manpower_plan.json)
+      // Convert to internal mpSetup format
+      const sched = backup.schedule||{};
+      const workloadFlat = [];
+      Object.entries(backup.workload).forEach(([role, tasks])=>{
+        (tasks||[]).forEach(t=>{
+          workloadFlat.push({
+            staffRole: role,
+            activity:  t.activity,
+            hrsEach:   t.hrsEach,
+            nos:       t.frequency
+          });
+        });
+      });
+      ST.mpSetup = {
+        workDays:    sched.workDays    || ['Mon','Tue','Wed','Thu','Fri'],
+        startTime:   sched.startTime   || '08:00',
+        endTime:     sched.endTime     || '17:00',
+        lunchMins:   sched.lunchMinutes|| 60,
+        defLeave:    (sched.defaults||{}).annualLeaveDays || 30,
+        defTraining: (sched.defaults||{}).trainingDays    || 10,
+        defSick:     (sched.defaults||{}).sickDays        || 5,
+        defOther:    (sched.defaults||{}).otherAbsenceDays|| 0,
+        staff:       (backup.staff||[]).map(s=>({
+          name:     s.name||'',
+          role:     s.role||'',
+          leave:    s.leave||null,
+          training: s.training||null,
+          sick:     s.sick||null,
+          other:    s.other||null,
+          allocationPct: s.allocationPct||100,
+          fte:           s.fte||1
+        })),
+        holidays:  {},
+        workload:  workloadFlat,
+        actuals:   backup.actuals||[],
+        signoff:   backup.signoff||{name:'',date:'',comments:''}
+      };
+      await SB.from('manpower_config').upsert({
+        id:'main', config_json: ST.mpSetup,
+        updated_by: uid, updated_at: new Date().toISOString()
+      });
+      mpImported = true;
+    }
+
     // Build result summary
     const allErrs = [...errs.hazards,...errs.risks,...errs.controls,...errs.events];
     const errHtml = allErrs.length
@@ -10017,7 +11165,9 @@ async function handleMigrateFile(input){
           Hazards: <strong>${counts.hazards}</strong> imported<br>
           Risks: <strong>${counts.risks}</strong> imported<br>
           Controls: <strong>${counts.controls}</strong> imported<br>
-          Events: <strong>${counts.events}</strong> imported
+          Events: <strong>${counts.events}</strong> imported<br>
+          Manpower Plan: <strong>${mpImported ? '✅ imported' : '— not found in file'}</strong><br>
+          Safety Programme: <strong>${progImported ? '✅ imported' : '— not found in file'}</strong>
           ${counts.skipped?`<br><span style="color:var(--text3);">${counts.skipped} records skipped (already exist)</span>`:''}
         </div>
         ${errHtml}
