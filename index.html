@@ -625,6 +625,7 @@ table.resizable{table-layout:fixed;}
       <span></span><span></span><span></span>
     </div>
     <div class="pg-title" id="pg-title">Dashboard</div>
+      <div style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--text3);padding:2px 7px;background:var(--bg3);border-radius:4px;border:1px solid var(--border);margin-left:6px;" id="app-version-badge">v0.0002</div>
     <div style="display:flex;align-items:center;gap:12px;">
       <span id="gh-status-indicator" style="font-size:10.5px;color:var(--text3);white-space:nowrap;font-family:'JetBrains Mono',monospace;cursor:pointer;" onclick="nav(document.querySelector('[data-page=settings]'))" title="Click to configure GitHub sync">☁ —</span>
       <!-- Signed-in user info -->
@@ -9879,6 +9880,12 @@ function initSpiConfig(){
 
 
 // ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+//  VERSION
+// ═══════════════════════════════════════════════════
+const APP_VERSION = 'v0.0002';
+const APP_BUILD   = '2026-04-16';
+
 const SUPABASE_URL = 'https://jmfvrgylgqhprbjvttdu.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_UtXQzg21cs0Qp0JsS9y8sg_ufMbhlDT';
 const SB = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -10160,6 +10167,9 @@ async function onSignedIn(){
   renderTopbar('dashboard');
   renderDashboard();
   updateBadges();
+  // Force badge re-render after a short delay in case data is still settling
+  setTimeout(updateBadges, 500);
+  setTimeout(updateBadges, 2000);
   initSidebarState();
   loadColWidths();
   setTimeout(initColResizers,100);
@@ -10959,11 +10969,45 @@ async function wipeSupabase(){
   }
 }
 
+// Full reload after any migration — re-renders every active page
+async function reloadAfterMigration(){
+  const statusEl = document.getElementById('migrate-status');
+  if(statusEl){
+    const existing = statusEl.innerHTML;
+    statusEl.innerHTML = existing + '<div style="margin-top:8px;color:var(--text3);font-size:11px;">⏳ Loading data from Supabase…</div>';
+  }
+  await loadAllDataFromSupabase();
+  // Re-render everything that could have changed
+  renderDashboard();
+  updateBadges();
+  updateSidebarOrg();
+  renderTopbar(document.querySelector('.nav-item.active')?.dataset.page||'dashboard');
+  // Re-render the active page if it's one of the affected ones
+  const activePage = document.querySelector('.nav-item.active')?.dataset.page;
+  if(activePage==='hazards')   renderHazards();
+  if(activePage==='risks')     renderRisks();
+  if(activePage==='controls')  renderControls();
+  if(activePage==='events')    renderEvents();
+  if(activePage==='programme') renderProgramme();
+  if(activePage==='manpower')  switchMpView('plan');
+  if(statusEl){
+    const existing = statusEl.innerHTML.replace(/<div[^>]*>⏳.*?<\/div>/,'');
+    statusEl.innerHTML = existing + '<div style="margin-top:8px;color:var(--green);font-size:11px;">✅ Data loaded — all registers updated.</div>';
+  }
+  toast('Migrated data loaded successfully','success');
+}
+
 async function handleMigrateFile(input){
   if(!canAdmin()){toast('Admin only','error');return;}
   const file=input.files[0];if(!file)return;
   const statusEl=document.getElementById('migrate-status');
-  if(statusEl)statusEl.innerHTML='<div style="color:var(--text3);">Reading file…</div>';
+
+  // Detect file type from name for early feedback
+  const fname = file.name.toLowerCase();
+  const isMpFile   = fname.includes('manpower');
+  const isProgFile = fname.includes('programme') || fname.includes('program');
+
+  if(statusEl) statusEl.innerHTML='<div style="color:var(--text3);font-size:11.5px;">⏳ Reading file <strong>'+file.name+'</strong>…</div>';
   try{
     const text=await file.text();
     const backup=JSON.parse(text);
@@ -11152,33 +11196,44 @@ async function handleMigrateFile(input){
       mpImported = true;
     }
 
-    // Build result summary
+    // ── Build result summary ──────────────────────────
     const allErrs = [...errs.hazards,...errs.risks,...errs.controls,...errs.events];
     const errHtml = allErrs.length
       ? `<div style="margin-top:8px;padding:8px;background:rgba(204,34,54,.06);border-radius:6px;font-size:10.5px;color:var(--red);max-height:120px;overflow-y:auto;">`
         +`<strong>${allErrs.length} error(s):</strong><br>`+allErrs.slice(0,20).join('<br>')+`</div>` : '';
 
+    // Determine what was actually imported to give useful feedback
+    const totalRecords = counts.hazards+counts.risks+counts.controls+counts.events;
+    const nothingImported = totalRecords===0 && !mpImported && !progImported;
+
     if(statusEl) statusEl.innerHTML=`
       <div style="background:rgba(0,147,79,.07);border:1px solid rgba(0,147,79,.25);border-radius:8px;padding:12px 14px;">
-        <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:8px;">✅ Migration complete</div>
-        <div style="font-size:11.5px;color:var(--text2);line-height:1.8;">
-          Hazards: <strong>${counts.hazards}</strong> imported<br>
-          Risks: <strong>${counts.risks}</strong> imported<br>
-          Controls: <strong>${counts.controls}</strong> imported<br>
-          Events: <strong>${counts.events}</strong> imported<br>
-          Manpower Plan: <strong>${mpImported ? '✅ imported' : '— not found in file'}</strong><br>
-          Safety Programme: <strong>${progImported ? '✅ imported' : '— not found in file'}</strong>
+        <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:8px;">✅ Migration complete — <strong>${file.name}</strong></div>
+        <div style="font-size:11.5px;color:var(--text2);line-height:1.9;">
+          ${counts.hazards||counts.risks||counts.controls||counts.events ? `
+          Hazards: <strong>${counts.hazards}</strong> &nbsp;·&nbsp;
+          Risks: <strong>${counts.risks}</strong> &nbsp;·&nbsp;
+          Controls: <strong>${counts.controls}</strong> &nbsp;·&nbsp;
+          Events: <strong>${counts.events}</strong><br>` : ''}
+          Manpower Plan: <strong>${mpImported ? '✅ imported' : '— not in this file'}</strong><br>
+          Safety Programme: <strong>${progImported ? '✅ imported' : '— not in this file'}</strong>
           ${counts.skipped?`<br><span style="color:var(--text3);">${counts.skipped} records skipped (already exist)</span>`:''}
+          ${nothingImported ? `<br><span style="color:var(--yellow);">⚠ Nothing was imported — check this is the right file type.</span>` : ''}
         </div>
         ${errHtml}
-        <button class="btn btn-primary btn-sm" style="margin-top:10px;"
-          onclick="loadAllDataFromSupabase().then(()=>{renderDashboard();updateBadges();toast('Data refreshed','success')})">
-          ↺ Load Migrated Data
-        </button>
+        <div style="margin-top:10px;font-size:11px;color:var(--text3);">⏳ Loading migrated data into the app…</div>
       </div>`;
-    toast('Migration complete — '+(counts.hazards+counts.risks+counts.controls+counts.events)+' records imported','success');
+
+    toast('Migration complete — '+(totalRecords)+' register records imported','success');
+
+    // Auto-reload immediately — no need for user to click
+    await reloadAfterMigration();
+
   }catch(e){
-    if(statusEl)statusEl.innerHTML=`<div style="color:var(--red);font-size:11.5px;">❌ Migration failed: ${e.message}</div>`;
+    if(statusEl)statusEl.innerHTML=`<div style="background:rgba(204,34,54,.07);border:1px solid rgba(204,34,54,.25);border-radius:8px;padding:12px 14px;color:var(--red);font-size:11.5px;">
+      <strong>❌ Migration failed</strong><br>${e.message}<br>
+      <span style="font-size:10.5px;color:var(--text3);">Check the browser console (F12) for details.</span>
+    </div>`;
     toast('Migration failed: '+e.message,'error');
   }
   input.value='';
